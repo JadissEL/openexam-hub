@@ -12,7 +12,7 @@ function PrimaryCTA({ children = 'Build my free plan', className = '' }) {
   return (
     <a
       href={APP_PATH}
-      className={`group inline-flex items-center justify-center gap-2 h-14 px-7 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white text-[17px] font-semibold shadow-[0_14px_30px_-14px_rgba(234,88,12,0.75)] transition-colors ${className}`}
+      className={`group inline-flex items-center justify-center gap-2 h-14 px-7 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white text-[17px] font-semibold shadow-[0_14px_30px_-14px_rgba(234,88,12,0.75)] transition-colors ${className}`}
     >
       {children}
       <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
@@ -92,7 +92,7 @@ function HowItWorks() {
           <ol className="mt-12 space-y-10">
             {STEPS.map((s, i) => (
               <li key={s.title} className="grid grid-cols-[3.25rem_1fr] gap-4">
-                <span aria-hidden="true" className="font-display text-[40px] leading-none text-[#E2A27A]">{String(i + 1).padStart(2, '0')}</span>
+                <span aria-hidden="true" className="font-display text-[40px] leading-none text-[#C76A3A]">{String(i + 1).padStart(2, '0')}</span>
                 <div>
                   <h3 className={`${ink} text-xl sm:text-[22px] font-semibold tracking-[-0.01em]`}>{s.title}</h3>
                   <p className={`mt-2 text-[17px] leading-[1.7] ${muted}`}>{s.body}</p>

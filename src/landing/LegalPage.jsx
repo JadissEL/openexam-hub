@@ -210,7 +210,7 @@ export default function LegalPage({ kind }) {
     <div className="min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" }}>
       <SiteHeader />
       <main id="main" className="mx-auto max-w-3xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
-        <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#C2410C]">Last updated {UPDATED}</p>
+        <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#9A3412]">Last updated {UPDATED}</p>
         <h1 className="mt-4 font-display text-5xl sm:text-6xl tracking-[-0.03em] font-medium leading-[1.02]">{page.title}</h1>
         <p className="mt-6 text-xl leading-[1.65] text-[#5C554C]">{page.intro}</p>
         <div className="mt-12 space-y-12 text-[17px] leading-[1.75] text-[#3B352F] [&_a]:text-[#C2410C] [&_a]:underline [&_a]:underline-offset-4 [&_ul]:space-y-3 [&_ul]:list-disc [&_ul]:pl-5 [&_strong]:text-[#1A1714]">

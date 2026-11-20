@@ -114,7 +114,7 @@ function PostCard({ post }) {
         {post.draft ? (
           <>
             <span aria-hidden="true">·</span>
-            <span className="uppercase tracking-[0.14em] font-semibold text-[#C2410C]">Example draft</span>
+            <span className="uppercase tracking-[0.14em] font-semibold text-[#9A3412]">Example draft</span>
           </>
         ) : null}
       </div>
@@ -221,7 +221,7 @@ function TableOfContents({ headings }) {
 function RoadmapCta({ exams }) {
   if (!exams?.length) {
     return (
-      <a href="/app" className="mt-4 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold">
+      <a href="/app" className="mt-4 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold">
         Build a free study plan <ArrowRight className="w-4 h-4" aria-hidden="true" />
       </a>
     );
@@ -232,7 +232,7 @@ function RoadmapCta({ exams }) {
         <li key={id}>
           <a
             href={plannerUrl(id)}
-            className="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold"
+            className="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold"
           >
             Build a free {examLabel(id)} plan <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </a>
