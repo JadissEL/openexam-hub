@@ -163,6 +163,18 @@ function linkStatusBadge(res, liveStatus) {
 // '' = same-origin /api (the Vercel functions in this repo). SERVER_ENABLED=false = preview mode:
 // fallback roadmaps + in-browser generation, nothing link-checked, nothing written to shared data.
 
+// Errors shown in the UI never carry raw server text: only 400 input errors (written for users)
+// pass through; everything else becomes the caller's friendly fallback. Details go to the console.
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+function friendlyError(err, fallback) {
+  return err instanceof ApiError && err.status === 400 && err.message ? err.message : fallback;
+}
+
 async function apiPost(path, body) {
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
@@ -170,14 +182,14 @@ async function apiPost(path, body) {
     body: JSON.stringify(body)
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+  if (!res.ok) throw new ApiError(data.error || `Server error ${res.status}`, res.status);
   return data;
 }
 
 async function apiGet(path) {
   const res = await fetch(`${API_BASE}${path}`);
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+  if (!res.ok) throw new ApiError(data.error || `Server error ${res.status}`, res.status);
   return data;
 }
 
@@ -418,7 +430,7 @@ const THEME = {
   primaryBtn:
     'inline-flex items-center justify-center gap-2 rounded-full bg-[#111111] hover:bg-neutral-800 text-white font-semibold transition disabled:opacity-60',
   accentBtn:
-    'inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white text-lg font-bold min-h-[56px] px-6 shadow-[0_12px_28px_-12px_rgba(255,107,26,0.8)] transition disabled:opacity-70',
+    'inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white text-lg font-bold min-h-[56px] px-6 shadow-[0_12px_28px_-12px_rgba(255,107,26,0.8)] transition disabled:opacity-70',
   ghostBtn:
     'inline-flex items-center justify-center gap-2 rounded-full border border-black/10 bg-white hover:bg-neutral-50 text-neutral-800 font-semibold transition',
   segWrap: 'flex p-1 gap-1 rounded-full bg-[#F4F4F2] border border-black/5',
@@ -2755,13 +2767,13 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
           ORIGIN STORY MODAL ("WHY THIS EXISTS")
       ==================================================================== */}
       {showOriginModal && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
+        <div role="dialog" aria-modal="true" aria-labelledby="oe-about-title" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
           <div className="oe-sheet bg-white w-full max-w-lg rounded-t-[28px] sm:rounded-[28px] p-6 sm:p-7 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto shadow-2xl">
             <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
             <div className="flex items-center justify-between pb-3 border-b border-black/5">
               <div className="flex items-center gap-2">
                 <span className="w-10 h-10 rounded-full bg-[#111111] text-white flex items-center justify-center shrink-0"><HeartHandshake className="w-5 h-5" aria-hidden="true" /></span>
-                <h3 className="font-bold text-neutral-900 text-lg">
+                <h3 id="oe-about-title" className="font-bold text-neutral-900 text-lg">
                   Why OpenExam Hub Exists
                 </h3>
               </div>
@@ -2804,11 +2816,11 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
           FIREBASE AUTH MODAL (GOOGLE + EMAIL/PASSWORD)
       ==================================================================== */}
       {showAuthModal && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
+        <div role="dialog" aria-modal="true" aria-labelledby="oe-auth-title" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
           <div className="oe-sheet bg-white w-full max-w-md rounded-t-[28px] sm:rounded-[28px] p-6 sm:p-7 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto shadow-2xl">
             <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
             <div className="flex items-center justify-between pb-3 border-b border-black/5">
-              <h3 className="font-bold text-neutral-900 text-lg">
+              <h3 id="oe-auth-title" className="font-bold text-neutral-900 text-lg">
                 Sync Your Study Cache Profile
               </h3>
               <button
@@ -3208,7 +3220,8 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
       setQuestions(out.questions || []);
       setState('quiz');
     } catch (e) {
-      setError(e.message);
+      console.warn('Diagnostic create failed:', e);
+      setError(friendlyError(e, 'The placement self-check is temporarily unavailable, please try again shortly.'));
       setState('idle');
     }
   };
@@ -3229,7 +3242,8 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
       onResult(out);
       setState('done');
     } catch (e) {
-      setError(e.message);
+      console.warn('Diagnostic scoring failed:', e);
+      setError(friendlyError(e, 'We could not score your answers right now, please try again shortly.'));
       setState('quiz');
     }
   };
@@ -3353,7 +3367,8 @@ function PracticePanel({ exam, level, deckIds, onSaveToDeck }) {
       setData(out);
       setState('done');
     } catch (e) {
-      setError(e.message);
+      console.warn('Practice generation failed:', e);
+      setError(friendlyError(e, 'Practice is temporarily unavailable, please try again shortly.'));
       setState('idle');
     }
   };
@@ -3472,7 +3487,8 @@ function CoachPanel({ roadmap, onApply }) {
       setAdvice(out);
       setState('done');
     } catch (e) {
-      setAdvice({ summary: e.message, tips: [] });
+      console.warn('Coach request failed:', e);
+      setAdvice({ summary: friendlyError(e, 'The progress coach is temporarily unavailable, please try again shortly.'), tips: [] });
       setState('done');
     }
   };
@@ -3482,8 +3498,9 @@ function CoachPanel({ roadmap, onApply }) {
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Activity className="w-4 h-4 text-orange-700" />
         <span className="font-semibold text-neutral-900">Progress coach</span>
-        <span className="text-xs text-neutral-600">I'm on day</span>
+        <label htmlFor="oe-coach-day" className="text-xs text-neutral-600">I'm on day</label>
         <input
+          id="oe-coach-day"
           type="number"
           min="1"
           max={roadmap.days}
