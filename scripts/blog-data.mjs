@@ -9,6 +9,7 @@ import matter from 'gray-matter';
 import MarkdownIt from 'markdown-it';
 import markdownItAnchor from 'markdown-it-anchor';
 import { KNOWN_EXAMS } from '../lib/exams.js';
+import { indexablePaths, ORG_ID, examPagesForTag } from '../src/seo/site.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..');
@@ -332,6 +333,7 @@ export function parsePost(filename, raw) {
     html,
     headings,
     readingMinutes,
+    wordCount: words,
     url: `/blog/${slug}`,
     canonical: `${SITE_ORIGIN}/blog/${slug}`
   };
@@ -370,26 +372,54 @@ export function escapeHtml(str) {
 }
 
 export function articleJsonLd(post) {
+  // Dates, language and headline come from the post frontmatter. Posts have no named author
+  // field, so the author is the publishing organisation (no invented people).
   const data = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: post.title,
     description: post.description,
     datePublished: post.date,
     dateModified: post.updated || post.date,
     inLanguage: post.lang,
-    mainEntityOfPage: post.canonical,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': post.canonical },
     url: post.canonical,
     image: post.cover?.imageUrl || `${SITE_ORIGIN}/og-image.jpg`,
-    author: { '@type': 'Organization', name: 'OpenExam Hub', url: SITE_ORIGIN },
+    wordCount: post.wordCount || undefined,
+    keywords: post.exams.map(examLabel).join(', '),
+    about: post.exams.map((id) => {
+      const page = examPagesForTag(id)[0];
+      return page
+        ? { '@type': 'Thing', name: examLabel(id), url: `${SITE_ORIGIN}/exams/${page.slug}` }
+        : { '@type': 'Thing', name: examLabel(id) };
+    }),
+    isPartOf: { '@type': 'Blog', '@id': `${SITE_ORIGIN}/blog#blog`, name: 'OpenExam Hub Blog', url: `${SITE_ORIGIN}/blog` },
+    author: { '@type': 'Organization', '@id': ORG_ID, name: 'OpenExam Hub', url: `${SITE_ORIGIN}/` },
     publisher: {
       '@type': 'Organization',
+      '@id': ORG_ID,
       name: 'OpenExam Hub',
-      url: SITE_ORIGIN,
+      url: `${SITE_ORIGIN}/`,
       logo: { '@type': 'ImageObject', url: `${SITE_ORIGIN}/icon-512.png` }
     }
   };
+  if (!data.wordCount) delete data.wordCount;
   return data;
+}
+
+/** BreadcrumbList for blog routes: Home > Blog [> exam tag] [> post]. */
+export function blogBreadcrumbJsonLd({ post = null, exam = null } = {}) {
+  const items = [
+    { name: 'Home', item: `${SITE_ORIGIN}/` },
+    { name: 'Blog', item: `${SITE_ORIGIN}/blog` }
+  ];
+  if (exam) items.push({ name: examLabel(exam), item: `${SITE_ORIGIN}/blog/tag/${exam}` });
+  if (post) items.push({ name: post.title, item: post.canonical });
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: it.item }))
+  };
 }
 
 export function faqJsonLd(post) {
@@ -405,7 +435,8 @@ export function faqJsonLd(post) {
   };
 }
 
-const STATIC_PAGES = ['/', '/app', '/about', '/faq', '/funding', '/privacy', '/terms', '/blog'];
+// Marketing pages and /exams guides come from src/seo/site.js so the sitemap and the prerender agree.
+const STATIC_PAGES = [...indexablePaths(), '/blog'];
 
 export function buildSitemapXml(posts) {
   const urls = [];

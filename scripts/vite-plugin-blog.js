@@ -13,11 +13,14 @@ import {
   buildSitemapXml,
   buildRssXml,
   articleJsonLd,
+  blogBreadcrumbJsonLd,
   faqJsonLd,
   examLabel,
   SITE_ORIGIN,
   REPO_ROOT
 } from './blog-data.mjs';
+import { prerenderPages } from './prerender-pages.mjs';
+import { organizationJsonLd, websiteJsonLd } from '../src/seo/site.js';
 
 const VIRTUAL_ID = 'virtual:blog-posts';
 const RESOLVED_VIRTUAL_ID = '\0' + VIRTUAL_ID;
@@ -46,7 +49,7 @@ function jsonLdScript(data) {
   return `    <script type="application/ld+json">${json}</script>`;
 }
 
-function applyHead(template, { title, description, canonical, type = 'website', jsonLd = [], lang = 'en', image = null, imageAlt = null }) {
+export function applyHead(template, { title, description, canonical, type = 'website', jsonLd = [], lang = 'en', image = null, imageAlt = null, rss = true }) {
   let html = template;
   html = html.replace(/<html\s+lang="[^"]*"/, `<html lang="${escapeAttr(lang)}"`);
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeAttr(title)}</title>`);
@@ -78,26 +81,26 @@ function applyHead(template, { title, description, canonical, type = 'website', 
     }
   }
   const extra = [
-    `    <link rel="alternate" type="application/rss+xml" title="OpenExam Hub Blog" href="${SITE_ORIGIN}/blog/rss.xml" />`,
-    ...jsonLd.map(jsonLdScript)
+    ...(rss ? [`    <link rel="alternate" type="application/rss+xml" title="OpenExam Hub Blog" href="${SITE_ORIGIN}/blog/rss.xml" />`] : []),
+    ...jsonLd.filter(Boolean).map(jsonLdScript)
   ].join('\n');
   html = html.replace('</head>', `${extra}\n  </head>`);
   return html;
 }
 
-function stripModuleScripts(html) {
+export function stripModuleScripts(html) {
   // Static blog HTML is complete; loading the SPA would replace #root and flash "Loading…".
   return html.replace(/<script type="module"[^>]*><\/script>/g, '').replace(/<script type="module"[^>]*>[\s\S]*?<\/script>/g, '');
 }
 
-function injectRoot(template, bodyHtml) {
+export function injectRoot(template, bodyHtml) {
   if (!/<div id="root"><\/div>/.test(template)) {
     throw new Error('prerender: dist/index.html is missing an empty #root');
   }
   return template.replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`);
 }
 
-function writePage(distDir, urlPath, html) {
+export function writePage(distDir, urlPath, html) {
   const rel = urlPath === '/blog' ? 'blog/index.html' : `${urlPath.replace(/^\//, '')}/index.html`;
   const file = path.join(distDir, rel);
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -139,7 +142,8 @@ async function prerender(distDir) {
         title: indexTitle,
         description: indexDesc,
         canonical: `${SITE_ORIGIN}/blog`,
-        type: 'website'
+        type: 'website',
+        jsonLd: [blogBreadcrumbJsonLd()]
       }),
       renderBlog('/blog', posts)
     )
@@ -156,7 +160,8 @@ async function prerender(distDir) {
           title,
           description,
           canonical: `${SITE_ORIGIN}/blog/tag/${exam}`,
-          type: 'website'
+          type: 'website',
+          jsonLd: [blogBreadcrumbJsonLd({ exam })]
         }),
         renderBlog(`/blog/tag/${exam}`, posts)
       )
@@ -165,7 +170,7 @@ async function prerender(distDir) {
   }
 
   for (const post of posts) {
-    const jsonLd = [articleJsonLd(post)];
+    const jsonLd = [articleJsonLd(post), blogBreadcrumbJsonLd({ post, exam: post.exams[0] || null })];
     const faq = faqJsonLd(post);
     if (faq) jsonLd.push(faq);
     const html = stripModuleScripts(
@@ -186,6 +191,8 @@ async function prerender(distDir) {
     writePage(distDir, post.url, html);
   }
 
+  const pages = await prerenderPages(distDir, template, { applyHead, injectRoot, stripModuleScripts, writePage, posts });
+
   fs.writeFileSync(path.join(distDir, 'sitemap.xml'), buildSitemapXml(posts));
   const rssDir = path.join(distDir, 'blog');
   fs.mkdirSync(rssDir, { recursive: true });
@@ -197,7 +204,7 @@ async function prerender(distDir) {
     // ignore
   }
 
-  return { posts: posts.length, draftsIncluded: includeDrafts() };
+  return { posts: posts.length, pages: pages.length, draftsIncluded: includeDrafts() };
 }
 
 export default function blogPlugin() {
@@ -205,6 +212,11 @@ export default function blogPlugin() {
     name: 'oeh-blog',
     resolveId(id) {
       if (id === VIRTUAL_ID) return RESOLVED_VIRTUAL_ID;
+    },
+    transformIndexHtml(html) {
+      // Sitewide Organization + WebSite JSON-LD, so every page (SPA shell, prerendered pages, blog) carries it.
+      const graph = { '@context': 'https://schema.org', '@graph': [organizationJsonLd(), websiteJsonLd()].map(({ '@context': _c, ...rest }) => rest) };
+      return html.replace('</head>', `${jsonLdScript(graph)}\n  </head>`);
     },
     load(id) {
       if (id === RESOLVED_VIRTUAL_ID) return moduleSource();
@@ -230,21 +242,20 @@ export default function blogPlugin() {
       });
     },
     configurePreviewServer(server) {
-      // Serve prerendered blog HTML and RSS before Vite's SPA fallback,
+      // Serve prerendered HTML (blog, exam guides, info pages) and RSS before Vite's SPA fallback,
       // so `vite preview` matches how Vercel serves the static files.
       const distDir = path.join(REPO_ROOT, 'dist');
       server.middlewares.use((req, res, next) => {
         const url = decodeURIComponent((req.url || '').split('?')[0]);
-        if (!url.startsWith('/blog') || url.includes('..')) return next();
+        if (url.includes('..') || url.startsWith('/api')) return next();
         let file = null;
         if (url === '/blog/rss.xml') file = path.join(distDir, 'blog', 'rss.xml');
-        else if (url === '/blog' || url === '/blog/') file = path.join(distDir, 'blog', 'index.html');
-        else {
-          const rel = url.replace(/^\/blog\//, '').replace(/\/$/, '');
-          const candidate = path.join(distDir, 'blog', rel, 'index.html');
-          const resolved = path.resolve(candidate);
-          if (resolved.startsWith(path.resolve(distDir, 'blog') + path.sep) && fs.existsSync(resolved)) {
-            file = resolved;
+        else if (url !== '/') {
+          // Any prerendered route (/blog/..., /exams/..., /about, ...) is served from <route>/index.html.
+          const rel = url.replace(/^\//, '').replace(/\/$/, '');
+          const candidate = path.resolve(distDir, rel, 'index.html');
+          if (candidate.startsWith(path.resolve(distDir) + path.sep) && fs.existsSync(candidate)) {
+            file = candidate;
           }
         }
         if (!file || !fs.existsSync(file)) return next();
@@ -256,7 +267,7 @@ export default function blogPlugin() {
       const distDir = options.dir || path.join(REPO_ROOT, 'dist');
       const result = await prerender(distDir);
       this.info(
-        `blog: prerendered ${result.posts} post(s), sitemap and RSS (${result.draftsIncluded ? 'drafts included' : 'production, drafts excluded'})`
+        `blog: prerendered ${result.posts} post(s), ${result.pages} site page(s), sitemap and RSS (${result.draftsIncluded ? 'drafts included' : 'production, drafts excluded'})`
       );
     }
   };
