@@ -5,6 +5,7 @@
 import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
+if (!process.env.VITE_GA_ID) console.warn('cf-build: VITE_GA_ID is not set; Google Analytics will be off.');
 if (!process.env.VITE_ADSENSE_CLIENT) console.warn('cf-build: VITE_ADSENSE_CLIENT is not set; the dashboard ad slot will be off.');
 execSync('npm run build', { stdio: 'inherit', env: { ...process.env, VERCEL_ENV: 'production' } });
 

@@ -2,7 +2,8 @@
 # (openexamhub.org is served from Cloudflare; /api stays on Vercel, which deploys itself).
 # Needs the repository secret CLOUDFLARE_API_TOKEN (Workers Scripts: Edit on account
 # 77ca4c42b0bef7f781c289a6c2ee8a2e; token "openexam-hub-github-deploy") and the repo variable
-# VITE_ADSENSE_CLIENT. Without the token the job is skipped, not failed.
+# VITE_ADSENSE_CLIENT (VITE_GA_ID is optional; it defaults to the GA4 Measurement ID below).
+# Without the token the job is skipped, not failed.
 name: Deploy to Cloudflare Workers
 on:
   push:
@@ -33,6 +34,8 @@ jobs:
         run: npm run cf:build
         env:
           VITE_ADSENSE_CLIENT: ${{ vars.VITE_ADSENSE_CLIENT }}
+          # GA4 Measurement ID (public, not a secret). A repo variable VITE_GA_ID overrides it.
+          VITE_GA_ID: ${{ vars.VITE_GA_ID || 'G-9FY37540YE' }}
       - if: env.HAS_TOKEN == 'true'
         run: npx --yes wrangler@4.166.0 deploy
         env:

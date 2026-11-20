@@ -29,8 +29,9 @@ const PAGES = {
               and use them on more than one device.
             </li>
             <li>
-              <strong>No analytics.</strong> We don’t use analytics tools. AI requests contain your exam, level, timeline
-              and progress, never your name or email.
+              <strong>Analytics only if you say yes.</strong> With your consent we use Google Analytics to see which pages
+              and features help learners. If you click “Reject”, or don’t choose, it never loads. AI requests contain your
+              exam, level, timeline and progress, never your name or email.
             </li>
           </ul>
         )
@@ -71,14 +72,47 @@ const PAGES = {
         h: 'What we don’t do',
         body: (
           <ul>
-            <li>No analytics tools, and no ads on the home page or on any information page.</li>
+            <li>No analytics without your consent, and no ads on the home page or on any information page.</li>
+            <li>We don’t send your name, email or plan contents to Google Analytics.</li>
             <li>We don’t sell, rent or share your personal data for marketing.</li>
             <li>We don’t ask for your real name, phone number or payment details.</li>
           </ul>
         )
       },
       {
-        h: 'Ads and cookies',
+        h: 'Cookies and Google Analytics',
+        body: (
+          <>
+            <p>
+              When you first visit, a small banner asks whether we may use cookies for analytics and ads. “Accept” and
+              “Reject” are equally easy, and nothing is loaded until you choose. Your choice is saved in your browser’s
+              local storage (<code>oeh_consent_v1</code>) so we don’t ask again. You can change it at any time with the{' '}
+              <button type="button" data-oe-consent-open className="underline">Cookie settings</button> link at the bottom
+              of every page (and in your account panel on the dashboard).
+            </p>
+            <ul className="mt-4">
+              <li>
+                <strong>If you accept:</strong> we load Google Analytics 4 (provided by Google Ireland Ltd). It sets first-party
+                cookies named <code>_ga</code> and <code>_ga_&lt;ID&gt;</code> (kept up to 2 years) to tell visits apart, and records
+                the pages you view, your approximate location (country/city, derived from your IP address, which Google does not
+                store), device and browser type, the site that sent you, and a few actions: creating an account or signing in,
+                choosing an exam, generating a plan (exam, level and number of days), and clicking a donation link, a blog
+                call-to-action or an official exam resource. Google Analytics keeps this event data for 14 months.
+              </li>
+              <li>
+                <strong>If you reject (or don’t choose):</strong> Google Analytics is not loaded and no analytics cookies are set.
+                Google Consent Mode stays “denied” for analytics and ads.
+              </li>
+              <li>
+                <strong>If you change your mind:</strong> choosing “Reject” later stops Google Analytics and deletes its cookies on
+                this site. See <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">how Google uses data from sites that use its services</a>.
+              </li>
+            </ul>
+          </>
+        )
+      },
+      {
+        h: 'Ads',
         body: (
           <>
             <p>
@@ -89,9 +123,9 @@ const PAGES = {
             </p>
             <ul className="mt-4">
               <li>
-                <strong>Your choice first.</strong> Before any ad loads, Google’s consent message (a Google-certified consent
-                tool) asks whether Google may use cookies or similar storage for ads. Until you decide, Google Consent Mode is
-                set to “denied”, so no ad cookies are set and no personalised ads are shown.
+                <strong>Your choice first.</strong> No ad is requested until you have answered the cookie banner. If you reject
+                cookies, Google Consent Mode stays “denied” and only non-personalised ads are requested. If Google’s own consent
+                message (a Google-certified consent tool) appears on the dashboard, it asks the same question for ads.
               </li>
               <li>
                 <strong>What Google may collect.</strong> If ads load, Google receives technical data such as your IP address, browser
@@ -99,13 +133,14 @@ const PAGES = {
                 <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">how Google uses data from sites that use its services</a>.
               </li>
               <li>
-                <strong>Changing your mind.</strong> You can change or withdraw your choice at any time from the “Privacy and cookie
-                settings” link Google shows on the dashboard, or by clearing this site’s cookies. You can also turn off personalised
+                <strong>Changing your mind.</strong> You can change or withdraw your choice at any time from “Cookie settings”, or
+                by clearing this site’s cookies and storage. You can also turn off personalised
                 ads at <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer">Google’s ad settings</a>.
               </li>
               <li>
                 <strong>Our own storage.</strong> The site itself uses your browser’s local storage and Firebase’s sign-in storage only to
-                keep you signed in and remember your plans and settings. These are strictly necessary and are not used for ads.
+                keep you signed in, remember your plans and settings, and remember your cookie choice. These are strictly necessary and
+                are not used for ads or analytics.
               </li>
             </ul>
           </>
@@ -115,8 +150,9 @@ const PAGES = {
         h: 'Services we rely on',
         body: (
           <ul>
-            <li><strong>Vercel</strong> hosts the website and the server (Frankfurt region). Like any web host, it keeps short-lived technical logs such as IP addresses.</li>
+            <li><strong>Cloudflare</strong> serves the website and <strong>Vercel</strong> runs the server (Frankfurt region). Like any web host, they keep short-lived technical logs such as IP addresses.</li>
             <li><strong>Google Firebase</strong> provides sign-in and the database.</li>
+            <li><strong>Google Analytics</strong> (only if you accept cookies) measures visits and the actions listed above.</li>
             <li><strong>Google AdSense</strong> (only on the signed-in dashboard, once ads are switched on) shows ads and runs the consent message described above.</li>
             <li><strong>Google Fonts</strong> serves the typefaces, so your browser contacts Google’s font servers.</li>
             <li>

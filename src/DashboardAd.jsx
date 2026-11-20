@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ADSENSE_CLIENT, ADSENSE_SLOT, adsConfigured, isDashboardPath, loadAdSense, waitForConsentDecision } from './ads.js';
+import {
+  ADSENSE_CLIENT,
+  ADSENSE_SLOT,
+  adsConfigured,
+  isDashboardPath,
+  loadAdSense,
+  personalisedAdsAllowed,
+  waitForConsentDecision
+} from './ads.js';
 
 // One unobtrusive ad unit in the dashboard sidebar. Renders nothing unless AdSense is configured
 // (VITE_ADSENSE_CLIENT + VITE_ADSENSE_SLOT), the page is /app and the user is signed in.
@@ -22,7 +30,10 @@ export default function DashboardAd({ enabled }) {
           if (!decided) setState('off');
           return;
         }
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        const q = (window.adsbygoogle = window.adsbygoogle || []);
+        // Rejected cookies (or no choice): non-personalised ads only.
+        q.requestNonPersonalizedAds = personalisedAdsAllowed() ? 0 : 1;
+        q.push({});
         setState('shown');
       })
       .catch(() => !cancelled && setState('off'));

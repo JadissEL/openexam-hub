@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  getAdditionalUserInfo,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup
 } from 'firebase/auth';
 import { examLabel } from '../lib/exams.js';
+import { trackAuth } from './analytics.js';
 
 // Sign-up / log-in page shown on /app to anyone who is not signed in with a real account.
 // The dashboard (tabs, plans, ads, data fetches) is never rendered behind it. The URL (including
@@ -124,8 +126,10 @@ export default function AuthGate({ auth, sampleRoadmap }) {
         setError('Please enter your password.');
       } else if (mode === 'signup') {
         await createUserWithEmailAndPassword(auth, em, password);
+        trackAuth('email', true);
       } else {
         await signInWithEmailAndPassword(auth, em, password);
+        trackAuth('email', false);
       }
     } catch (err) {
       setError(friendlyAuthError(err));
@@ -139,7 +143,8 @@ export default function AuthGate({ auth, sampleRoadmap }) {
     setBusy(true);
     setError(null);
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+      trackAuth('google', !!getAdditionalUserInfo(cred)?.isNewUser);
     } catch (err) {
       setError(friendlyAuthError(err));
     } finally {
@@ -293,7 +298,8 @@ export default function AuthGate({ auth, sampleRoadmap }) {
               </p>
             )}
             <p className="mt-6 text-center text-xs text-[#6B635A]">
-              Free, no payment details. <a href="/privacy" className="underline">Privacy</a> · <a href="/terms" className="underline">Terms</a>
+              Free, no payment details. <a href="/privacy" className="underline">Privacy</a> · <a href="/terms" className="underline">Terms</a> ·{' '}
+              <button type="button" data-oe-consent-open className="underline">Cookie settings</button>
             </p>
           </>
         )}

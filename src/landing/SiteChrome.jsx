@@ -120,6 +120,7 @@ const FOOTER_COLS = [
     links: [
       { href: '/privacy', label: 'Privacy' },
       { href: '/terms', label: 'Terms' },
+      { action: 'consent', label: 'Cookie settings' },
       { href: `mailto:${LEGAL_EMAIL}`, label: LEGAL_EMAIL }
     ]
   }
@@ -143,7 +144,13 @@ export function SiteFooter() {
             <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6B635A]">{col.title}</h2>
             <ul className="mt-4 space-y-2.5 text-[15px] text-[#3B352F]">
               {col.links.map((l) => (
-                <li key={l.href + l.label}>
+                <li key={(l.href || l.action) + l.label}>
+                  {l.action === 'consent' ? (
+                    // Reopens the cookie banner (handled by public/oeh-consent.js).
+                    <button type="button" data-oe-consent-open className="hover:text-[#C2410C] text-left">
+                      {l.label}
+                    </button>
+                  ) : (
                   <a
                     className="hover:text-[#C2410C] break-all"
                     href={l.href}
@@ -151,6 +158,7 @@ export function SiteFooter() {
                   >
                     {l.label}
                   </a>
+                  )}
                 </li>
               ))}
             </ul>

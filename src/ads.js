@@ -4,11 +4,11 @@
 // never on the landing or info pages; adult, gambling and similar sensitive categories are blocked in
 // the AdSense account; all ad income is published on the transparency page.
 //
-// Consent: users are mostly in the EU, so AdSense must run behind a Google-certified CMP. We use
-// Google's own "Privacy & messaging" GDPR message, which the AdSense tag itself brings once it is
-// configured in the AdSense account. Before the tag loads we set Google Consent Mode v2 defaults to
-// DENIED, and we only request an ad after the CMP's TCF API reports a finished consent decision
-// (or that GDPR does not apply). If no CMP answers, no ad is requested.
+// Consent: Google Consent Mode v2 defaults are DENIED (set by public/oeh-consent.js before any Google
+// tag loads). An ad is requested only after the visitor answered the site's cookie banner (or, if
+// one is configured in the AdSense account, Google's own TCF consent message reports a decision).
+// When the visitor rejected cookies, the ad request is non-personalised (requestNonPersonalizedAds)
+// and Consent Mode keeps ad_storage / ad_user_data / ad_personalization denied.
 
 export const ADSENSE_CLIENT = (import.meta.env.VITE_ADSENSE_CLIENT || '').trim();
 export const ADSENSE_SLOT = (import.meta.env.VITE_ADSENSE_SLOT || '').trim();
@@ -64,9 +64,24 @@ export function loadAdSense() {
   return loading;
 }
 
+/** The visitor's banner choice: 'granted' | 'denied' | null. */
+export function siteConsent() {
+  try {
+    return (typeof window !== 'undefined' && window.oeh && window.oeh.consent()) || null;
+  } catch {
+    return null;
+  }
+}
+
+/** True only when the visitor accepted cookies; otherwise ads must be non-personalised. */
+export function personalisedAdsAllowed() {
+  return siteConsent() === 'granted';
+}
+
 /**
- * Resolves true once the CMP has a final decision (tcloaded / useractioncomplete) or says GDPR
- * does not apply; false if no CMP shows up within `timeoutMs`.
+ * Resolves true once the visitor has answered the site's cookie banner, or a TCF CMP has a final
+ * decision (tcloaded / useractioncomplete) or says GDPR does not apply. Without the banner script
+ * (window.oeh) it resolves false if no CMP shows up within `timeoutMs`.
  */
 export function waitForConsentDecision(timeoutMs = 15000) {
   return new Promise((resolve) => {
@@ -74,9 +89,17 @@ export function waitForConsentDecision(timeoutMs = 15000) {
     const finish = (v) => {
       if (!done) {
         done = true;
+        window.removeEventListener('oeh:consent', onChoice);
         resolve(v);
       }
     };
+    const onChoice = () => finish(true);
+    const hasBanner = !!(window.oeh && typeof window.oeh.consent === 'function');
+    if (hasBanner) {
+      if (window.oeh.consent()) return finish(true);
+      window.addEventListener('oeh:consent', onChoice);
+      window.oeh.require(); // show the banner if it is not already up
+    }
     const started = Date.now();
     const attach = () => {
       if (done) return;
@@ -88,7 +111,8 @@ export function waitForConsentDecision(timeoutMs = 15000) {
         });
         return;
       }
-      if (Date.now() - started > timeoutMs) return finish(false);
+      if (!hasBanner && Date.now() - started > timeoutMs) return finish(false);
+      if (hasBanner && Date.now() - started > timeoutMs) return; // keep waiting for the banner
       setTimeout(attach, 250);
     };
     attach();

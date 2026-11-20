@@ -49,6 +49,7 @@ import {
   signInWithCustomToken,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  getAdditionalUserInfo,
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
@@ -79,6 +80,7 @@ import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVari
 import StudyToday from './StudyToday.jsx';
 import DashboardAd from './DashboardAd.jsx';
 import AuthGate from './AuthGate.jsx';
+import { track, trackAuth } from './analytics.js';
 import ReviewDeck, { SaveToDeckButton, cardFromPractice, cardIdFor } from './ReviewDeck.jsx';
 import { dueQueue, retention as srsRetention } from '../lib/algo/srs.js';
 import { quantiseProfile, localDate, hasSchedule, planDays, currentDay } from './lib/plan.js';
@@ -1185,6 +1187,10 @@ function Dashboard({ initialUser }) {
   // IELTS: the band the learner picked is kept on the plan (the plan itself is built for the mapped CEFR level).
   const targetTag = (exam) => (exam === 'IELTS' && selectedExam === 'IELTS' && selectedBand ? { targetScore: `Band ${selectedBand}` } : {});
 
+  // GA key event (consent-gated, see src/analytics.js): a new plan was built or loaded for the learner.
+  const trackRoadmap = (source) =>
+    track('roadmap_generated', { exam: selectedExam, level: selectedLevel, days: Number(daysUntilExam), source });
+
   const handleGenerateStudyPath = async (forceRefresh = false) => {
     // Firebase is configured: a real (non-anonymous) account is required before
     // we spend AI tokens or hit the shared plan cache on behalf of a learner.
@@ -1236,6 +1242,7 @@ function Dashboard({ initialUser }) {
           Object.assign(clonedForUser, targetTag(clonedForUser.exam));
           setSavedRoadmaps((prev) => [clonedForUser, ...prev.filter((item) => item.id !== cacheKey)]);
           setActiveRoadmapId(cacheKey);
+          trackRoadmap('shared_cache');
           setCacheLayerHit('global');
           setAgentStep(5);
           setPipelineTrace(roadmap.pipeline || []);
@@ -1271,6 +1278,7 @@ function Dashboard({ initialUser }) {
           Object.assign(clonedForUser, targetTag(clonedForUser.exam));
           setSavedRoadmaps((prev) => [clonedForUser, ...prev.filter((item) => item.id !== cacheKey)]);
           setActiveRoadmapId(cacheKey);
+          trackRoadmap('shared_cache');
           setCacheLayerHit('global');
           setAgentStep(5);
           await saveToPersonalCache(clonedForUser);
@@ -1328,6 +1336,7 @@ function Dashboard({ initialUser }) {
           ...prev.filter((item) => item.id !== cacheKey)
         ]);
         setActiveRoadmapId(cacheKey);
+        trackRoadmap('server');
         await saveToPersonalCache(newRoadmap);
         const n = newRoadmap.verifiedResources?.length || 0;
         setStatusNotice(
@@ -1455,6 +1464,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
       Object.assign(newRoadmap, targetTag(newRoadmap.exam));
       setSavedRoadmaps((prev) => [newRoadmap, ...prev.filter((item) => item.id !== cacheKey)]);
       setActiveRoadmapId(cacheKey);
+      trackRoadmap('preview');
       await saveToPersonalCache(newRoadmap);
       setStatusNotice(
         `Preview mode: generated in your browser. Links are on official domains but have not been checked${
@@ -1486,6 +1496,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
     Object.assign(fallbackRoadmap, targetTag(fallbackRoadmap.exam));
     setSavedRoadmaps((prev) => [fallbackRoadmap, ...prev.filter((item) => item.id !== cacheKey)]);
     setActiveRoadmapId(cacheKey);
+    trackRoadmap('fallback');
     await saveToPersonalCache(fallbackRoadmap);
     setStatusNotice(notice);
   };
@@ -1617,7 +1628,8 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
     setAuthFeedback(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const cred = await signInWithPopup(auth, provider);
+      trackAuth('google', !!getAdditionalUserInfo(cred)?.isNewUser);
       setShowAuthModal(false);
     } catch (err) {
       setAuthFeedback(err.message || 'Google sign-in popup closed or blocked.');
@@ -1634,8 +1646,10 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
     try {
       if (authMode === 'signup') {
         await createUserWithEmailAndPassword(auth, authEmail.trim(), authPassword);
+        trackAuth('email', true);
       } else {
         await signInWithEmailAndPassword(auth, authEmail.trim(), authPassword);
+        trackAuth('email', false);
       }
       setAuthEmail('');
       setAuthPassword('');
@@ -2057,7 +2071,10 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                             key={exam.id}
                             type="button"
                             aria-pressed={selectedExam === exam.id}
-                            onClick={() => setSelectedExam(exam.id)}
+                            onClick={() => {
+                              if (selectedExam !== exam.id) track('exam_selected', { exam: exam.id, context: 'planner' });
+                              setSelectedExam(exam.id);
+                            }}
                             className={`min-h-[44px] px-3 sm:px-4 rounded-full text-sm font-semibold border transition ${
                               selectedExam === exam.id
                                 ? 'bg-[#111111] text-white border-[#111111]'
@@ -3286,6 +3303,13 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   <LogOut className="w-3.5 h-3.5" />
                   Sign out
                 </button>
+                <button
+                  type="button"
+                  data-oe-consent-open
+                  className="w-full min-h-[44px] text-xs font-semibold text-neutral-700 underline underline-offset-2"
+                >
+                  Cookie settings
+                </button>
                 <details className="pt-3 border-t border-orange-200" data-testid="delete-account">
                   <summary className="min-h-[44px] flex items-center text-xs font-semibold text-rose-700 cursor-pointer">
                     Delete my account
@@ -3561,7 +3585,10 @@ function LibraryTab({ defaultExam }) {
           <button
             key={e.id}
             type="button"
-            onClick={() => setExam(e.id)}
+            onClick={() => {
+              if (exam !== e.id) track('exam_selected', { exam: e.id, context: 'library' });
+              setExam(e.id);
+            }}
             aria-pressed={exam === e.id}
             className={`min-h-[44px] px-4 rounded-full text-sm font-semibold border transition ${
               exam === e.id ? 'bg-[#111111] text-white border-[#111111]' : 'bg-white border-black/10 text-neutral-700 hover:bg-neutral-50'
