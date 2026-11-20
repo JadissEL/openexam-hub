@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Free, official-source study roadmaps for language exams (DELF/DALF, IELTS, Goethe, ...). Vite + React frontend, Vercel Node functions, Firestore.",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "vite",

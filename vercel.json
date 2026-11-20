@@ -5,13 +5,26 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/cron/recheck-links.js": { "maxDuration": 300 },
-    "api/admin/expand.js": { "maxDuration": 300 }
+    "api/cron/recheck-links.js": {
+      "maxDuration": 300
+    },
+    "api/admin/expand.js": {
+      "maxDuration": 300
+    }
   },
   "crons": [
-    { "path": "/api/cron/recheck-links", "schedule": "0 3 * * *" }
+    {
+      "path": "/api/cron/recheck-links",
+      "schedule": "0 3 * * *"
+    }
   ],
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "regions": [
+    "fra1"
   ]
 }
