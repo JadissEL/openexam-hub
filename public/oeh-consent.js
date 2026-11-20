@@ -260,8 +260,13 @@
       return;
     }
     var host = u.hostname.toLowerCase();
-    if (host === 'ko-fi.com' || host === 'opencollective.com' || (host === 'github.com' && /^\/sponsors\//.test(u.pathname))) {
-      track('donation_click', { platform: host === 'github.com' ? 'github_sponsors' : host.replace(/\.com$/, ''), link_url: u.href });
+    var provider = null;
+    if (host === 'ko-fi.com' || host.slice(-8) === '.ko-fi.com') provider = 'kofi';
+    else if (host === 'opencollective.com' || host.slice(-17) === '.opencollective.com') provider = 'opencollective';
+    else if (host === 'github.com' && /^\/sponsors\//.test(u.pathname)) provider = 'github_sponsors';
+    else if (host === 'paypal.com' || host === 'paypal.me' || host.slice(-11) === '.paypal.com' || host.slice(-10) === '.paypal.me') provider = 'paypal';
+    if (provider) {
+      track('donation_click', { platform: provider, provider: provider, link_url: u.href });
     } else if (u.origin === location.origin && /^\/blog(\/|$)/.test(location.pathname) && /^\/(app|exams)(\/|$)/.test(u.pathname) && !a.closest('header, footer, nav')) {
       track('blog_cta_click', { cta_target: u.pathname + u.search, post_path: location.pathname, link_text: (a.textContent || '').trim().slice(0, 100) });
     } else if (u.origin !== location.origin && hostMatches(host, OFFICIAL)) {

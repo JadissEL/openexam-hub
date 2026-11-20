@@ -10,7 +10,8 @@ import {
   SUPPORT_EMAIL,
   TRANSPARENCY_PATH
 } from './content.js';
-import { DONATION_PLATFORMS } from '../donations.js';
+import { DONATION_PLATFORMS, donationCopy } from '../donations.js';
+import { FundProjectButton } from '../FundProject.jsx';
 import { EXAM_PAGES } from '../seo/site.js';
 
 export function Wordmark({ className = '' }) {
@@ -104,7 +105,7 @@ const FOOTER_COLS = [
       { href: '/funding', label: 'Funding & donate' },
       { href: REPO_URL, label: 'Open source on GitHub', external: true },
       { href: `${REPO_URL}/issues`, label: 'Report a problem', external: true },
-      ...DONATION_PLATFORMS.map((d) => ({ href: d.url, label: `Support on ${d.name}`, external: true }))
+      ...DONATION_PLATFORMS.map((d) => ({ href: d.url, labelKey: d.primary ? 'fund' : 'support', name: d.name, external: true }))
     ]
   },
   {
@@ -138,13 +139,20 @@ export function SiteFooter() {
           <p className="mt-3 text-[15px] leading-relaxed text-[#5C554C]">
             Free. Create a free account to generate your plan.
           </p>
+          <div className="mt-5">
+            <FundProjectButton showSubline={false} />
+            <p className="mt-2 text-[13px] leading-relaxed text-[#5C554C]">{donationCopy().fundSubline}</p>
+          </div>
         </div>
         {FOOTER_COLS.map((col) => (
           <div key={col.title}>
             <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6B635A]">{col.title}</h2>
             <ul className="mt-4 space-y-2.5 text-[15px] text-[#3B352F]">
-              {col.links.map((l) => (
-                <li key={(l.href || l.action) + l.label}>
+              {col.links.map((l) => {
+                const copy = donationCopy();
+                const label = l.labelKey === 'fund' ? copy.fundLabel : l.labelKey === 'support' ? copy.supportOn(l.name) : l.label;
+                return (
+                <li key={(l.href || l.action) + label}>
                   {l.action === 'consent' ? (
                     // Reopens the cookie banner (handled by public/oeh-consent.js).
                     <button type="button" data-oe-consent-open className="hover:text-[#C2410C] text-left">
@@ -156,11 +164,12 @@ export function SiteFooter() {
                     href={l.href}
                     {...(l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   >
-                    {l.label}
+                    {label}
                   </a>
                   )}
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </div>
         ))}

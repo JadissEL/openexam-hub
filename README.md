@@ -2,7 +2,7 @@
 
 **Free study roadmaps for language exams, built from official free materials.**
 
-[Live site](https://openexamhub.org) · [Ko-fi](https://ko-fi.com/openexamhub) · [Open Collective](https://opencollective.com/openexam-hub) · License: [MIT](LICENSE)
+[Live site](https://openexamhub.org) · [Fund this project (PayPal)](https://www.paypal.com/paypalme/JadissEL) · [Ko-fi](https://ko-fi.com/openexamhub) · License: [MIT](LICENSE)
 
 OpenExam Hub turns the free material that exam boards and public broadcasters already publish into a calm, day-by-day study plan. Choose an exam, a target level and how many days you have. Every resource link is checked before you see it.
 
@@ -82,9 +82,10 @@ Contributions are welcome, including official-source exam resources, accessibili
 
 OpenExam Hub is free to use. Running costs are meant to be covered by donations and, until a publicly tracked funding goal is reached, by a few ads on the planner only.
 
+- [PayPal](https://www.paypal.com/paypalme/JadissEL) — [Fund this project](https://www.paypal.com/paypalme/JadissEL). Keep OpenExam Hub free for every learner.
 - [Ko-fi](https://ko-fi.com/openexamhub) (one-off tips)
-- [Open Collective](https://opencollective.com/openexam-hub) (fiscal host application pending)
-- GitHub Sponsors (pending, after the fiscal host on the Sponsors profile is corrected)
+- Open Collective (fiscal host application pending)
+- GitHub Sponsors (pending; the Sponsors page is not live yet)
 
 When the goal is met, the site is intended to become ad-free. Figures on the live site are the source of truth; this README does not invent earnings, expenses or user counts.
 

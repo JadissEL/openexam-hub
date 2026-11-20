@@ -5,7 +5,8 @@ import { BrowserFrame } from './frames.jsx';
 import { GithubMark } from './icons.jsx';
 import { ink, muted, eyebrow, h2, lead, pageFont } from './theme.js';
 import { APP_PATH, CONTACT_EMAIL, FAQ, REPO_URL } from './content.js';
-import { DONATION_LINKS } from '../donations.js';
+import { DONATION_LINKS, donationCopy } from '../donations.js';
+import { FundProjectButton } from '../FundProject.jsx';
 import { BooksPanel, usePublicBooks } from '../BooksPanel.jsx';
 
 // <title> and meta tags come from src/seo/site.js (prerendered, and synced in src/main.jsx).
@@ -188,6 +189,32 @@ function FundingBooks() {
   );
 }
 
+
+function FundingCta() {
+  const copy = donationCopy();
+  return (
+    <>
+      <p className={`mt-8 text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
+        {copy.fundingHelp}
+      </p>
+      <div className="mt-6 mb-16 flex flex-col sm:flex-row sm:items-center gap-3">
+        <FundProjectButton />
+        {DONATION_LINKS.kofi ? (
+          <a
+            href={DONATION_LINKS.kofi}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded-full border border-[#1A1714] text-[#1A1714] font-semibold hover:bg-[#1A1714] hover:text-white transition-colors"
+          >
+            {copy.supportOn('Ko-fi')} <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
 export function FundingPage() {
   const promises = [
     ['No paywall', 'Every feature is free, forever. There is no premium tier waiting behind it.'],
@@ -217,19 +244,7 @@ export function FundingPage() {
           ))}
         </dl>
         <FundingBooks />
-        <p className={`mt-8 text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
-          Want to help the ads disappear sooner? You can leave a tip on{' '}
-          <a className="text-[#C2410C] underline underline-offset-4" href={DONATION_LINKS.kofi} target="_blank" rel="noopener noreferrer">Ko-fi</a>.
-          It’s optional and unlocks nothing: everyone gets the same planner.
-        </p>
-        <a
-          href={DONATION_LINKS.kofi}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 mb-16 inline-flex items-center gap-2 h-12 px-6 rounded-full border border-[#1A1714] text-[#1A1714] font-semibold hover:bg-[#1A1714] hover:text-white transition-colors"
-        >
-          Support on Ko-fi <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
-        </a>
+        <FundingCta />
         <p className={`pb-24 text-[17px] leading-[1.7] ${muted}`}>
           The live totals are also on the Transparency tab inside the{' '}
           <a className="text-[#C2410C] underline underline-offset-4" href="/app">planner</a> (free account).

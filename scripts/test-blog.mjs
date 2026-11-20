@@ -21,6 +21,7 @@ import { SITEMAP_PATHS, TAG_INDEX_MIN_POSTS, allExamTags } from './blog-data.mjs
 import { parsePlannerQuery, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
 import * as siteModule from '../src/seo/site.js';
 import { PLAN_PAGES, planPath } from '../src/seo/planPages.js';
+import { DONATION_COPY, DONATION_LINKS, DONATION_PLATFORMS } from '../src/donations.js';
 
 // Exam bodies, public broadcasters and governments only (study plans link nothing else).
 const PLAN_LINK_HOSTS = [
@@ -46,6 +47,24 @@ function test(name, fn) {
 const exampleFile = 'example-when-to-start-preparing.md';
 const exampleRaw = fs.readFileSync(path.join(CONTENT_DIR, exampleFile), 'utf8');
 const example = parsePost(exampleFile, exampleRaw);
+
+
+const PAYPAL_URL = 'https://www.paypal.com/paypalme/JadissEL';
+
+test('PayPal is the live primary funding link; unfinished platforms stay hidden', () => {
+  assert.equal(DONATION_LINKS.paypal, PAYPAL_URL);
+  assert.equal(DONATION_LINKS.kofi, 'https://ko-fi.com/openexamhub');
+  assert.equal(DONATION_LINKS.githubSponsors, '');
+  assert.equal(DONATION_LINKS.openCollective, '');
+  assert.deepEqual(DONATION_PLATFORMS.map((p) => p.key), ['paypal', 'kofi']);
+  assert.equal(DONATION_PLATFORMS[0].primary, true);
+  assert.equal(DONATION_COPY.en.fundLabel, 'Fund this project');
+  assert.equal(DONATION_COPY.en.fundSubline, 'Keep OpenExam Hub free for every learner');
+  assert.equal(DONATION_COPY.fr.fundLabel, 'Financer ce projet');
+  assert.match(DONATION_COPY.fr.fundSubline, /gratuit/);
+  const blob = `${DONATION_COPY.en.fundLabel} ${DONATION_COPY.en.fundSubline} ${DONATION_COPY.fr.fundLabel} ${DONATION_COPY.fr.fundSubline} ${DONATION_COPY.en.fundingHelp}`;
+  assert.doesNotMatch(blob, /buy me a coffee|tax-deductible/i);
+});
 
 test('example post parses and is clearly a draft', () => {
   assert.equal(example.draft, true);
@@ -465,6 +484,27 @@ if (process.argv.includes('--built')) {
       const noindex = /<meta name="robots" content="noindex,follow" \/>/.test(html);
       assert.equal(noindex, count < TAG_INDEX_MIN_POSTS, `${tag}: ${count} post(s), noindex=${noindex}`);
     }
+  });
+
+
+  test('funding page and site footer include the PayPal funding link', () => {
+    const funding = read('funding/index.html');
+    assert.ok(funding.includes(`href="${PAYPAL_URL}"`), 'funding page missing PayPal href');
+    assert.match(funding, /Fund this project/);
+    assert.match(funding, /Keep OpenExam Hub free for every learner/);
+    assert.match(funding, /target="_blank"/);
+    assert.match(funding, /rel="noopener noreferrer"/);
+    assert.doesNotMatch(funding, /Buy me a coffee/i);
+    assert.doesNotMatch(funding, /tax-deductible/i);
+    assert.doesNotMatch(funding, /github\.com\/sponsors/);
+    assert.doesNotMatch(funding, /opencollective\.com/);
+    assert.match(funding, /ko-fi\.com\/openexamhub/);
+    const home = read('index.html');
+    assert.ok(home.includes(`href="${PAYPAL_URL}"`), 'homepage footer missing PayPal href');
+    assert.match(home, /Fund this project/);
+    assert.match(home, /Keep OpenExam Hub free for every learner/);
+    assert.doesNotMatch(home, /github\.com\/sponsors/);
+    assert.doesNotMatch(home, /opencollective\.com/);
   });
 
   test('homepage is prerendered with hero, exam guide links and FAQ, and keeps its head', () => {

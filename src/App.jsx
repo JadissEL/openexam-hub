@@ -13,7 +13,6 @@ import {
   HeartHandshake,
   Coins,
   Server,
-  Code2,
   Lock,
   UserCheck,
   LogOut,
@@ -73,7 +72,8 @@ import {
   connectFirestoreEmulator
 } from 'firebase/firestore';
 import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
-import { DONATION_LINKS } from './donations.js';
+import { DONATION_LINKS, DONATION_PLATFORMS, donationCopy } from './donations.js';
+import { FundProjectButton } from './FundProject.jsx';
 import { FIVE_YEAR_GOAL_EUR, FUNDING_PROMISE } from './funding.js';
 import { BooksPanel } from './BooksPanel.jsx';
 import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant, parsePlannerQuery, IELTS_BANDS, ieltsBandLevel } from '../lib/exams.js';
@@ -2025,14 +2025,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     <h1 className="text-xl sm:text-2xl font-bold mt-1">How OpenExam Hub is funded</h1>
                     <p className="text-sm text-neutral-500 mt-1">{FUNDING_PROMISE}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowContributeModal(true)}
-                    className={`${THEME.primaryBtn} w-full md:w-auto shrink-0 whitespace-nowrap min-h-[48px] px-5 text-sm`}
-                  >
-                    <Heart className="w-4 h-4" aria-hidden="true" />
-                    Back the pool
-                  </button>
+                  <FundProjectButton className="w-full md:w-auto shrink-0" />
                 </div>
 
               </section>
@@ -2920,16 +2913,30 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                         <Activity className="w-4 h-4 text-orange-700" />
                         Public donation ledger
                       </h3>
-                      {DONATION_LINKS.kofi && (
-                        <a
-                          href={DONATION_LINKS.kofi}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="min-h-[44px] px-2 -mr-2 rounded-full text-xs font-semibold text-orange-700 hover:underline inline-flex items-center"
-                        >
-                          Support on Ko-fi →
-                        </a>
-                      )}
+                      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+                        {DONATION_LINKS.paypal && (
+                          <a
+                            href={DONATION_LINKS.paypal}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="min-h-[44px] px-2 rounded-full text-xs font-semibold text-[#003087] hover:underline inline-flex items-center"
+                          >
+                            {donationCopy().fundLabel} →
+                            <span className="sr-only"> (opens in a new tab)</span>
+                          </a>
+                        )}
+                        {DONATION_LINKS.kofi && (
+                          <a
+                            href={DONATION_LINKS.kofi}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="min-h-[44px] px-2 -mr-2 rounded-full text-xs font-semibold text-orange-700 hover:underline inline-flex items-center"
+                          >
+                            {donationCopy().supportOn('Ko-fi')} →
+                            <span className="sr-only"> (opens in a new tab)</span>
+                          </a>
+                        )}
+                      </div>
                     </div>
                     <div className="divide-y divide-black/5 border border-black/[0.08] rounded-xl overflow-hidden">
                       {ledgerEvents.length === 0 && (
@@ -3118,51 +3125,23 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               </div>
 
               <div className="mt-4 space-y-2">
-                {DONATION_LINKS.githubSponsors && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowContributeModal(true);
-                  }}
-                  className="min-h-[44px] w-full py-2.5 px-3.5 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-between transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <Code2 className="w-4 h-4 text-orange-400" />
-                    GitHub Sponsors (0% Fee)
-                  </span>
-                  <span className="text-orange-300">Back Pool →</span>
-                </button>
+                <FundProjectButton fullWidth showSubline={false} className="text-sm" />
+                <p className="text-[11px] text-neutral-500 px-1">{donationCopy().fundSubline}</p>
+                {DONATION_LINKS.kofi && (
+                  <a
+                    href={DONATION_LINKS.kofi}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-h-[44px] w-full py-2.5 px-3.5 rounded-full bg-white hover:bg-[#FAFAF8] text-neutral-800 border border-neutral-300 text-xs font-semibold flex items-center justify-between transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Coins className="w-4 h-4 text-amber-600" aria-hidden="true" />
+                      {donationCopy().supportOn('Ko-fi')}
+                    </span>
+                    <span className="text-neutral-600">Tip →</span>
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
                 )}
-
-                {DONATION_LINKS.openCollective && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowContributeModal(true);
-                  }}
-                  className="min-h-[44px] w-full py-2.5 px-3.5 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-between transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4" />
-                    Open Collective (Public Ledger)
-                  </span>
-                  <span className="text-orange-100">Back Pool →</span>
-                </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowContributeModal(true);
-                  }}
-                  className="min-h-[44px] w-full py-2.5 px-3.5 rounded-full bg-white hover:bg-[#FAFAF8] text-neutral-800 border border-neutral-300 text-xs font-semibold flex items-center justify-between transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <Coins className="w-4 h-4 text-amber-600" />
-                    Ko-fi One-Off Token Tip
-                  </span>
-                  <span className="text-neutral-600">Tip →</span>
-                </button>
               </div>
             </div>
 
@@ -3486,27 +3465,23 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               {FIVE_YEAR_GOAL_EUR != null ? ` (€${Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB')} goal).` : ' (goal amount coming soon).'}
             </p>
             <div className="mt-4 space-y-2">
-              {[
-                { label: 'GitHub Sponsors (0% fee, monthly)', url: DONATION_LINKS.githubSponsors, icon: Code2 },
-                { label: 'Open Collective (public fiscal host)', url: DONATION_LINKS.openCollective, icon: ShieldCheck },
-                { label: 'Ko-fi (one-off tip)', url: DONATION_LINKS.kofi, icon: Coins }
-              ].filter(({ url }) => !!url).map(({ label, url, icon: Icon }) => (
-                  <a
-                    key={label}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-[44px] w-full py-2.5 px-3.5 rounded-xl border border-neutral-300 hover:border-orange-300 text-sm font-semibold flex items-center justify-between transition"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-orange-700" aria-hidden="true" />
-                      {label}
-                    </span>
-                    <ExternalLink className="w-4 h-4 text-neutral-500" aria-hidden="true" />
-                    <span className="sr-only"> (opens in a new tab)</span>
-                  </a>
-                )
-              )}
+              <FundProjectButton fullWidth />
+              {DONATION_PLATFORMS.filter((p) => p.key !== 'paypal').map((p) => (
+                <a
+                  key={p.key}
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-h-[44px] w-full py-2.5 px-3.5 rounded-xl border border-neutral-300 hover:border-orange-300 text-sm font-semibold flex items-center justify-between transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-orange-700" aria-hidden="true" />
+                    {donationCopy().supportOn(p.name)}
+                  </span>
+                  <ExternalLink className="w-4 h-4 text-neutral-500" aria-hidden="true" />
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              ))}
             </div>
           </div>
         </div>
