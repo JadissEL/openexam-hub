@@ -77,8 +77,8 @@ export default function StudyToday({ roadmap, onToggle, dueCards = 0, onOpenRevi
   const dayDone = day.tasks.filter((t) => t.key in done).length;
   const before = today < 1;
   const after = today > days.length;
-  const statusTone = !prog ? 'neutral' : prog.onTrack ? 'green' : 'amber';
-  const statusText = !prog ? '' : prog.remaining === 0 ? 'All done' : prog.onTrack ? 'On track' : 'Behind';
+  const statusTone = !prog || prog.insufficientHistory ? 'neutral' : prog.onTrack ? 'green' : 'amber';
+  const statusText = !prog ? '' : prog.remaining === 0 ? 'All done' : prog.insufficientHistory ? 'Just started' : prog.onTrack ? 'On track' : 'Behind';
 
   const dayState = (d) => {
     const n = d.tasks.length;
@@ -111,7 +111,7 @@ export default function StudyToday({ roadmap, onToggle, dueCards = 0, onOpenRevi
             className={`${UI.chip} ${statusTone === 'green' ? 'text-green-800 border-green-200 bg-green-50' : statusTone === 'amber' ? 'text-amber-800 border-amber-200 bg-amber-50' : ''}`}
             title="Decided by the pace model (EWMA + hysteresis), not by AI"
           >
-            <span className={`w-2 h-2 rounded-full ${statusTone === 'green' ? 'bg-green-500' : 'bg-amber-500'}`} aria-hidden="true" />
+            <span className={`w-2 h-2 rounded-full ${statusTone === 'green' ? 'bg-green-500' : statusTone === 'amber' ? 'bg-amber-500' : 'bg-neutral-400'}`} aria-hidden="true" />
             {statusText}
           </span>
         )}

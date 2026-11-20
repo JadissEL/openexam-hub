@@ -371,6 +371,15 @@ const FALLBACK_ROADMAPS = {
   }
 };
 
+// Shown only while the visitor has no plan of their own. Read-only: ticks are not recorded.
+const SAMPLE_ROADMAP = {
+  ...FALLBACK_ROADMAPS.TCF,
+  id: 'sample-TCF-B2-30',
+  sample: true,
+  createdAt: new Date().toISOString().slice(0, 10),
+  completedTasks: {}
+};
+
 // ============================================================================
 // TREASURY & 3-YEAR ROADMAP CONSTANTS
 // ============================================================================
@@ -615,15 +624,10 @@ export default function App() {
   const [statusNotice, setStatusNotice] = useState(null);
 
   // Saved Roadmaps (Layer 1 Personal Cache)
-  const [savedRoadmaps, setSavedRoadmaps] = useState(() => [
-    {
-      id: 'TCF-B2-30',
-      createdAt: '2026-11-18',
-      completedTasks: { '0-0': true },
-      ...FALLBACK_ROADMAPS.TCF
-    }
-  ]);
-  const [activeRoadmapId, setActiveRoadmapId] = useState('TCF-B2-30');
+  // A fresh visitor starts with no saved plans. Until they build one, the plan view shows a
+  // clearly labelled read-only sample with no progress (never someone else's ticks).
+  const [savedRoadmaps, setSavedRoadmaps] = useState([]);
+  const [activeRoadmapId, setActiveRoadmapId] = useState(null);
 
   // Public Financial Ledger & Ad-Sunset Engine (Backed by Firestore)
   // Real figures only: start at zero, filled from the server-written Firestore ledger.
@@ -669,7 +673,7 @@ export default function App() {
 
   const activeRoadmap = useMemo(() => {
     return (
-      savedRoadmaps.find((r) => r.id === activeRoadmapId) || savedRoadmaps[0]
+      savedRoadmaps.find((r) => r.id === activeRoadmapId) || savedRoadmaps[0] || SAMPLE_ROADMAP
     );
   }, [savedRoadmaps, activeRoadmapId]);
 
@@ -1151,6 +1155,10 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
   // Toggle task completion & persist to Firestore
   const toggleTaskCompletion = async (phaseIdx, taskIdx) => {
     if (!activeRoadmap) return;
+    if (activeRoadmap.sample) {
+      setStatusNotice('This is a sample plan. Build your own plan above to track your progress.');
+      return;
+    }
     const key = `${phaseIdx}-${taskIdx}`;
     const updatedCompleted = {
       ...(activeRoadmap.completedTasks || {}),
@@ -1172,6 +1180,10 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
   // A field-path update touches one key, so ticks on two devices never overwrite each other.
   const toggleCalendarTask = async (task) => {
     if (!activeRoadmap || !task?.key) return;
+    if (activeRoadmap.sample) {
+      setStatusNotice('This is a sample plan. Build your own plan above to track your progress.');
+      return;
+    }
     const prevDone = activeRoadmap.progress?.done || {};
     const wasDone = task.key in prevDone;
     const nextDone = { ...prevDone };
@@ -1893,6 +1905,11 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     <div className="p-5 sm:p-7 border-b border-black/5">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2 flex-wrap">
+                          {activeRoadmap.sample && (
+                            <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs">
+                              Sample plan
+                            </span>
+                          )}
                           <span className="px-3 py-1 rounded-full bg-[#111111] text-white font-bold text-xs">
                             {activeRoadmap.exam} · {activeRoadmap.level}
                           </span>
@@ -1927,13 +1944,18 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                         <ProgressRing pct={roadmapProgress.pct} size={76} />
                         <div className="min-w-0">
                           <h2 id="oe-plan-title" className="text-xl sm:text-2xl font-bold leading-tight">
-                            Your {activeRoadmap.exam} plan
+                            {activeRoadmap.sample ? `Sample ${activeRoadmap.exam} plan` : `Your ${activeRoadmap.exam} plan`}
                           </h2>
                           <p className="text-sm text-neutral-500 mt-1">
                             {roadmapProgress.done} of {roadmapProgress.total} tasks done
                           </p>
                         </div>
                       </div>
+                      {activeRoadmap.sample && (
+                        <p className="mt-4 text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                          This is an example so you can see how a plan looks. Pick your exam, level and date above and press "Build my plan" to get your own.
+                        </p>
+                      )}
                       <p className="mt-4 text-sm text-neutral-600 leading-relaxed">{activeRoadmap.summary}</p>
                     </div>
 
@@ -2007,8 +2029,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     <div className="p-5 sm:p-7 space-y-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <h3 className={THEME.label}>{activeIsScheduled ? 'Plan overview' : 'Your checklist'}</h3>
-                        <span className="text-xs text-neutral-500">{activeIsScheduled ? 'Tick tasks in the day view above' : 'Ticks save to your profile'}</span>
+                        <span className="text-xs text-neutral-500">{activeRoadmap.sample ? 'Sample only: build your own plan to tick tasks' : activeIsScheduled ? 'Tick tasks in the day view above' : 'Ticks save to your profile'}</span>
                       </div>
+{!activeRoadmap.sample && (
                       <CoachPanel
                         roadmap={activeRoadmap}
                         onApply={async (phases) => {
@@ -2019,6 +2042,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                           await saveToPersonalCache(updated);
                         }}
                       />
+                      )}
                       {activeIsScheduled ? (
                         <details className="group rounded-2xl border border-black/5 bg-[#FAFAF8]">
                           <summary className="cursor-pointer list-none min-h-[52px] px-4 py-3 flex items-center justify-between gap-3 text-sm font-semibold text-neutral-900">
@@ -2542,7 +2566,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
           >
             {activeTab === 'generator' ? (
               <>
-                {activeRoadmap ? (
+                {activeRoadmap && !activeRoadmap.sample ? (
                   <section aria-labelledby="oe-continue" className={`${THEME.card} p-5 sm:p-6`}>
                     <p className={THEME.label}>Continue your plan</p>
                     <div className="mt-3 flex items-center gap-4">
@@ -3522,13 +3546,13 @@ function CoachPanel({ roadmap, onApply }) {
         <div className="text-xs text-neutral-700 space-y-1.5">
           <p>
             {typeof advice.onTrack === 'boolean' && (
-              <strong className={advice.onTrack ? 'text-orange-700' : 'text-amber-700'}>
-                {advice.onTrack ? 'On track. ' : 'Behind schedule. '}
+              <strong className={advice.insufficientHistory ? 'text-neutral-800' : advice.onTrack ? 'text-orange-700' : 'text-amber-700'}>
+                {advice.insufficientHistory ? 'Just getting started. ' : advice.onTrack ? 'On track. ' : 'Behind schedule. '}
               </strong>
             )}
             {advice.summary}
           </p>
-          {typeof advice.pace === 'number' && (
+          {typeof advice.pace === 'number' && !advice.insufficientHistory && (
             <p className="text-neutral-600">
               Pace {advice.pace} tasks/day · planned {advice.plannedPace} · needed {advice.requiredPace}
               {advice.projectedFinishDate ? ` · projected finish ${advice.projectedFinishDate}` : ''}
