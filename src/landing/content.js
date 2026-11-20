@@ -68,7 +68,7 @@ export const SOURCES = [
 export const FAQ = [
   {
     q: 'Is it really free? What’s the catch?',
-    a: 'There is no paid tier and no paywall, and we don’t sell data. Running it costs money (hosting and AI calls). It’s funded openly by donations and, on the study dashboard only, a few ads. Every euro from donations and ads, and the project’s expenses, are shown publicly, and once the next 5 years of running costs are covered, the ads go away. This page will never show ads.'
+    a: 'There is no paid tier and no paywall, and we don’t sell data. Running it costs money (hosting and AI calls). It’s funded openly by donations and, later, a few ads. Ads are not live yet (Google AdSense is under review). When they are on, they will only ever appear on the logged-in study dashboard, never on this page or other public pages. Every euro from donations and ads, and the project’s expenses, are shown publicly, and once the next 5 years of running costs are covered, the ads go away. This page will never show ads.'
   },
   {
     q: 'Do I need an account?',

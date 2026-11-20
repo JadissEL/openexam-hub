@@ -32,31 +32,61 @@ class FakePub {
   constructor() {
     this.docs = new Map();
   }
+  match(d, f, op, v) {
+    if (op === '==') return d[f] === v;
+    if (op === 'in') return Array.isArray(v) && v.includes(d[f]);
+    if (op === 'array-contains') return Array.isArray(d[f]) && d[f].includes(v);
+    return false;
+  }
+  query(colName, clauses = []) {
+    const prefix = `${colName}/`;
+    const docs = [...this.docs.entries()]
+      .filter(([p]) => p.startsWith(prefix) && !p.slice(prefix.length).includes('/'))
+      .filter(([, d]) => clauses.every(([f, op, v]) => this.match(d, f, op, v)))
+      .map(([p, d]) => ({
+        id: p.slice(prefix.length),
+        data: () => structuredClone(d)
+      }));
+    return { docs, empty: !docs.length, size: docs.length };
+  }
   root() {
     const fs = this;
-    return {
-      collection(name) {
-        return {
-          doc(id) {
-            const path = `${name}/${id}`;
-            return {
-              path,
-              id,
-              collection(sub) {
-                return fs.root().collection(`${name}/${id}/${sub}`);
-              },
-              async get() {
-                const d = fs.docs.get(path);
-                return { exists: d !== undefined, id, data: () => (d !== undefined ? structuredClone(d) : undefined) };
-              },
-              async set(data, opts) {
-                fs.write(path, data, opts);
-              }
-            };
-          }
-        };
-      }
+    const collection = (name) => {
+      const make = (clauses = []) => ({
+        doc(id) {
+          const path = `${name}/${id}`;
+          return {
+            path,
+            id,
+            collection(sub) {
+              return collection(`${name}/${id}/${sub}`);
+            },
+            async get() {
+              const d = fs.docs.get(path);
+              return { exists: d !== undefined, id, data: () => (d !== undefined ? structuredClone(d) : undefined) };
+            },
+            async set(data, opts) {
+              fs.write(path, data, opts);
+            }
+          };
+        },
+        where(f, op, v) {
+          return make([...clauses, [f, op, v]]);
+        },
+        async get() {
+          return fs.query(name, clauses);
+        },
+        count() {
+          return {
+            async get() {
+              return { data: () => ({ count: fs.query(name, clauses).size }) };
+            }
+          };
+        }
+      });
+      return make();
     };
+    return { collection };
   }
   write(path, data, opts) {
     const prev = opts?.merge ? structuredClone(this.docs.get(path) || {}) : {};
@@ -264,6 +294,49 @@ test('GET /api/stats returns usage, lifetime totals and treasury; cacheHitRate o
   assert.equal(res2.body.stats.cacheHitRate, 0.8);
 });
 
+test('GET /api/stats library counts come from the resources collection, not a stale rollup', async () => {
+  const fake = new FakePub();
+  fake.docs.set('stats/public', {
+    resources: 9,
+    approvedResources: 9,
+    plansBuilt: 4,
+    cacheHits: 1,
+    cacheHitRate: 0.2,
+    fallbackPlans: 0,
+    byExam: { TCF: { resources: 3 }, IELTS: { resources: 3 }, GOETHE: { resources: 3 } },
+    linkHealth: { ok: 9, unverified: 0, error: 0, dead: 0 },
+    updatedAt: new Date('2026-11-20T16:47:27.607Z')
+  });
+  const live = [
+    ['a', { approved: true, linkStatus: 'ok', exams: ['TEF_CANADA'] }],
+    ['b', { approved: true, linkStatus: 'ok', exams: ['TEF_CANADA', 'TEF'] }],
+    ['c', { approved: true, linkStatus: 'ok', exams: ['TOEFL'] }],
+    ['d', { approved: true, linkStatus: 'ok', exams: ['DELE'] }],
+    ['e', { approved: true, linkStatus: 'dead', exams: ['TCF'] }],
+    ['f', { approved: false, linkStatus: 'ok', exams: ['IELTS'] }]
+  ];
+  for (const [id, data] of live) fake.docs.set(`resources/${id}`, data);
+  setPubForTests(() => fake.root());
+  setCountRegisteredUsersForTests(async () => 0);
+  const res = mockRes();
+  await statsHandler({ method: 'GET', headers: {} }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.stats.resources, 6, 'all resource docs, including unapproved and dead');
+  assert.equal(res.body.stats.approvedResources, 5);
+  assert.deepEqual(res.body.stats.linkHealth, { ok: 4, unverified: 0, error: 0, dead: 1 });
+  assert.deepEqual(res.body.stats.byExam, {
+    TEF_CANADA: { resources: 2 },
+    TEF: { resources: 1 },
+    TOEFL: { resources: 1 },
+    DELE: { resources: 1 }
+  });
+  assert.equal(res.body.stats.byExam.TCF, undefined, 'dead links are excluded from byExam, matching /api/library');
+  assert.equal(res.body.stats.byExam.IELTS, undefined, 'unapproved resources are excluded');
+  assert.equal(res.body.stats.plansBuilt, 4, 'rollup counters are kept');
+  assert.equal(res.body.stats.cacheHits, 1);
+  assert.equal(res.body.stats.cacheHitRate, 0.2);
+});
+
 test('presentUsage and presentTreasury stay numeric and drop missing docs to zeros', () => {
   const empty = presentUsage(null, '2026-11');
   assert.equal(empty.calls, 0);
@@ -288,6 +361,10 @@ test('frugality copy covers only mechanisms that exist, and is used in the FAQ',
   assert.doesNotMatch(blob, /\d+%/);
   const faq = FAQ.find((f) => f.q === 'How do you keep AI use small?');
   assert.equal(faq.a, AI_FRUGALITY_FAQ);
+  const ads = FAQ.find((f) => f.q === 'Is it really free? What’s the catch?');
+  assert.match(ads.a, /not live yet/i);
+  assert.match(ads.a, /AdSense is under review/i);
+  assert.match(ads.a, /logged-in (study )?dashboard/i);
 });
 
 test('pending expenses are excluded from the total', () => {

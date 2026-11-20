@@ -59,7 +59,7 @@ If you want to add a new exam, open an issue first (there is a “Official resou
 
 ## Security and production access
 
-If you think you have found a security issue, please email [elantaki.dijadiss@gmail.com](mailto:elantaki.dijadiss@gmail.com) rather than opening a public issue.
+If you think you have found a security issue, please email [hello@openexamhub.org](mailto:hello@openexamhub.org) rather than opening a public issue.
 
 Production deploys, webhook secrets and Firebase admin access stay with the maintainer.
 

@@ -120,7 +120,7 @@ export const PAGE_META = {
   '/funding': {
     title: 'How OpenExam Hub is funded · Open books, no paywall',
     description:
-      'OpenExam Hub is free with no paywall. See how it is funded through donations and a few dashboard ads, and the published income and expenses.'
+      'OpenExam Hub is free with no paywall. It is funded through donations and, later, a few dashboard ads (not live yet; AdSense is under review, and ads will only ever appear on the logged-in dashboard). Income and expenses are published.'
   },
   '/privacy': {
     title: 'Privacy policy · OpenExam Hub',

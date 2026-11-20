@@ -300,7 +300,7 @@ const CONTENT = {
     runBy: { name: 'France Éducation international', url: DELF_DALF_CA },
     intro: [
       'DELF (Diplôme d’études en langue française) and DALF (Diplôme approfondi de langue française) are the official French diplomas of France Éducation international. DELF tout public covers levels A1 to B2; DALF covers C1 and C2. Both assess reading, listening, writing and speaking.',
-      'OpenExam Hub does not build DELF or DALF study plans yet, but the free official sample papers and listening practice are listed below.'
+      'Personalised DELF and DALF study plans are coming soon. In the meantime, the free official sample papers and listening practice are listed below, and you can build a TCF plan — it uses many of the same official French sources.'
     ],
     facts: [
       ['Awarded by', 'France Éducation international'],
@@ -311,6 +311,7 @@ const CONTENT = {
     format: null,
     examIds: ['DELF', 'DALF'],
     planner: null,
+    relatedPlanner: { exam: 'TCF', label: 'TCF' },
     faq: [
       {
         q: 'What is the difference between DELF and DALF?',
@@ -318,7 +319,7 @@ const CONTENT = {
       },
       {
         q: 'Can OpenExam Hub make a DELF study plan?',
-        a: 'Not yet. DELF and DALF resources are in the library, but the planner currently covers TEF Canada, TCF, IELTS, TOEFL, Goethe and DELE. The official sample papers below are free to use now.'
+        a: 'Personalised DELF and DALF plans are coming soon. The official sample papers below are free to use now. Until those plans are ready, you can build a TCF plan, which uses many of the same official French sources.'
       },
       NOT_AFFILIATED('France Éducation international')
     ],

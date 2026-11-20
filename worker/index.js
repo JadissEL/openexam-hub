@@ -7,6 +7,7 @@
 //   - /blog/               -> same page as /blog (Vercel parity: 200, no redirect)
 //   - /demo/*              -> byte-range (206) support for the demo video: Static Assets alone always
 //                             answers 200 with the full file, which breaks seeking and Safari playback.
+//   - /transparency[/]     -> 301 /funding (legacy public-books URL)
 //   - any path with no matching file -> /app/<tab> deep links get the /app shell (200); everything
 //                             else is a real 404 (every public page is prerendered, so no soft 404s).
 // www.openexamhub.org -> apex 308 is a zone Redirect Rule; the host check below is a backup.
@@ -104,6 +105,10 @@ export default {
       return Response.redirect(`https://${APEX}${url.pathname}${url.search}`, 308);
     }
     const { pathname } = url;
+    // Public books used to be advertised at /transparency; they now live at /funding.
+    if (pathname === '/transparency' || pathname === '/transparency/') {
+      return Response.redirect(`https://${APEX}/funding${url.search}`, 301);
+    }
     if (pathname.startsWith('/api/')) return proxyToApi(request, env, url, pathname);
     if (pathname === '/ads.txt') return proxyToApi(request, env, url, '/api/ads-txt');
 

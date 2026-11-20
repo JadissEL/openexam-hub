@@ -80,7 +80,7 @@ Contributions are welcome, including official-source exam resources, accessibili
 
 ## Funding and ads
 
-OpenExam Hub is free to use. Running costs are meant to be covered by donations and, until a publicly tracked funding goal is reached, by a few ads on the planner only.
+OpenExam Hub is free to use. Running costs are meant to be covered by donations and, until a publicly tracked funding goal is reached, by a few ads on the logged-in dashboard only. Ads are not live yet (AdSense is under review).
 
 - [PayPal](https://www.paypal.com/paypalme/JadissEL) — [Fund this project](https://www.paypal.com/paypalme/JadissEL). Keep OpenExam Hub free for every learner.
 - [Ko-fi](https://ko-fi.com/openexamhub) (one-off tips)

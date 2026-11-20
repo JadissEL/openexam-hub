@@ -186,22 +186,27 @@ function Faq({ faq }) {
   );
 }
 
-function PlannerCta({ planner, label }) {
+function PlannerCta({ planner, label, relatedPlanner }) {
+  const cta = planner || relatedPlanner;
   return (
     <section aria-labelledby="plan-title" className="mt-14 rounded-3xl bg-[#1A1714] text-white px-6 sm:px-8 py-8 sm:py-10">
       <h2 id="plan-title" className="font-display text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium">
-        {planner ? `Turn this into a ${planner.label} study plan` : 'Plan your preparation'}
+        {planner
+          ? `Turn this into a ${planner.label} study plan`
+          : `Personalised ${label} plans are coming soon`}
       </h2>
       <p className="mt-3 text-[16px] sm:text-[17px] leading-relaxed text-[#D9D2C8] max-w-xl">
         {planner
           ? 'OpenExam Hub builds a free day-by-day plan from official, free material like the links on this page. Pick your level and exam date. Free account, no paywall.'
-          : `The planner doesn’t cover ${label} yet. The official material above is free to use now, and the French-language plans for TCF and TEF Canada use many of the same sources.`}
+          : relatedPlanner
+            ? `The official material above is free to use now. Until a ${label} plan is ready, you can build a ${relatedPlanner.label} plan — it uses many of the same official sources.`
+            : `The planner doesn’t cover ${label} yet. The official material above is free to use now.`}
       </p>
       <a
-        href={planner ? `/app?exam=${encodeURIComponent(planner.exam)}` : '/app'}
+        href={cta ? `/app?exam=${encodeURIComponent(cta.exam)}` : '/app'}
         className="mt-6 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold"
       >
-        {planner ? `Build a free ${planner.label} plan` : 'Open the planner'} <ArrowRight className="w-4 h-4" aria-hidden="true" />
+        {planner ? `Build a free ${planner.label} plan` : relatedPlanner ? `Build a free ${relatedPlanner.label} plan` : 'Open the planner'} <ArrowRight className="w-4 h-4" aria-hidden="true" />
       </a>
     </section>
   );
@@ -467,7 +472,7 @@ export function ExamPage({ slug, posts = [] }) {
         <FormatTable format={c.format} />
         <DeleLevels rows={c.deleLevels} scoring={c.scoring} />
         <Resources groups={c.resources} lastChecked={c.lastChecked} />
-        <PlannerCta planner={c.planner} label={c.label} />
+        <PlannerCta planner={c.planner} label={c.label} relatedPlanner={c.relatedPlanner} />
         <Faq faq={c.faq} />
 
         <section aria-labelledby="sources-title" className="mt-14 pt-10 border-t border-[#E7E1D7] max-w-3xl">

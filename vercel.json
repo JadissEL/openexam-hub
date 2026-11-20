@@ -28,6 +28,16 @@
   ],
   "redirects": [
     {
+      "source": "/transparency",
+      "destination": "/funding",
+      "permanent": true
+    },
+    {
+      "source": "/transparency/",
+      "destination": "/funding",
+      "permanent": true
+    },
+    {
       "source": "/((?!api/).*)",
       "has": [
         {

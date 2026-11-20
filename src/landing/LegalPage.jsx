@@ -116,7 +116,8 @@ const PAGES = {
         body: (
           <>
             <p>
-              To keep the site free, we plan to show a small number of Google AdSense ads, and only inside the study dashboard
+              Ads are not live yet (Google AdSense is under review). To keep the site free, we plan to show a small number of
+              Google AdSense ads, and they will only ever appear inside the study dashboard
               (<code>/app</code>) for signed-in users. There are never ads on the home page, the information pages or these legal
               pages. Adult, gambling, dating and other sensitive ad categories are blocked. All ad income is published on the
               transparency page, and ads come off once five years of running costs (€200,000) are covered.
