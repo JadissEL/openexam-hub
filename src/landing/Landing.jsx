@@ -3,7 +3,8 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { SiteHeader, SiteFooter } from './SiteChrome.jsx';
 import { BrowserFrame, PhoneFrame } from './frames.jsx';
 import { ink, muted, eyebrow, h2, lead, pageFont } from './theme.js';
-import { APP_PATH, LEGACY_HASH_REDIRECTS, SOURCES } from './content.js';
+import { APP_PATH, FAQ, LEGACY_HASH_REDIRECTS, SOURCES } from './content.js';
+import { EXAM_PAGES } from '../seo/site.js';
 import { API_BASE, SERVER_ENABLED } from '../firebaseConfig.js';
 import { learnersProof } from './learners.js';
 
@@ -187,9 +188,59 @@ function Exams() {
             </div>
           ))}
         </div>
+        <nav aria-labelledby="guides-title" className="mt-14 border-t border-[#E7E1D7] pt-8">
+          <h3 id="guides-title" className={`${ink} text-xl sm:text-[22px] font-semibold tracking-[-0.01em]`}>Free exam guides</h3>
+          <p className={`mt-2 text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
+            Format, timings, scoring and the free official practice material for each exam, all in one place.
+          </p>
+          <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-3">
+            {EXAM_PAGES.map((g) => (
+              <li key={g.slug}>
+                <a href={`/exams/${g.slug}`} className={`text-[17px] font-medium ${ink} underline decoration-[#E7C9B4] decoration-2 underline-offset-[6px] hover:decoration-[#EA580C]`}>
+                  {g.label} guide
+                </a>
+              </li>
+            ))}
+            <li>
+              <a href="/exams" className="text-[17px] font-medium text-[#C2410C] underline decoration-[#E7C9B4] decoration-2 underline-offset-[6px] hover:decoration-[#EA580C]">
+                All exam guides
+              </a>
+            </li>
+          </ul>
+        </nav>
         <p className={`mt-12 text-[15px] leading-relaxed ${muted} max-w-3xl`}>
           OpenExam Hub is independent. We are not affiliated with, endorsed by or sponsored by any of these
           organisations. Their names are used only to tell you where a link leads.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// The first questions from /faq, so the homepage answers the basics without JavaScript.
+const HOME_FAQ = FAQ.slice(0, 5);
+
+function HomeFAQ() {
+  return (
+    <section id="common-questions" className="scroll-mt-6 bg-[#F1EDE5]" aria-labelledby="faq-title">
+      <div className="mx-auto max-w-3xl px-5 sm:px-8 py-16 sm:py-20">
+        <p className={eyebrow}>Questions</p>
+        <h2 id="faq-title" className={`mt-4 ${h2}`}>Common questions</h2>
+        <div className="mt-10 divide-y divide-[#E2DBCF] border-y border-[#E2DBCF]">
+          {HOME_FAQ.map((f) => (
+            <details key={f.q} className="group py-5">
+              <summary className={`cursor-pointer list-none flex items-start justify-between gap-4 ${ink} text-[18px] font-semibold`}>
+                <span>{f.q}</span>
+                <span aria-hidden="true" className="mt-0.5 text-[#C2410C] transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <p className={`mt-3 text-[17px] leading-[1.7] ${muted}`}>{f.a}</p>
+            </details>
+          ))}
+        </div>
+        <p className="mt-8">
+          <a href="/faq" className={`text-[17px] font-medium ${ink} underline decoration-[#E7C9B4] decoration-2 underline-offset-[6px] hover:decoration-[#EA580C]`}>
+            Read all the questions and answers
+          </a>
         </p>
       </div>
     </section>
@@ -234,6 +285,7 @@ export default function Landing() {
         <Hero />
         <HowItWorks />
         <Exams />
+        <HomeFAQ />
         <FinalCTA />
       </main>
       <SiteFooter />

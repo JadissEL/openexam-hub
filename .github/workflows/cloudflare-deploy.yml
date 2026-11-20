@@ -37,3 +37,7 @@ jobs:
         run: npx --yes wrangler@4.166.0 deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Ping IndexNow with the sitemap URLs
+        if: env.HAS_TOKEN == 'true'
+        continue-on-error: true
+        run: sleep 20 && npm run indexnow

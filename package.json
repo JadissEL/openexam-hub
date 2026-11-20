@@ -23,7 +23,8 @@
     "test:account": "firebase emulators:exec --only auth,firestore --project demo-openexam --config firebase.json \"node scripts/test-account-emulator.mjs\"",
     "cf:build": "node scripts/cf-build.mjs",
     "cf:deploy": "npx --yes wrangler@4.166.0 deploy",
-    "cf:dev": "npx --yes wrangler@4.166.0 dev"
+    "cf:dev": "npx --yes wrangler@4.166.0 dev",
+    "indexnow": "node scripts/indexnow-ping.mjs"
   },
   "dependencies": {
     "firebase": "^13.4.0",

@@ -5,7 +5,10 @@
  *   page takes over on load (src/main.jsx waits for the page chunk before rendering, no flash).
  * - /exams, /exams/<slug> and /exams/<slug>/<plan>: full static HTML, no module script (like the blog).
  * - /app: correct head only (the study app is client-only).
- * - / is left alone: dist/index.html is also the SPA fallback for /app and unknown paths.
+ * - /: the landing page is rendered into dist/index.html (hydrated). The root carries
+ *   data-prerendered="landing" so src/main.jsx discards that markup if the file is ever served as
+ *   an SPA fallback for another path (vite preview, Vercel previews). Cloudflare serves /app and
+ *   /app/<tab> from dist/app/index.html, which has an empty root.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -141,6 +144,11 @@ export async function prerenderPages(distDir, template, { applyHead, injectRoot,
     writePage(distDir, p, stripModuleScripts(injectRoot(headFor(p, jsonLd), ssr.renderPage(p, posts))));
     written.push(p);
   }
+
+  // Last, because `template` (the original dist/index.html) is the shell every page above starts from.
+  const landing = injectRoot(template, ssr.renderPage('/', posts)).replace('<div id="root">', '<div id="root" data-prerendered="landing">');
+  fs.writeFileSync(path.join(distDir, 'index.html'), landing);
+  written.push('/');
 
   try {
     fs.unlinkSync(ssrFile);

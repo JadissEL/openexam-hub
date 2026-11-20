@@ -1,5 +1,6 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
+import Landing from '../landing/Landing.jsx';
 import InfoPage from '../landing/InfoPage.jsx';
 import LegalPage from '../landing/LegalPage.jsx';
 import { ExamPage, ExamsIndex, PlanPage } from './ExamPages.jsx';
@@ -10,6 +11,7 @@ import { FAQ } from '../landing/content.js';
 /** Build-time HTML for marketing and exam-guide routes (see scripts/prerender-pages.mjs). */
 export function renderPage(pathname, posts = []) {
   const p = String(pathname).replace(/\/+$/, '') || '/';
+  if (p === '/') return renderToString(<Landing />);
   if (p === '/about') return renderToString(<InfoPage kind="about" />);
   if (p === '/faq') return renderToString(<InfoPage kind="faq" />);
   if (p === '/funding') return renderToString(<InfoPage kind="funding" />);

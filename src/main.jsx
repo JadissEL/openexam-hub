@@ -47,6 +47,12 @@ async function boot() {
   syncHead(pathname);
   const container = document.getElementById('root');
   const route = resolveRoute(pathname);
+  // dist/index.html carries the prerendered landing page. When it is served for another path
+  // (an SPA fallback), drop that markup so the right page mounts into an empty root.
+  if (container.dataset.prerendered && container.dataset.prerendered !== route.key) {
+    container.replaceChildren();
+  }
+  delete container.dataset.prerendered;
   if (container.firstElementChild) {
     // Prerendered HTML is already on screen: load the page module first so React swaps in the
     // same markup instead of flashing the "Loading…" fallback.
