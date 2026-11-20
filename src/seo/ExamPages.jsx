@@ -4,6 +4,7 @@ import { SiteHeader, SiteFooter } from '../landing/SiteChrome.jsx';
 import { ink, muted, eyebrow, lead, pageFont } from '../landing/theme.js';
 import { EXAM_PAGES, EXAMS_INDEX } from './site.js';
 import { examContent } from './examContent.js';
+import { planPage, planPath, plansForGuide } from './planPages.js';
 
 function formatDate(iso) {
   const [y, m, d] = String(iso || '').split('-').map(Number);
@@ -242,6 +243,199 @@ function RelatedReading({ posts, related }) {
   );
 }
 
+function StudyPlans({ guide }) {
+  const plans = plansForGuide(guide);
+  if (!plans.length) return null;
+  return (
+    <section aria-labelledby="study-plans-title" className="mt-14">
+      <SectionTitle id="study-plans-title">Free study plans</SectionTitle>
+      <ul className="mt-5 grid gap-5 sm:grid-cols-2">
+        {plans.map((p) => (
+          <li key={p.slug} className="rounded-2xl border border-[#E7E1D7] bg-white/70 p-6">
+            <h3 className={`font-display ${ink} text-[22px] tracking-[-0.02em] font-medium`}>
+              <a href={planPath(p)} className="hover:text-[#C2410C]">{p.label}</a>
+            </h3>
+            <p className={`mt-2 text-[16px] leading-[1.6] ${muted}`}>{p.description}</p>
+            <p className="mt-4 text-[15px]">
+              <a href={planPath(p)} className="inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
+                Open the {p.duration} plan <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </a>
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function planBreadcrumbs(plan) {
+  const guide = EXAM_PAGES.find((g) => g.slug === plan.guide);
+  return [
+    { name: 'Home', path: '/' },
+    { name: 'Exams', path: '/exams' },
+    { name: guide ? guide.label : plan.guide, path: `/exams/${plan.guide}` },
+    { name: plan.breadcrumb, path: planPath(plan) }
+  ];
+}
+
+function relatedLinks(plan) {
+  return (plan.related || [])
+    .map((r) => {
+      if (r.type === 'plan') {
+        const p = planPage(r.guide, r.slug);
+        return p ? { href: planPath(p), label: p.label } : null;
+      }
+      const g = EXAM_PAGES.find((x) => x.slug === r.guide);
+      return g ? { href: `/exams/${g.slug}`, label: `${g.label} guide` } : null;
+    })
+    .filter(Boolean);
+}
+
+function LinkList({ links }) {
+  if (!links?.length) return null;
+  return (
+    <span className="mt-1 block text-[15px]">
+      {links.map((l, i) => (
+        <React.Fragment key={l.url}>
+          {i > 0 ? <span className="text-[#6B635A]"> · </span> : null}
+          <a href={l.url} target="_blank" rel="noopener noreferrer" className="text-[#C2410C] underline underline-offset-4">{l.label}</a>
+        </React.Fragment>
+      ))}
+    </span>
+  );
+}
+
+export function PlanPage({ guide, slug, posts = [] }) {
+  const plan = planPage(guide, slug);
+  if (!plan) return null;
+  const guidePage = EXAM_PAGES.find((g) => g.slug === plan.guide);
+  const blogPosts = relatedPosts(posts, plan.tags);
+  const checked = formatDate(plan.lastChecked);
+  const related = relatedLinks(plan);
+  return (
+    <Shell>
+      <article className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
+        <Breadcrumbs items={planBreadcrumbs(plan)} />
+        <header className="mt-6 max-w-3xl">
+          <p className={eyebrow}>Study plan · {plan.duration} · {plan.level}</p>
+          <h1 className={`mt-4 font-display ${ink} text-[38px] sm:text-5xl lg:text-6xl tracking-[-0.03em] font-medium leading-[1.05]`}>{plan.h1}</h1>
+          <p className={`mt-6 ${lead}`}>{plan.subhead}</p>
+          {checked ? <p className="mt-4 text-[14px] text-[#6B635A]">Last checked against the official sources: <time dateTime={plan.lastChecked}>{checked}</time></p> : null}
+        </header>
+
+        <section aria-labelledby="who-title" className="mt-12 max-w-3xl">
+          <SectionTitle id="who-title">Who this plan is for</SectionTitle>
+          <ul className={`mt-4 list-disc pl-5 space-y-2 text-[17px] leading-[1.7] ${muted}`}>
+            {plan.whoFor.map((t) => <li key={t.slice(0, 40)}>{t}</li>)}
+          </ul>
+        </section>
+
+        <section aria-labelledby="facts-title" className="mt-14 max-w-4xl">
+          <SectionTitle id="facts-title">The exam at a glance</SectionTitle>
+          <dl className="mt-4 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]">
+            {plan.facts.map(([k, v]) => (
+              <div key={k} className="py-4 grid sm:grid-cols-[14rem_1fr] gap-1 sm:gap-6">
+                <dt className={`${ink} font-semibold text-[16px]`}>{k}</dt>
+                <dd className={`text-[16px] leading-[1.6] ${muted}`}>{v}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-3 text-[14px] text-[#6B635A]">{plan.factsNote} Full details in the <a href={`/exams/${plan.guide}`} className="text-[#C2410C] underline underline-offset-4">{guidePage ? guidePage.label : plan.guide} guide</a>.</p>
+        </section>
+
+        <section aria-labelledby="schedule-title" className="mt-14 max-w-4xl">
+          <SectionTitle id="schedule-title">The plan</SectionTitle>
+          <ol className="mt-6 space-y-10">
+            {plan.phases.map((ph, i) => (
+              <li key={ph.title}>
+                <h3 id={`phase-${i + 1}`} className={`font-display ${ink} text-[22px] sm:text-[24px] tracking-[-0.02em] font-medium`}>{ph.title}</h3>
+                <p className={`mt-1 text-[16px] ${muted}`}>{ph.focus}</p>
+                <ul className="mt-4 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]">
+                  {ph.tasks.map((t) => (
+                    <li key={t.when} className="py-4 grid sm:grid-cols-[9rem_1fr] gap-1 sm:gap-6">
+                      <span className={`${ink} font-semibold text-[16px]`}>{t.when}</span>
+                      <span className={`text-[16px] leading-[1.65] ${muted}`}>
+                        {t.text}
+                        <LinkList links={t.links} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ol>
+          <p className={`mt-8 rounded-2xl border border-[#E7C9B4] bg-[#FBF1E9] px-5 py-4 text-[16px] leading-[1.6] text-[#3B352F]`}>{plan.caution}</p>
+        </section>
+
+        <section aria-labelledby="materials-title" className="mt-14 max-w-3xl">
+          <SectionTitle id="materials-title">Free material used in this plan</SectionTitle>
+          <p className={`mt-3 text-[16px] ${muted}`}>Every link goes to the exam body, a public broadcaster or a government site. We don’t host or copy any of it.</p>
+          <ul className="mt-4 space-y-3 text-[16px] leading-snug">
+            {plan.materials.map((m) => (
+              <li key={m.url}>
+                <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{m.label}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <Faq faq={plan.faq} />
+
+        <section aria-labelledby="sources-title" className="mt-14 pt-10 border-t border-[#E7E1D7] max-w-3xl">
+          <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Sources</h2>
+          <ol className="mt-4 space-y-2 text-[16px] leading-snug">
+            {plan.sources.map((s) => (
+              <li key={s.url}>
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-[#C2410C] underline underline-offset-4 break-words">
+                  {s.label} <ArrowUpRight className="inline w-3.5 h-3.5" aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-4 text-[14px] text-[#6B635A]">
+            {checked ? `Last checked ${checked}. ` : ''}Exam rules, score tables, fees and dates change. Always confirm on the official site before you book or apply. OpenExam Hub is independent and not affiliated with any exam body or government.
+          </p>
+        </section>
+
+        <section aria-labelledby="related-title" className="mt-14 grid gap-10 md:grid-cols-2">
+          <div>
+            <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>From the blog</h2>
+            {blogPosts.length ? (
+              <ul className="mt-4 space-y-3 text-[16px] leading-snug">
+                {blogPosts.map((p) => (
+                  <li key={p.slug}>
+                    <a href={p.url} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{p.title}</a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={`mt-4 text-[16px] ${muted}`}>
+                No articles on this exam yet. <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Browse the blog</a>.
+              </p>
+            )}
+          </div>
+          <div>
+            <h2 className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Related guides and plans</h2>
+            <ul className="mt-4 space-y-3 text-[16px] leading-snug">
+              <li>
+                <a href={`/exams/${plan.guide}`} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{guidePage ? guidePage.label : plan.guide} guide</a>
+              </li>
+              {related.map((r) => (
+                <li key={r.href}>
+                  <a href={r.href} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{r.label}</a>
+                </li>
+              ))}
+              <li>
+                <a href="/exams" className="text-[#C2410C] underline underline-offset-4">All exam guides</a>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </article>
+    </Shell>
+  );
+}
+
 export function ExamPage({ slug, posts = [] }) {
   const c = examContent(slug);
   if (!c) return null;
@@ -269,6 +463,7 @@ export function ExamPage({ slug, posts = [] }) {
           </dl>
         </section>
 
+        <StudyPlans guide={slug} />
         <FormatTable format={c.format} />
         <DeleLevels rows={c.deleLevels} scoring={c.scoring} />
         <Resources groups={c.resources} lastChecked={c.lastChecked} />

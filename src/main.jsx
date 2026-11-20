@@ -27,7 +27,7 @@ function resolveRoute(pathname) {
   if (p === '/about') return { key: 'info', props: { kind: 'about' } };
   if (p === '/faq') return { key: 'info', props: { kind: 'faq' } };
   if (p === '/funding') return { key: 'info', props: { kind: 'funding' } };
-  if (p === '/exams' || /^\/exams\/[a-z0-9-]+$/.test(p)) return { key: 'exams', props: { pathname: p } };
+  if (p === '/exams' || /^\/exams\/[a-z0-9-]+(\/[a-z0-9-]+)?$/.test(p)) return { key: 'exams', props: { pathname: p } };
   if (isBlogPath(p) && p !== '/blog/rss.xml') return { key: 'blog', props: {} };
   return { key: 'app', props: {} }; // /app and any other path open the study app
 }

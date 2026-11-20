@@ -19,6 +19,13 @@ import {
 } from './blog-data.mjs';
 import { parsePlannerQuery, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
 import * as siteModule from '../src/seo/site.js';
+import { PLAN_PAGES, planPath } from '../src/seo/planPages.js';
+
+// Exam bodies, public broadcasters and governments only (study plans link nothing else).
+const PLAN_LINK_HOSTS = [
+  'canada.ca', 'france-education-international.fr', 'lefrancaisdesaffaires.fr', 'tv5monde.com', 'rfi.fr',
+  'ielts.org', 'britishcouncil.org', 'cambridgeenglish.org', 'goethe.de', 'dw.com', 'vhs-lernportal.de'
+];
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
@@ -180,6 +187,29 @@ Body of the post.
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+
+test('study plan data: routes, sitemap paths and sources stay official and claim-free', () => {
+  for (const plan of PLAN_PAGES) {
+    const p = planPath(plan);
+    assert.match(p, /^\/exams\/[a-z0-9-]+\/[a-z0-9-]+$/);
+    assert.ok(siteModule.examPageBySlug(plan.guide), `${p}: unknown parent guide`);
+    const meta = siteModule.routeMeta(p);
+    assert.equal(meta.canonical, `https://openexamhub.org${p}`);
+    assert.equal(siteModule.routeMeta(`${p}/`).canonical, meta.canonical);
+    assert.ok(siteModule.indexablePaths().includes(p));
+    assert.ok(plan.description.length >= 70 && plan.description.length <= 160, `${p}: description length ${plan.description.length}`);
+    assert.match(plan.lastChecked, /^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(plan.faq.length >= 3 && plan.sources.length >= 2);
+    const links = [...plan.materials, ...plan.sources, ...plan.phases.flatMap((ph) => ph.tasks.flatMap((t) => t.links))];
+    for (const l of links) {
+      const host = new URL(l.url).hostname;
+      assert.ok(PLAN_LINK_HOSTS.some((h) => host === h || host.endsWith(`.${h}`)), `${p}: non-official link ${l.url}`);
+    }
+    const all = JSON.stringify(plan);
+    assert.doesNotMatch(all, /\d+\s?%|pass rate|success rate|guaranteed|we guarantee|students who|testimonial/i, `${p}: stat or promise wording`);
+  }
+  assert.equal(siteModule.routeMeta('/exams/ielts/not-a-plan'), null);
+});
 
 test('parsePlannerQuery pre-selects known exams and levels, ignores junk', () => {
   assert.deepEqual(parsePlannerQuery('?exam=IELTS'), { exam: 'IELTS', level: null });
@@ -355,6 +385,47 @@ if (process.argv.includes('--built')) {
     }
     assert.ok(fs.existsSync(path.join(dist, 'exams/index.html')));
     assert.ok(sitemap.includes('<loc>https://openexamhub.org/exams</loc>'));
+  });
+
+  test('study plan pages are prerendered, linked from their guide, in the sitemap, with visible FAQ JSON-LD', () => {
+    const sitemap = read('sitemap.xml');
+    assert.equal(PLAN_PAGES.length, 5);
+    for (const plan of PLAN_PAGES) {
+      const p = planPath(plan);
+      const rel = `${p.slice(1)}/index.html`;
+      assert.ok(fs.existsSync(path.join(dist, rel)), `missing ${rel}`);
+      const html = read(rel);
+      const url = `https://openexamhub.org${p}`;
+      assert.match(html, new RegExp(`<link rel="canonical" href="${url}"`));
+      assert.match(html, new RegExp(`<meta property="og:url" content="${url}"`));
+      assert.match(html, /<meta property="og:title"/);
+      assert.ok(html.includes(`<title>${plan.title.replace(/&/g, '&amp;')} · OpenExam Hub</title>`), `title on ${p}`);
+      assert.equal((html.match(/<h1[\s>]/g) || []).length, 1, `${p} has one h1`);
+      assert.doesNotMatch(html, /<script type="module"/);
+      assert.doesNotMatch(html, /pagead2\.googlesyndication|adsbygoogle/);
+      assert.match(html, /Last checked/);
+      assert.match(html, /id="sources-title"/);
+      const blocks = jsonLdBlocks(html);
+      const t = types(blocks);
+      for (const need of ['Organization', 'WebSite', 'BreadcrumbList', 'WebPage', 'Course', 'FAQPage']) {
+        assert.ok(t.includes(need), `${p} missing ${need} JSON-LD`);
+      }
+      const crumbs = blocks.find((b) => b['@type'] === 'BreadcrumbList').itemListElement;
+      assert.deepEqual(crumbs.map((c) => c.item), [
+        'https://openexamhub.org/', 'https://openexamhub.org/exams', `https://openexamhub.org/exams/${plan.guide}`, url
+      ]);
+      const faq = blocks.find((b) => b['@type'] === 'FAQPage');
+      assert.equal(faq.mainEntity.length, plan.faq.length);
+      const text = html.replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+      for (const item of plan.faq) {
+        assert.ok(text.includes(`>${item.q}`), `${p}: FAQ question not visible: ${item.q}`);
+        assert.ok(text.includes(item.a), `${p}: FAQ answer not visible: ${item.q}`);
+      }
+      assert.ok(sitemap.includes(`<loc>${url}</loc>`), `sitemap missing ${url}`);
+      const guide = read(`exams/${plan.guide}/index.html`);
+      assert.ok(guide.includes(`href="${p}"`), `guide /exams/${plan.guide} does not link to ${p}`);
+      assert.ok(html.includes(`href="/exams/${plan.guide}"`), `${p} does not link back to its guide`);
+    }
   });
 
   test('info pages are prerendered with their own title and canonical; FAQ has FAQPage JSON-LD', () => {
