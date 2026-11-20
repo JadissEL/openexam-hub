@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // OpenExam Hub on Cloudflare Workers: static assets from dist/ + worker/index.js (see DEPLOY.md
+  // "Cloudflare Workers"). Build with `npm run cf:build`, deploy with `npm run cf:deploy`.
+  "name": "openexam-hub",
+  "account_id": "77ca4c42b0bef7f781c289a6c2ee8a2e",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-20",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // /blog/slug is served from blog/slug/index.html with no redirect (canonical URLs have no slash).
+    "html_handling": "drop-trailing-slash",
+    // Missing files invoke the Worker, which applies the SPA / 404 rules from vercel.json.
+    "not_found_handling": "none",
+    "run_worker_first": ["/api/*", "/ads.txt", "/blog/", "/demo/*"]
+  },
+  "vars": {
+    // The Vercel deployment that still runs the Node API functions and the cron jobs.
+    "API_ORIGIN": "https://openexam-hub.vercel.app"
+  },
+  // Production custom domains (attached at cutover; see DEPLOY.md "Cloudflare Workers").
+  // "routes": [
+  //   { "pattern": "openexamhub.org", "custom_domain": true },
+  //   { "pattern": "www.openexamhub.org", "custom_domain": true }
+  // ],
+  "env": {
+    // npx wrangler deploy --env staging  ->  Worker "openexam-hub-staging" on https://staging.openexamhub.org
+    "staging": {
+      "routes": [{ "pattern": "staging.openexamhub.org", "custom_domain": true }],
+      "vars": { "API_ORIGIN": "https://openexam-hub.vercel.app" }
+    }
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "traces": { "enabled": true }
+  }
+}

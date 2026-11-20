@@ -379,3 +379,66 @@ npm run e2e          # Firestore emulator (project demo-openexam, rules + indexe
 ```
 `npm run e2e` starts and stops everything itself and refuses any project id that does not start
 with `demo-`, so it can never write to the real Firebase project.
+
+## 8. Cloudflare Workers (static hosting at the edge, API on Vercel)
+
+`wrangler.jsonc` + `worker/index.js` serve the site from **Cloudflare Workers Static Assets** (free and
+unmetered for static files, including the demo video's bandwidth) and **proxy `/api/*` and `/ads.txt` to the
+Vercel deployment** (`API_ORIGIN`, default `https://openexam-hub.vercel.app`). Vercel keeps running every Node
+function and all three cron jobs, so nothing runs twice and no server code changed.
+
+Why not the API on Workers too: on the Workers **Free** plan an invocation gets 10 ms of CPU and 50 external
+subrequests. `firebase-admin` cannot run in workerd (protobufjs code generation is blocked), and the routes
+make more outbound calls than that (the `recheck-links` cron checks up to 150 links; roadmap builds do link
+checks + Firestore + LLM calls). Moving the API needs Workers Paid and a REST rewrite of the Firestore/Auth layer.
+
+What the Worker does (everything else is a plain asset hit and never runs the script):
+
+| Path | Behaviour (same as vercel.json) |
+| --- | --- |
+| `/api/*` | proxied to `API_ORIGIN` (method, headers, body, status passed through; redirects not followed) |
+| `/ads.txt` | proxied to `API_ORIGIN/api/ads-txt` |
+| `/demo/*` | served with `Range` support (206) through the Cache API; Static Assets alone only answers 200 |
+| `/blog/` | same page as `/blog` |
+| missing file | `/app/<tab>` deep links get the `/app` shell (200); any other unknown path is a real 404 (all public pages are prerendered) |
+| host `www.` | 308 to the apex (backup; the zone Redirect Rule does it first) |
+
+`scripts/cf-build.mjs` runs the production build (`VERCEL_ENV=production`, so blog drafts are excluded) and writes
+`dist/_headers` (HSTS, `Access-Control-Allow-Origin: *`, immutable `/assets/*`, demo cache headers, VTT type).
+Trailing-slash variants of blog pages (`/blog/<slug>/`) answer 307 to the canonical no-slash URL.
+
+```bash
+export VITE_ADSENSE_CLIENT=ca-pub-9692106045195909     # same value as on Vercel
+npm run cf:build
+npx --yes wrangler@4.166.0 deploy --env staging        # https://staging.openexamhub.org (Worker openexam-hub-staging)
+npx --yes wrangler@4.166.0 deploy                      # production Worker openexam-hub
+```
+
+Visitor IPs: Vercel overwrites `x-forwarded-for` with the Worker's IP, so the Worker sends the visitor IP as
+`x-oeh-client-ip` plus `x-oeh-proxy-key`; `/api/events` trusts it only when the key equals `PROXY_SHARED_SECRET`.
+Set the same random value as a Vercel env var (Production) and as a Worker secret
+(`npx wrangler secret put PROXY_SHARED_SECRET`) before the cutover, then redeploy Vercel.
+
+### Cutover (DNS)
+
+DNS records before the cutover (all DNS-only, TTL auto), zone `7e685b3f9438eaf3f64a2c5d67e31a85`:
+
+| id | type | name | content |
+| --- | --- | --- | --- |
+| `64bc0dc65536bbac0a816e9453933369` | A | openexamhub.org | 64.29.17.1 |
+| `cbc688862062f21181acd463c4e16166` | A | openexamhub.org | 216.198.79.1 |
+| `d311b840f39121e1a68741639db57ba4` | CNAME | www.openexamhub.org | 062ded5a105ee087.vercel-dns-017.com |
+
+Never touch the MX, SPF, DKIM (`cf2024-1._domainkey`) or `google-site-verification` TXT records.
+
+1. Uncomment `routes` in `wrangler.jsonc` (apex + www custom domains). Delete the three records above
+   (a Workers custom domain cannot sit on a hostname that already has an A/CNAME record), then run
+   `npx --yes wrangler@4.166.0 deploy`. Expect a brief certificate issuance window for the hostnames.
+2. Add a zone Single Redirect rule: `http.host eq "www.openexamhub.org"` -> `concat("https://openexamhub.org", http.request.uri.path)`, 308, preserve query string.
+3. Re-run the route parity check and `BASE_URL=https://openexamhub.org npm run e2e:gate`.
+
+### Rollback (one step)
+
+Remove the Worker custom domains (`openexamhub.org`, `www.openexamhub.org`) in Workers > openexam-hub >
+Settings > Domains & Routes, then re-create the three DNS-only records from the table above. The Vercel project
+was never changed or deleted, so it serves again as soon as DNS resolves to it.
