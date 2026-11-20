@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/brand/lockup-horizontal-dark.svg" />
+    <img src="public/brand/lockup-horizontal-light.svg" alt="OpenExam Hub" height="64" />
+  </picture>
+</p>
+
 # OpenExam Hub
 
 **Free study roadmaps for language exams, built from official free materials.**

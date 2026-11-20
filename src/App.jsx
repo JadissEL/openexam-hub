@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   ShieldCheck,
   Sparkles,
-  BookOpen,
   CheckCircle2,
   Circle,
   ExternalLink,
@@ -1871,11 +1870,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             aria-label="OpenExam Hub home"
             className="flex items-center gap-2.5 min-w-0 min-h-[44px] rounded-full"
           >
-            <span className="w-9 h-9 rounded-full bg-[#111111] text-white flex items-center justify-center shrink-0" aria-hidden="true">
-              <BookOpen className="w-[18px] h-[18px]" />
-            </span>
+            <img src="/brand/mark.svg" alt="" width="36" height="36" className="w-9 h-9 shrink-0" aria-hidden="true" />
             <span className="min-w-0 text-left">
-              <span className="block font-bold text-[17px] tracking-tight leading-none text-neutral-950">OpenExam Hub</span>
+              <span className="block font-bold text-[17px] tracking-tight leading-none text-neutral-950">OpenExam <span className="text-[#C2410C]">Hub</span></span>
               <span className="hidden 2xl:block whitespace-nowrap text-[11px] text-neutral-500 mt-1">Free official exam prep · MIT open source</span>
             </span>
           </button>

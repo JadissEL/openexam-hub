@@ -174,8 +174,8 @@ export default function AuthGate({ auth, sampleRoadmap }) {
     >
       <main className="mx-auto w-full max-w-md px-5 pt-8 pb-16 sm:pt-16">
         <a href="/" className="inline-flex items-center gap-2.5 font-semibold tracking-tight">
-          <img src="/favicon.svg" alt="" width="32" height="32" className="w-8 h-8 rounded-lg" />
-          <span className="text-[18px]">OpenExam Hub</span>
+          <img src="/brand/mark.svg" alt="" width="34" height="34" className="w-[34px] h-[34px]" />
+          <span className="text-[18px]">OpenExam <span className="text-[#C2410C]">Hub</span></span>
         </a>
 
         {accountDeleted && (
