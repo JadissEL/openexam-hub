@@ -46,7 +46,7 @@ function jsonLdScript(data) {
   return `    <script type="application/ld+json">${json}</script>`;
 }
 
-function applyHead(template, { title, description, canonical, type = 'website', jsonLd = [], lang = 'en' }) {
+function applyHead(template, { title, description, canonical, type = 'website', jsonLd = [], lang = 'en', image = null, imageAlt = null }) {
   let html = template;
   html = html.replace(/<html\s+lang="[^"]*"/, `<html lang="${escapeAttr(lang)}"`);
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeAttr(title)}</title>`);
@@ -70,6 +70,13 @@ function applyHead(template, { title, description, canonical, type = 'website', 
     /<meta name="twitter:description" content="[^"]*"\s*\/>/,
     `<meta name="twitter:description" content="${escapeAttr(description)}" />`
   );
+  if (image) {
+    html = html.replace(/<meta property="og:image" content="[^"]*"\s*\/>/, `<meta property="og:image" content="${escapeAttr(image)}" />`);
+    html = html.replace(/<meta name="twitter:image" content="[^"]*"\s*\/>/, `<meta name="twitter:image" content="${escapeAttr(image)}" />`);
+    if (imageAlt) {
+      html = html.replace(/<meta property="og:image:alt" content="[^"]*"\s*\/>/, `<meta property="og:image:alt" content="${escapeAttr(imageAlt)}" />`);
+    }
+  }
   const extra = [
     `    <link rel="alternate" type="application/rss+xml" title="OpenExam Hub Blog" href="${SITE_ORIGIN}/blog/rss.xml" />`,
     ...jsonLd.map(jsonLdScript)
@@ -169,7 +176,9 @@ async function prerender(distDir) {
           canonical: post.canonical,
           type: 'article',
           jsonLd,
-          lang: post.lang
+          lang: post.lang,
+          image: post.cover?.imageUrl || `${SITE_ORIGIN}/og-image.jpg`,
+          imageAlt: post.cover?.alt || null
         }),
         renderBlog(post.url, posts)
       )

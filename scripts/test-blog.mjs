@@ -11,6 +11,9 @@ import {
   buildRssXml,
   articleJsonLd,
   faqJsonLd,
+  normalizeCover,
+  firstBodyImage,
+  resolveImageUrl,
   SITE_ORIGIN,
   CONTENT_DIR
 } from './blog-data.mjs';
@@ -186,6 +189,72 @@ test('parsePlannerQuery pre-selects known exams and levels, ignores junk', () =>
   assert.equal(parsePlannerQuery('?exam=NOPE').exam || DEFAULT_PICKER_EXAM, DEFAULT_PICKER_EXAM);
 });
 
+
+test('published posts fall back to the first body image as the cover', () => {
+  const published = loadBlogPosts({ includeDrafts: false });
+  assert.ok(published.length >= 2, 'expected the two published posts');
+  for (const post of published) {
+    assert.ok(post.cover?.src, `${post.slug} is missing a cover`);
+    assert.ok(post.cover.alt, `${post.slug} cover is missing alt`);
+    assert.equal(post.cover.imageUrl, `https://openexamhub.org${post.cover.src}`);
+    assert.ok(!post.html.includes(`src="${post.cover.src}"`), `${post.slug} still repeats the cover image in the body`);
+  }
+  const tef = published.find((p) => p.slug === 'tef-canada-clb-nclc-express-entry');
+  assert.ok(tef);
+  assert.equal(tef.cover.src, '/blog/tef-canada-clb-nclc-express-entry/cover.webp');
+  assert.match(tef.cover.credit || '', /OpenExam Hub/);
+});
+
+test('frontmatter cover wins over the first body image; invalid cover is rejected', () => {
+  const raw = `---
+title: "Covered post"
+description: "Has an explicit cover."
+date: "2026-03-03"
+updated: "2026-03-03"
+lastVerified: "2026-03-03"
+exams: [IELTS]
+audience: [students]
+lang: en
+draft: false
+sources: []
+cover:
+  src: "/blog/covered-post/hero.webp"
+  alt: "A custom hero"
+  credit: "Photo credit"
+---
+
+![A body image](/blog/covered-post/other.webp)
+
+Body text.
+`;
+  const post = parsePost('covered-post.md', raw);
+  assert.equal(post.cover.src, '/blog/covered-post/hero.webp');
+  assert.equal(post.cover.alt, 'A custom hero');
+  assert.equal(post.cover.credit, 'Photo credit');
+  assert.equal(post.cover.imageUrl, 'https://openexamhub.org/blog/covered-post/hero.webp');
+  assert.match(post.html, /other\.webp/);
+  assert.equal(articleJsonLd(post).image, post.cover.imageUrl);
+
+  const bad = `---
+title: "Covered post"
+description: "Has a broken cover."
+date: "2026-03-03"
+updated: "2026-03-03"
+lastVerified: "2026-03-03"
+exams: [IELTS]
+audience: [students]
+lang: en
+draft: false
+sources: []
+cover:
+  src: "/blog/covered-post/hero.webp"
+---
+
+Body text.
+`;
+  assert.throws(() => parsePost('covered-post.md', bad), /cover/);
+});
+
 if (process.argv.includes('--built')) {
   const dist = path.join(root, 'dist');
   test('built sitemap and RSS exist', () => {
@@ -228,8 +297,26 @@ if (process.argv.includes('--built')) {
         assert.match(sitemap, new RegExp(loc.replace(/[/.]/g, r => '\\' + r)));
       }
       const index = fs.readFileSync(path.join(dist, 'blog/index.html'), 'utf8');
-      assert.match(index, /Articles coming soon/);
+      const rss = fs.readFileSync(path.join(dist, 'blog/rss.xml'), 'utf8');
       assert.doesNotMatch(index, /example-when-to-start-preparing/);
+      const published = loadBlogPosts({ includeDrafts: false });
+      if (published.length === 0) {
+        assert.match(index, /Articles coming soon/);
+      } else {
+        assert.doesNotMatch(index, /Articles coming soon/);
+        for (const post of published) {
+          assert.match(index, new RegExp(post.slug));
+          assert.ok(fs.existsSync(path.join(dist, 'blog', post.slug, 'index.html')), `missing prerendered ${post.slug}`);
+          assert.match(sitemap, new RegExp(post.slug));
+          assert.match(rss, new RegExp(post.slug));
+          const html = fs.readFileSync(path.join(dist, 'blog', post.slug, 'index.html'), 'utf8');
+          assert.match(html, /<meta property="og:type" content="article"/);
+          if (post.cover?.imageUrl) {
+            assert.match(html, new RegExp(`og:image" content="${post.cover.imageUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
+            assert.match(index, new RegExp(post.cover.src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+          }
+        }
+      }
     });
   }
 }

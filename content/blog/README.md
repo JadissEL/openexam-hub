@@ -31,6 +31,10 @@ draft: true                 # true = hidden on production, visible on preview
 sources:
   - title: "Official page title"
     url: "https://example.gov/page"
+cover:                      # optional; hero, list card and Open Graph image
+  src: "/blog/my-title/cover.webp"
+  alt: "A short description of the image"
+  credit: "Diagram by OpenExam Hub."   # optional
 faq:                        # optional; becomes an on-page FAQ and FAQPage JSON-LD
   - q: "A short question?"
     a: "A short, sourced answer."
@@ -55,6 +59,7 @@ Do not repeat the title as a # heading; the page already renders `title`.
 | `sources` | yes | List of `{title, url}`. URLs must be `https://`. Include every official page you rely on. |
 | `draft` | yes | `true` or `false`. |
 | `faq` | no | List of `{q, a}`. Optional. |
+| `cover` | no | `{src, alt, credit?}`. `src` is a site path such as `/blog/<slug>/cover.webp` (files live in `public/blog/<slug>/`) or an `https://` URL. `alt` is required when `cover` is set. `credit` is optional and shown under the hero. If `cover` is omitted, the first image in the body (and an italic line immediately under it, if any) is used for the hero, the list card and the Open Graph image. |
 
 ### Known exam ids
 

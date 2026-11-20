@@ -87,9 +87,26 @@ function ExamFilter({ exams, active }) {
   );
 }
 
+function CoverImage({ cover, href, className = '' }) {
+  if (!cover?.src) return null;
+  const img = (
+    <img
+      src={cover.src}
+      alt={cover.alt || ''}
+      className={`w-full h-auto object-cover ${className}`}
+    />
+  );
+  return href ? <a href={href} className="block">{img}</a> : img;
+}
+
 function PostCard({ post }) {
   return (
     <article className="border-b border-[#D9D1C5] py-8 sm:py-10">
+      {post.cover ? (
+        <div className="mb-5 overflow-hidden rounded-2xl bg-[#EDE7DD]">
+          <CoverImage cover={post.cover} href={post.url} />
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#8A8178]">
         <time dateTime={post.date}>{formatDate(post.date)}</time>
         <span aria-hidden="true">·</span>
@@ -272,6 +289,17 @@ export function BlogPost({ post }) {
             ))}
           </ul>
         </header>
+
+        {post.cover ? (
+          <figure className="mt-10 max-w-3xl">
+            <div className="overflow-hidden rounded-2xl bg-[#EDE7DD]">
+              <CoverImage cover={post.cover} />
+            </div>
+            {post.cover.credit ? (
+              <figcaption className={`mt-3 text-[14px] leading-relaxed ${muted}`}>{post.cover.credit}</figcaption>
+            ) : null}
+          </figure>
+        ) : null}
 
         <div className="mt-12 grid lg:grid-cols-[minmax(0,1fr)_16rem] gap-10 lg:gap-16 items-start">
           <aside className="lg:col-start-2 lg:row-start-1">

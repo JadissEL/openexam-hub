@@ -185,6 +185,90 @@ function normalizeList(raw, field, allowed, label) {
   });
 }
 
+
+export function resolveImageUrl(src) {
+  const s = String(src || '').trim();
+  if (!s) return null;
+  if (s.startsWith(SITE_ORIGIN + '/')) {
+    return { src: s.slice(SITE_ORIGIN.length), imageUrl: s };
+  }
+  if (s.startsWith('/') && !s.startsWith('//')) {
+    return { src: s, imageUrl: `${SITE_ORIGIN}${s}` };
+  }
+  if (/^https:\/\//i.test(s)) return { src: s, imageUrl: s };
+  return null;
+}
+
+function decodeEntities(str) {
+  return String(str || '')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
+function sameSrc(a, b) {
+  const ra = resolveImageUrl(a);
+  const rb = resolveImageUrl(b);
+  if (!ra || !rb) return false;
+  return ra.imageUrl === rb.imageUrl;
+}
+
+export function normalizeCover(raw, label) {
+  if (raw == null || raw === false) return null;
+  if (typeof raw !== 'object' || Array.isArray(raw) || !raw.src || !raw.alt) {
+    throw new Error(`${label}: "cover" must be {src, alt} (optional credit)`);
+  }
+  const resolved = resolveImageUrl(raw.src);
+  if (!resolved) {
+    throw new Error(`${label}: cover.src must be a site path (e.g. /blog/slug/cover.webp) or an https URL`);
+  }
+  const cover = { src: resolved.src, alt: String(raw.alt).trim(), imageUrl: resolved.imageUrl };
+  if (!cover.alt) throw new Error(`${label}: cover.alt must not be empty`);
+  if (raw.credit) cover.credit = String(raw.credit).trim();
+  return cover;
+}
+
+/** First <p><img></p> in the rendered body, plus an optional following italic caption. */
+export function firstBodyImage(html) {
+  const m = String(html || '').match(/<p>\s*<img\b([^>]*)>\s*<\/p>(?:\s*<p>\s*<em>([\s\S]*?)<\/em>\s*<\/p>)?/i);
+  if (!m) return null;
+  const attrs = m[1];
+  const src = (attrs.match(/\bsrc="([^"]+)"/i) || [])[1];
+  const alt = (attrs.match(/\balt="([^"]*)"/i) || [])[1] || '';
+  if (!src) return null;
+  const resolved = resolveImageUrl(decodeEntities(src));
+  if (!resolved) return null;
+  const credit = m[2] ? decodeEntities(m[2].replace(/<[^>]+>/g, '')).trim() : '';
+  return {
+    src: resolved.src,
+    imageUrl: resolved.imageUrl,
+    alt: decodeEntities(alt),
+    ...(credit ? { credit } : {}),
+    matchedHtml: m[0]
+  };
+}
+
+function applyCover(html, frontmatterCover, label) {
+  const fromMatter = normalizeCover(frontmatterCover, label);
+  const fromBody = firstBodyImage(html);
+  let cover = fromMatter;
+  if (!cover && fromBody) {
+    cover = {
+      src: fromBody.src,
+      alt: fromBody.alt || 'Article image',
+      imageUrl: fromBody.imageUrl,
+      ...(fromBody.credit ? { credit: fromBody.credit } : {})
+    };
+  }
+  let body = html;
+  if (cover && fromBody && sameSrc(cover.src, fromBody.src)) {
+    body = html.replace(fromBody.matchedHtml, '').trim();
+  }
+  return { cover, html: body };
+}
+
 export function parsePost(filename, raw) {
   const slug = filename.replace(/\.md$/i, '');
   const label = `content/blog/${filename}`;
@@ -225,7 +309,8 @@ export function parsePost(filename, raw) {
   const sources = normalizeSources(data.sources, label);
   const faq = normalizeFaq(data.faq, label);
 
-  const html = md.render(body);
+  const rendered = md.render(body);
+  const { cover, html } = applyCover(rendered, data.cover, label);
   const headings = extractHeadings(html);
   const words = wordCount(body);
   const readingMinutes = Math.max(1, Math.round(words / 220));
@@ -242,6 +327,7 @@ export function parsePost(filename, raw) {
     lang,
     sources,
     faq,
+    cover,
     draft: data.draft,
     html,
     headings,
@@ -294,7 +380,7 @@ export function articleJsonLd(post) {
     inLanguage: post.lang,
     mainEntityOfPage: post.canonical,
     url: post.canonical,
-    image: `${SITE_ORIGIN}/og-image.jpg`,
+    image: post.cover?.imageUrl || `${SITE_ORIGIN}/og-image.jpg`,
     author: { '@type': 'Organization', name: 'OpenExam Hub', url: SITE_ORIGIN },
     publisher: {
       '@type': 'Organization',
