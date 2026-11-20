@@ -15,11 +15,11 @@ No paywalls, no accounts needed (anonymous by default, sign in to sync).
 | Path | What it is |
 |---|---|
 | `index.html`, `src/` | Vite + React 18 + Tailwind 3 frontend. `src/App.jsx` is the whole app; `src/firebaseConfig.js` holds the public Firebase web config and the `VITE_*` overrides. |
-| `api/` | Vercel Node 24 serverless functions (8 entrypoints; Hobby allows 12): `generate-roadmap`, `diagnostic`, `coach`, `practice`, plus dispatchers `[route].js` (check-link, library), `admin/[action].js`, `webhooks/[provider].js`, `cron/[job].js`. Route handlers live in `lib/routes/`; add new endpoints to a dispatcher, not as new `api/` files. |
+| `api/` | Vercel Node 24 serverless functions (8 entrypoints; Hobby allows 12): `generate-roadmap`, `diagnostic`, `coach`, `practice`, plus dispatchers `[route].js` (check-link, library, plan, stats, events), `admin/[action].js`, `webhooks/[provider].js`, `cron/[job].js`. Route handlers live in `lib/routes/`; add new endpoints to a dispatcher, not as new `api/` files. |
 | `lib/` | Server code: the orchestrator and agents (`lib/agents/`), the LLM client (`lib/llm.js`, any OpenAI-compatible gateway such as OmniRoute), the library store, ledger, link checker, and the pure algorithm layer (`lib/algo/`: ranking, scheduling, FSRS spaced repetition, adaptive placement, progress). |
-| `scripts/` | Unit suites, the end-to-end test, the mock LLM, the local API server and the library seeder. |
+| `scripts/` | Unit suites, the end-to-end test, the mock LLM, the local API server, the library seeder and the v3 backfill (`migrate-v3.mjs`, dry run by default). |
 | `firestore.rules`, `firestore.indexes.json`, `firebase.json`, `.firebaserc` | Firestore security rules and indexes for the `openexam-hub` Firebase project. |
-| `vercel.json` | One Vercel project: Vite static build in `dist/`, functions in `api/`, SPA rewrite, daily 03:00 UTC link-recheck cron. |
+| `vercel.json` | One Vercel project: Vite static build in `dist/`, functions in `api/`, SPA rewrite, daily 03:00 UTC link-recheck cron and 03:30 UTC rollup cron (usage/calibration folding, public stats, shelves). |
 
 Docs: [DEPLOY.md](DEPLOY.md) (env vars, Vercel, Firestore, webhooks, OmniRoute),
 [CONTRACT.md](CONTRACT.md) (API contract), [ARCHITECTURE.md](ARCHITECTURE.md) (algorithms and data model).
@@ -37,7 +37,7 @@ Without a running API, build the UI in preview mode: `VITE_SERVER_ENABLED=false 
 ## Test
 
 ```bash
-npm test             # offline unit suites: orchestrator, learner agents, ledger, algorithms
+npm test             # offline unit suites: orchestrator, learner agents, ledger, algorithms, v3 integration
 npm run e2e          # Firestore emulator (demo-openexam, needs Java 11+) + mock LLM + real HTTP to api/**
 npm run build        # production frontend build into dist/
 ```

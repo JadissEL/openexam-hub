@@ -1,8 +1,9 @@
 # OpenExam Hub: algorithms and data model (v3 proposal)
 
-Status: **the algorithm layer is written and tested** (`lib/algo/*`, `scripts/test-algo.mjs`, 41/41 passing).
-**The data model below is a proposal.** No existing file was edited. The real `firestore.rules`, `firestore.indexes.json` and
-server files change only when the checklist in §C is applied. The proposed rules were checked in the Firestore emulator (18/18 checks, §B.9).
+Status: **integrated.** The algorithm layer (`lib/algo/*`, 41/41 tests) is wired into the server and the App following §C
+(commit history on `main`). Rules and indexes in the repo are the v3 versions (§B.9, Appendix 1–2) and are **deployed separately**
+(see DEPLOY.md §3: indexes first, rules only after the App with the bounded ledger feed is live). The backfill
+`scripts/migrate-v3.mjs` (§B.12 steps 2–3) is tested on the emulator; running it on production is a manual, separate step.
 
 Principle: **the AI writes words; the algorithms make the decisions.** Ranking, scheduling, review timing, level
 estimation, pace and caching are all deterministic, pure functions. The output is the same for the same input, every function

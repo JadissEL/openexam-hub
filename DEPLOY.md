@@ -57,7 +57,9 @@ use it), or with `vercel env add NAME production`. Never commit them.
 |---|---|---|
 | `EXTRA_ALLOWED_DOMAINS` | no | A comma-separated list of extra official domains, used for new exams. Example: `cervantes.es,testdaf.de,celpip.ca`. Use bare hostnames only (no scheme, path or wildcard). Subdomains are included automatically. Invalid entries are ignored with a warning. Never add multi-tenant hosts (`github.io`, `blogspot.com`) or public suffixes (`co.uk`). Mirror the same list in src/App.jsx's allowlist so the client agrees. Redeploy after changing it. |
 
-Other routes (roadmap, diagnostic, coach, practice) use only the variables above.
+| `RESOURCE_IDS_V3` | no | Set to `1` **only after** `scripts/migrate-v3.mjs` has run on the project. New library writes then use the v3 resource id (sha1 of the canonical URL). Leave unset before the backfill. For the 9 seeded resources the legacy and v3 ids are identical, so they never move. |
+
+Other routes (roadmap, plan, stats, events, diagnostic, coach, practice) use only the variables above.
 
 ---
 
@@ -79,6 +81,7 @@ Or import the GitHub repo in the Vercel dashboard (root directory = `./`); `verc
 * Client build variables (`VITE_*`, see `.env.example`) are optional: `src/firebaseConfig.js` defaults to the public `openexam-hub` web config. `VITE_SERVER_ENABLED=false` builds a preview-only UI that never calls `/api`.
 * `vercel.json` sets a **daily** cron (`0 3 * * *`, 03:00 UTC) for `/api/cron/recheck-links` and gives `api/cron/*.js` and `api/admin/*.js` (so `/api/cron/recheck-links` and `/api/admin/expand`) `maxDuration: 300`. On Hobby the cap is 300 s and only daily crons are allowed. Each run checks 150 links and stops starting new checks after 240 s, so each run fits the limit and the whole library is re-checked about every `N/150` days.
 * To smoke-test the cron: `curl -H "Authorization: Bearer $CRON_SECRET" https://<app>/api/cron/recheck-links`.
+* Crons: `recheck-links` (daily) and `rollup` (03:30 UTC: folds usage/calibration buckets, writes `stats/public`, rebuilds shelves).
 * **Before go-live, reset the old browser-written treasury.** The old client wrote sample and arbitrary amounts into `treasury/monthly_ledger` and `ledger_events`. Delete `artifacts/{APP_ID}/public/data/treasury/monthly_ledger` and every existing `ledger_events/*` doc in the Firestore console. (`lib/ledger.js` also ignores the money fields of any ledger doc that has no `month`, keeping only `adsenseBridge`. Deleting the old events is still needed to clean the public feed.)
 
 ### Rate-limit the expensive routes (recommended)
@@ -93,32 +96,56 @@ Check your plan's Firewall limits on vercel.com/docs/vercel-firewall.
 
 ---
 
-## 3. Firestore rules and indexes
+## 3. Firestore rules, indexes, TTL and the v3 backfill
 
-`firestore.rules` works like this:
-* `artifacts/{appId}/public/**`: anyone can read; **no client can write**. Everything shared is written by the server through the Admin SDK, which bypasses rules.
-* `artifacts/{appId}/users/{uid}/**`: only the owner (`request.auth.uid == uid`) can read or write. Roadmap docs must pass a shape and size check: `exam`, `level` A1–C2, `days` 1–180, bounded list and map sizes, at most 25 keys, and `id` must match the doc id.
+`firestore.rules` (v3 data model, ARCHITECTURE.md §B.9):
+* `artifacts/{appId}/public/data/{coll}/{doc}`: `get` for the public collections (resources, shelves, plans, exam_profiles,
+  practice_sets, item_sets, ledger_events, treasury, stats, legacy global_verified_roadmaps/metrics); `list` **only with
+  `limit <= 100`**; server-only collections (counters, usage_buckets, calib_buckets, link_checks) are not readable. **No client writes.**
+* `users/{uid}/roadmaps/{id}`: owner only, shape-checked (≤ 30 keys, level A1–C2, days 1–180, `progress.done` map ≤ 2000,
+  `calendar` ≤ 180, id == doc id). `users/{uid}/srs/{id}` and `users/{uid}/placement/{EXAM}`: owner only, validated keys.
 * Everything else is denied.
 
-`firestore.indexes.json` defines the composite index that
-`lib/library.js` `findResources` needs: `resources`: `exams` (array-contains) + `approved` (==)
-+ `linkStatus` (in). The link-maintenance query (`orderBy lastCheckedAt`) uses the automatic
-single-field index.
+`firestore.indexes.json` adds the v3 composite indexes (resources `exams`+`approved`+`linkStatus`, `approved`+`nextCheckAt`,
+srs `exam`+`due`) and index exemptions for big maps (`roadmaps.progress`, `plans.resources`, `shelves.bySkill`, ...).
 
-Deploy both with the Firebase CLI from the repo root (`firebase.json` and `.firebaserc` are committed; the default project is `openexam-hub`):
+**Deploy order (important):**
+1. Indexes first: `firebase deploy --only firestore:indexes` (they take a few minutes to build). Until the
+   `approved`+`nextCheckAt` index exists, the link cron falls back to the old `orderBy lastCheckedAt` scan (reported as `queryMode`).
+2. Rules **only after** the App build with the bounded ledger feed (`orderBy createdAt desc, limit 20`) is live,
+   because the new rules reject unbounded lists: `firebase deploy --only firestore:rules`.
 
 ```bash
 npm i -g firebase-tools
 firebase login
 firebase use openexam-hub
-firebase deploy --only firestore:rules,firestore:indexes
+firebase deploy --only firestore:indexes
+# after the App deploy is live:
+firebase deploy --only firestore:rules
 ```
 
-Indexes take a few minutes to build. Until then, `findResources` fails with `FAILED_PRECONDITION`,
-and the error message contains a console link that creates the same index.
+**TTL policies** (one-time, Google Cloud console or gcloud):
+```bash
+for c in plans usage_buckets calib_buckets link_checks; do
+  gcloud firestore fields ttls update expireAt --collection-group=$c --enable-ttl --project openexam-hub
+done
+```
 
-The rules were checked against the Firestore emulator (16 allow/deny cases: public read, no client
-writes to ledger/events/cache, owner-only roadmaps, bad level/days/id rejected, default deny).
+**v3 backfill** (`scripts/migrate-v3.mjs`, idempotent; ARCHITECTURE.md §B.12 steps 2–3). It adds the v3 fields
+(site, dedupKey, tier, shelfKeys, nextCheckAt, checkIntervalDays, completionCount, consecutiveDead) to existing resources,
+moves ids only for URLs whose canonical form changed (old doc kept with `duplicateOf` + `approved:false`), retires
+near-duplicates, deletes plans citing retired ids, builds the shelves and writes `stats/public`.
+```bash
+node scripts/migrate-v3.mjs                      # dry run: prints what it would change, writes nothing
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8085 node scripts/migrate-v3.mjs --write   # emulator
+# production (manual, after reviewing the dry run):
+FIREBASE_SERVICE_ACCOUNT=... APP_ID=openexam-hub node scripts/migrate-v3.mjs --write --i-understand-this-writes-production
+```
+Then set `RESOURCE_IDS_V3=1` in Vercel and redeploy. Without the backfill everything still works: legacy docs are
+rechecked by the `lastCheckedAt` fallback, shelves are built on demand, and derived fields are computed on read.
+
+The rules are exercised by `npm run e2e` against the emulator (public reads, no client writes, bounded lists,
+owner-only roadmaps with field-path ticks, SRS card validation).
 
 ---
 
