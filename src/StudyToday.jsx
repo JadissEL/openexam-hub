@@ -32,7 +32,7 @@ function TaskRow({ task, checked, onToggle, resource }) {
           {checked ? <CheckCircle2 className="w-6 h-6 text-[#EA580C] oe-pop" aria-hidden="true" /> : <Circle className="w-6 h-6 text-neutral-300" aria-hidden="true" />}
         </button>
         <div className="min-w-0 flex-1 pt-1">
-          <p className={`text-sm leading-snug ${checked ? 'text-neutral-400 line-through' : 'text-neutral-900'}`}>{task.text}</p>
+          <p className={`text-sm leading-snug ${checked ? 'text-neutral-500 line-through' : 'text-neutral-900'}`}>{task.text}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-neutral-500">
             {task.minutes > 0 && (
               <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" aria-hidden="true" />{task.minutes} min</span>
@@ -100,7 +100,7 @@ export default function StudyToday({ roadmap, onToggle, dueCards = 0, onOpenRevi
           </p>
           <h3 id="oe-today-title" className="text-lg sm:text-xl font-bold mt-1 leading-tight">
             Day {selected} of {days.length}
-            <span className="text-neutral-400 font-semibold"> · {TYPE_LABEL[day.type] || 'Study'}</span>
+            <span className="text-neutral-500 font-semibold"> · {TYPE_LABEL[day.type] || 'Study'}</span>
           </h3>
           <p className="text-xs text-neutral-500 mt-0.5">
             {fmtDate(dateOfDay(roadmap, selected))} · about {day.minutes} min · {dayDone}/{day.tasks.length} done
@@ -206,9 +206,15 @@ export default function StudyToday({ roadmap, onToggle, dueCards = 0, onOpenRevi
           </div>
           <div className="rounded-2xl bg-[#FAFAF8] border border-black/5 p-3.5">
             <p className={`${UI.label} flex items-center gap-1`}><Flag className="w-3.5 h-3.5" aria-hidden="true" />Projected finish</p>
-            <p className="mt-1 text-lg font-bold">{prog.projectedFinishDate ? fmtDate(prog.projectedFinishDate) : '—'}</p>
+            <p className="mt-1 text-lg font-bold">{prog.projectedFinishDate ? fmtDate(prog.projectedFinishDate) : prog.projectionCapped ? `${prog.behindMonths}+ months late` : '—'}</p>
             <p className="text-xs text-neutral-500">
-              {prog.lateByDays == null ? 'Tick a few tasks to see a projection' : prog.lateByDays > 0 ? `${prog.lateByDays} day(s) after your exam` : 'On or before your exam'}
+              {prog.projectionCapped
+                ? `You are ${prog.behindText}. Pick up the pace or choose a later exam date.`
+                : prog.lateByDays == null
+                  ? 'Tick a few tasks to see a projection'
+                  : prog.lateByDays > 0
+                    ? `${prog.lateByDays} ${prog.lateByDays === 1 ? 'day' : 'days'} after your exam`
+                    : 'On or before your exam'}
             </p>
           </div>
         </div>

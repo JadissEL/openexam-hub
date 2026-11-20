@@ -510,6 +510,16 @@ test('progress: on schedule, ahead, behind; projected finish; completed plan', (
   const stalled = PR.assessProgress({ days: 10, startDate: START, now: at(60), totalTasks: 10, completedAt: [] });
   assert.equal(stalled.projectedFinishDay, null); assert.equal(stalled.onTrack, false);
 });
+test('progress: far-off projections are capped (no 2029 dates), "more than N months behind" instead', () => {
+  // 200 tasks over 30 days, only 3 done in 20 days -> pace ~0.15/day -> finish years away.
+  const slow = PR.assessProgress({ days: 30, startDate: START, now: at(20), totalTasks: 200, completedAt: [at(2), at(9), at(18)] });
+  assert.equal(slow.projectedFinishDate, null);
+  assert.equal(slow.projectionCapped, true);
+  assert.ok(slow.behindMonths >= 2, `months ${slow.behindMonths}`);
+  assert.match(slow.behindText, /^more than \d+ months behind at this pace$/);
+  const near = PR.assessProgress({ days: 30, startDate: START, now: at(10, 18), totalTasks: 60, completedAt: Array.from({ length: 20 }, (_, i) => at(Math.floor(i / 2) + 1)) });
+  assert.equal(near.projectionCapped, false); assert.ok(near.projectedFinishDate); assert.equal(near.behindText, null);
+});
 test('progress: hysteresis prevents flip-flop around the threshold', () => {
   const total = 100; const days = 50; const day = 21;
   // ~10 points behind on share, but a strong recent pace (3/day in the last 7 days) so the projection is on time.
