@@ -39,6 +39,10 @@ async function signUp(email) {
   return { uid: j.localId, token: j.idToken };
 }
 
+// Start from empty emulators so re-runs are deterministic.
+await fetch(`http://${AUTH_HOST}/emulator/v1/projects/${PROJECT}/accounts`, { method: 'DELETE' });
+await fetch(`http://${FS_HOST}/emulator/v1/projects/${PROJECT}/databases/(default)/documents`, { method: 'DELETE' });
+
 const server = spawn(process.execPath, ['scripts/local-server.mjs', String(PORT)], {
   cwd: ROOT,
   env: { ...process.env, LOCAL_SERVER_QUIET: '1', CRON_SECRET, FIREBASE_SERVICE_ACCOUNT: '' },
@@ -105,7 +109,7 @@ try {
     const { runCleanup } = await import('../lib/routes/cron/cleanup.js');
     const pub = db.collection('artifacts').doc(APP_ID).collection('public').doc('data');
     const past = new Date(Date.now() - 864e5);
-    const future = new Date(Date.now() + 864e5);
+    const future = new Date(Date.now() + 30 * 864e5);
     for (const c of ['plans', 'usage_buckets', 'calib_buckets', 'link_checks']) {
       await pub.collection(c).doc('old').set({ expireAt: past });
       await pub.collection(c).doc('fresh').set({ expireAt: future });
