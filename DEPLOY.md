@@ -419,6 +419,10 @@ Visitor IPs: Vercel overwrites `x-forwarded-for` with the Worker's IP, so the Wo
 Set the same random value as a Vercel env var (Production) and as a Worker secret
 (`npx wrangler secret put PROXY_SHARED_SECRET`) before the cutover, then redeploy Vercel.
 
+**Content updates:** pushes to main deploy Vercel (API) automatically, but the static site on Cloudflare is
+updated by `.github/workflows/cloudflare-deploy.yml`, which needs the repo secret `CLOUDFLARE_API_TOKEN`.
+Until that secret exists, run `npm run cf:build && npm run cf:deploy` after each content push.
+
 ### Cutover (DNS)
 
 DNS records before the cutover (all DNS-only, TTL auto), zone `7e685b3f9438eaf3f64a2c5d67e31a85`:

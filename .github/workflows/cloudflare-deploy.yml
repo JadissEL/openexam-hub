@@ -1,0 +1,38 @@
+# Deploy the static site to the Cloudflare Worker "openexam-hub" on every push to main
+# (openexamhub.org is served from Cloudflare; /api stays on Vercel, which deploys itself).
+# Needs the repository secret CLOUDFLARE_API_TOKEN (Workers Scripts: Edit on account
+# 77ca4c42b0bef7f781c289a6c2ee8a2e). Without it the job is skipped, not failed.
+name: Deploy to Cloudflare Workers
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: cloudflare-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+    steps:
+      - name: Skip without a Cloudflare token
+        if: env.HAS_TOKEN != 'true'
+        run: echo "::warning::CLOUDFLARE_API_TOKEN is not set; openexamhub.org was NOT updated."
+      - uses: actions/checkout@v4
+        if: env.HAS_TOKEN == 'true'
+      - uses: actions/setup-node@v4
+        if: env.HAS_TOKEN == 'true'
+        with:
+          node-version: 24
+          cache: npm
+      - if: env.HAS_TOKEN == 'true'
+        run: npm ci --no-audit --no-fund
+      - if: env.HAS_TOKEN == 'true'
+        run: npm run cf:build
+        env:
+          VITE_ADSENSE_CLIENT: ca-pub-9692106045195909
+      - if: env.HAS_TOKEN == 'true'
+        run: npx --yes wrangler@4.166.0 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
