@@ -45,6 +45,7 @@ const IELTS_READING = 'https://ielts.org/take-a-test/test-types/ielts-academic-t
 const IELTS_WRITING_AC = 'https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-academic-format-writing';
 const IELTS_WRITING_GT = 'https://ielts.org/take-a-test/test-types/ielts-general-training-test/ielts-general-training-format-writing';
 const IELTS_SPEAKING = 'https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-academic-format-speaking';
+const IELTS_CEFR = 'https://ielts.org/organisations/ielts-for-organisations/compare-ielts/ielts-and-the-cefr';
 const BC_MOCKS = 'https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests';
 const IELTS_SAMPLES = 'https://ielts.org/take-a-test/preparation-resources/sample-test-questions';
 const IELTS_SAMPLES_AC = 'https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test';
@@ -273,7 +274,7 @@ export const PLAN_PAGES = [
     slug: '8-week-study-plan',
     label: 'IELTS 8-week study plan toward band 6.5',
     breadcrumb: '8-week study plan',
-    level: 'Band 6.5 target (CEFR B2)',
+    level: 'Band 6.5 target',
     duration: '8 weeks',
     tags: ['IELTS'],
     title: 'IELTS 8-week study plan toward band 6.5',
@@ -292,9 +293,9 @@ export const PLAN_PAGES = [
       ['Reading', '60 min, 3 sections, 40 questions'],
       ['Writing', '60 min, 2 tasks: Task 1 at least 150 words in about 20 min, Task 2 at least 250 words in about 40 min. Task 2 counts twice as much as Task 1'],
       ['Speaking', '11–14 min, 3 parts, face-to-face with an examiner'],
-      ['Band 6.5 and CEFR', 'Bands 5.5–6.5 align to B2 under the IELTS–CEFR alignment']
+      ['Band 6.5 and the CEFR', 'IELTS’s alignment is approximate: band 6.5 sits on the border between B2 and C1']
     ],
-    factsNote: 'Format from IELTS.org’s official test-format pages, checked 20 November 2026.',
+    factsNote: 'Format from IELTS.org’s official test-format pages and CEFR alignment from IELTS.org’s “IELTS and the CEFR” page, checked 20 November 2026.',
     materials: [
       L('British Council: free official IELTS practice and mock tests', BC_MOCKS),
       L('IELTS.org: official sample test questions', IELTS_SAMPLES),
@@ -356,6 +357,7 @@ export const PLAN_PAGES = [
       L('IELTS.org: Reading format', IELTS_READING),
       L('IELTS.org: Academic Writing format', IELTS_WRITING_AC),
       L('IELTS.org: Speaking format', IELTS_SPEAKING),
+      L('IELTS.org: IELTS and the CEFR', IELTS_CEFR),
       L('IRCC: Express Entry language test results', IRCC_TESTS)
     ],
     lastChecked: '2026-11-20',
