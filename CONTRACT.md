@@ -1,6 +1,6 @@
 # OpenExam Hub server — shared contract (all agents MUST follow)
 
-Runtime: Vercel Node 20 serverless functions, ESM (`export default async function handler(req, res)`), dependency `firebase-admin` only (plus Node built-ins / global fetch). No other npm deps unless essential; add them to package.json.
+Runtime: Vercel Node 24 serverless functions (fra1), ESM (`export default async function handler(req, res)`). Route handlers live in `lib/routes/` and are mounted by the `api/` dispatchers (max 12 functions on Hobby; see DEPLOY.md), dependency `firebase-admin` only (plus Node built-ins / global fetch). No other npm deps unless essential; add them to package.json.
 Shared libs already exist — reuse, don't duplicate: `lib/allowlist.js` (isOfficialUrl, normalizeUrl, OFFICIAL_DOMAIN_ALLOWLIST), `lib/linkCheck.js` (checkLink -> {status: ok|dead|unverified|off_allowlist|error, httpCode, finalUrl}), `lib/llm.js` (generateJson({agent, system, prompt, schema, validate}) -> {data, usage, model}; S = standard JSON Schema helpers; `agent` is one of DISCOVERY|PLANNER|FORMAT|DIAGNOSTIC|COACH|PRACTICE|EXPANSION and picks the model via LLM_MODEL_<AGENT>; ALWAYS pass a `validate(data)` that returns an error string or null — free models drift from the schema, and validate failures are retried automatically), `lib/firebaseAdmin.js` (db, APP_ID, pub() = doc artifacts/{APP_ID}/public/data), `lib/library.js` (findResources, upsertResource, markUsed, resourceId, SKILLS), `lib/http.js` (cors, rawBody).
 
 Firestore layout (all under artifacts/{APP_ID}/):

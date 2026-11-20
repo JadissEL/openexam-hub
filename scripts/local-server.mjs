@@ -14,12 +14,14 @@
  *   - res.status(), res.json(), res.send(), res.redirect()
  *   - an exception escaping the handler -> 500 FUNCTION_INVOCATION_FAILED (Vercel does not catch ApiError).
  *
+ *   - api/[param].js dynamic segments (one function serving several routes) -> req.query[param]
+ *
  * Usage: node scripts/local-server.mjs [port]   (default 3001; also LOCAL_API_PORT)
  */
 import { createServer } from 'node:http';
 import { PassThrough } from 'node:stream';
 import { parse as parseQS } from 'node:querystring';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -126,13 +128,27 @@ async function addHelpers(req, res) {
 }
 
 const modules = new Map();
+/**
+ * Vercel filesystem routing for api/**: an exact file wins (api/coach.js); otherwise a single
+ * dynamic segment file in the same directory (api/admin/[action].js) matches and its value is
+ * exposed as req.query[action]. Files/segments starting with "_" or "." are never routes.
+ * Returns { handler, params } or null.
+ */
 async function loadRoute(pathname) {
   const rel = pathname.replace(/^\/+/, '').replace(/\/+$/, '');
-  if (!/^api(\/[A-Za-z0-9_-]+)+$/.test(rel)) return null;
-  const file = path.join(ROOT, `${rel}.js`);
-  if (!existsSync(file)) return null;
+  if (!/^api(\/[A-Za-z0-9-][A-Za-z0-9_-]*)+$/.test(rel)) return null;
+  let file = path.join(ROOT, `${rel}.js`);
+  const params = {};
+  if (!existsSync(file)) {
+    const dir = path.join(ROOT, path.dirname(rel));
+    const seg = path.basename(rel);
+    const dyn = existsSync(dir) ? readdirSync(dir).find((f) => /^\[[A-Za-z0-9_]+\]\.js$/.test(f)) : null;
+    if (!dyn) return null;
+    file = path.join(dir, dyn);
+    params[dyn.slice(1, -4)] = seg;
+  }
   if (!modules.has(file)) modules.set(file, await import(pathToFileURL(file).href));
-  return modules.get(file).default;
+  return { handler: modules.get(file).default, params };
 }
 
 const server = createServer(async (req, res) => {
@@ -140,14 +156,15 @@ const server = createServer(async (req, res) => {
   const { pathname } = new URL(req.url, 'http://localhost');
   res.on('finish', () => process.env.LOCAL_SERVER_QUIET || console.log(`${req.method} ${pathname} -> ${res.statusCode} (${Date.now() - started} ms)`));
   try {
-    const handler = await loadRoute(pathname);
-    if (!handler) {
+    const route = await loadRoute(pathname);
+    if (!route) {
       res.statusCode = 404;
       res.setHeader('content-type', 'text/plain');
       return res.end('The page could not be found. NOT_FOUND');
     }
     await addHelpers(req, res);
-    await handler(req, res);
+    if (Object.keys(route.params).length) req.query = { ...req.query, ...route.params }; // like Vercel's path segments
+    await route.handler(req, res);
   } catch (err) {
     console.error(`[local-server] ${req.method} ${pathname} crashed:`, err?.stack || err);
     if (!res.headersSent) {

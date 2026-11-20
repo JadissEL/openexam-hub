@@ -1,6 +1,6 @@
 # OpenExam Hub: deployment guide
 
-One Vercel project serves both halves: the static Vite build (`dist/`) and the Node 20 serverless
+One Vercel project serves both halves: the static Vite build (`dist/`) and the Node 24 serverless
 functions in `api/**`. The functions that use Firestore
 through `firebase-admin`. All AI calls go through one OpenAI-compatible endpoint (`lib/llm.js`).
 The default is a self-hosted **OmniRoute** gateway on a small always-on host.
@@ -73,10 +73,11 @@ vercel --prod
 Or import the GitHub repo in the Vercel dashboard (root directory = `./`); `vercel.json` already sets
 `framework: vite`, `buildCommand: npm run build` and `outputDirectory: dist`.
 
-* The function runtime comes from `package.json` (`"type": "module"`, `engines.node: 20.x`). The build step is `vite build` for the frontend only; `api/**` is bundled by Vercel.
+* The function runtime comes from `package.json` (`"type": "module"`, `engines.node: 24.x`, region `fra1` next to Firestore eur3). The build step is `vite build` for the frontend only; `api/**` is bundled by Vercel.
+* **Function budget:** Hobby allows 12 Serverless Functions per deployment and every file in `api/` is one. The repo ships 8: `generate-roadmap`, `diagnostic`, `coach`, `practice`, and four dispatchers, `api/[route].js` (`/api/check-link`, `/api/library`), `api/admin/[action].js`, `api/webhooks/[provider].js` and `api/cron/[job].js`. Handlers live in `lib/routes/`. Public URLs are unchanged, so webhook registrations stay the same. New endpoints go into a dispatcher table, not a new `api/` file (see ARCHITECTURE.md §C.8).
 * `vercel.json` rewrites every non-`/api/` path to `/index.html` (SPA). Same-origin `/api` means the client needs no `VITE_API_BASE`.
 * Client build variables (`VITE_*`, see `.env.example`) are optional: `src/firebaseConfig.js` defaults to the public `openexam-hub` web config. `VITE_SERVER_ENABLED=false` builds a preview-only UI that never calls `/api`.
-* `vercel.json` sets a **daily** cron (`0 3 * * *`, 03:00 UTC) for `/api/cron/recheck-links` and gives it and `/api/admin/expand` `maxDuration: 300`. On Hobby the cap is 300 s and only daily crons are allowed. Each run checks 150 links and stops starting new checks after 240 s, so each run fits the limit and the whole library is re-checked about every `N/150` days.
+* `vercel.json` sets a **daily** cron (`0 3 * * *`, 03:00 UTC) for `/api/cron/recheck-links` and gives `api/cron/*.js` and `api/admin/*.js` (so `/api/cron/recheck-links` and `/api/admin/expand`) `maxDuration: 300`. On Hobby the cap is 300 s and only daily crons are allowed. Each run checks 150 links and stops starting new checks after 240 s, so each run fits the limit and the whole library is re-checked about every `N/150` days.
 * To smoke-test the cron: `curl -H "Authorization: Bearer $CRON_SECRET" https://<app>/api/cron/recheck-links`.
 * **Before go-live, reset the old browser-written treasury.** The old client wrote sample and arbitrary amounts into `treasury/monthly_ledger` and `ledger_events`. Delete `artifacts/{APP_ID}/public/data/treasury/monthly_ledger` and every existing `ledger_events/*` doc in the Firestore console. (`lib/ledger.js` also ignores the money fields of any ledger doc that has no `month`, keeping only `adsenseBridge`. Deleting the old events is still needed to clean the public feed.)
 

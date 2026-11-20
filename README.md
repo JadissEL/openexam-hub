@@ -15,7 +15,7 @@ No paywalls, no accounts needed (anonymous by default, sign in to sync).
 | Path | What it is |
 |---|---|
 | `index.html`, `src/` | Vite + React 18 + Tailwind 3 frontend. `src/App.jsx` is the whole app; `src/firebaseConfig.js` holds the public Firebase web config and the `VITE_*` overrides. |
-| `api/` | Vercel Node 20 serverless functions: roadmap generation, library, diagnostic, coach, practice, link checks, admin, donation webhooks, daily cron. |
+| `api/` | Vercel Node 24 serverless functions (8 entrypoints; Hobby allows 12): `generate-roadmap`, `diagnostic`, `coach`, `practice`, plus dispatchers `[route].js` (check-link, library), `admin/[action].js`, `webhooks/[provider].js`, `cron/[job].js`. Route handlers live in `lib/routes/`; add new endpoints to a dispatcher, not as new `api/` files. |
 | `lib/` | Server code: the orchestrator and agents (`lib/agents/`), the LLM client (`lib/llm.js`, any OpenAI-compatible gateway such as OmniRoute), the library store, ledger, link checker, and the pure algorithm layer (`lib/algo/`: ranking, scheduling, FSRS spaced repetition, adaptive placement, progress). |
 | `scripts/` | Unit suites, the end-to-end test, the mock LLM, the local API server and the library seeder. |
 | `firestore.rules`, `firestore.indexes.json`, `firebase.json`, `.firebaserc` | Firestore security rules and indexes for the `openexam-hub` Firebase project. |

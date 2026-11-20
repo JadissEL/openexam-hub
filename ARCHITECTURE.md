@@ -273,7 +273,7 @@ The `resources` collection is never queried on a normal request. Only shelf rebu
 
 The rebuild runs in four places:
 - in `upsertResource`/`saveToLibrary`, for each (exam, level) the resource is tagged with, after the request has replied;
-- in `api/admin/approve.js`;
+- in `lib/routes/admin/approve.js` (served by `api/admin/[action].js`);
 - in `linkMaintenance` for every `shelfKeys` entry of a resource whose status changed;
 - nightly in the rollup.
 
@@ -514,14 +514,24 @@ Rollback: unset `ALGO_V3`. The old collections are still being written until ste
    - `invalidateRoadmaps`: replace the full `select().get()` scan with chunks of 30 ids:
      `plans.where('resourceIds','array-contains-any', chunk).select().get()`, then delete. Keep the legacy scan on `global_verified_roadmaps` during migration.
    - Write `link_checks/{rid}_{yyyymmdd}` with `expireAt` (+90 d) only for status changes.
-7. **`api/library.js`**: serve from `getShelf(exam, level)` (entries, or `bySkill[skill]` mapped back through the entries), and set
+7. **`lib/routes/library.js`** (served at `/api/library` by `api/[route].js`): serve from `getShelf(exam, level)` (entries, or `bySkill[skill]` mapped back through the entries), and set
    `Cache-Control: public, s-maxage=600, stale-while-revalidate=86400`. It falls back to the current query when a shelf is missing.
 8. **New files**:
    - `lib/counters.js` (§B.5);
-   - `api/plan.js` (GET, CDN-cached plan lookup by `planKey`, 404 on miss);
-   - `api/stats.js` (GET `stats/public`, s-maxage=300);
-   - `api/events.js` (POST `{type:'task_done', resourceId}` → `recordUsage([id], 'c')`, which validates that the id exists on the caller's plan and rate-limits by IP);
-   - `api/cron/rollup.js` (Bearer `CRON_SECRET`: fold buckets and shards → `resources`, `stats/public`, shelves; fold `calib_buckets` → `item_bank` and `item_sets`);
+   - **Function budget (Vercel Hobby: max 12 Serverless Functions per deployment; every file under `api/` counts, `lib/` does not).**
+     Do **not** add new files under `api/`. Write each handler in `lib/routes/…` and register it in the matching dispatcher table;
+     the public URL stays `/api/<name>`:
+     - `lib/routes/plan.js` → `ROUTES.plan` in `api/[route].js` (GET, CDN-cached plan lookup by `planKey`, 404 on miss);
+     - `lib/routes/stats.js` → `ROUTES.stats` in `api/[route].js` (GET `stats/public`, s-maxage=300);
+     - `lib/routes/events.js` → `ROUTES.events` in `api/[route].js` (POST `{type:'task_done', resourceId}` → `recordUsage([id], 'c')`, which validates that the id exists on the caller's plan and rate-limits by IP);
+     - `lib/routes/shelf.js` / `lib/routes/item-set.js` → `api/[route].js` too, if they ship;
+     - `lib/routes/cron/rollup.js` → `ROUTES.rollup` in `api/cron/[job].js` (Bearer `CRON_SECRET`: fold buckets and shards → `resources`, `stats/public`, shelves; fold `calib_buckets` → `item_bank` and `item_sets`). It inherits `maxDuration: 300` from the `api/cron/*.js` glob;
+     - new admin actions → `api/admin/[action].js`; new donation providers → `api/webhooks/[provider].js` (handlers must read the raw body via `lib/http.js` `rawBody()` and never touch `req.body` before verifying).
+     Current entrypoints (8): `generate-roadmap`, `diagnostic`, `coach`, `practice` (LLM routes, kept separate so their cold starts and limits stay isolated),
+     plus the dispatchers `[route]`, `admin/[action]`, `webhooks/[provider]`, `cron/[job]`. A new standalone file is only justified for a route that needs its own
+     `maxDuration`/memory or isolation; check `find api -name '*.js' ! -name '_*' | wc -l` stays ≤ 10 so there is headroom. Static files win over `[param].js` in the same folder,
+     and files or folders starting with `_` are not functions (but keep helpers in `lib/` anyway). Every dispatcher answers unknown names with a JSON 404,
+     and `scripts/local-server.mjs` routes `[param].js` the same way as Vercel, so add an e2e case for each new name.
    - `scripts/migrate-v3.mjs` (§B.12 step 2–3, with `--dry-run`).
    - `vercel.json`: add `{"path": "/api/cron/rollup", "schedule": "30 3 * * *"}`.
 9. **`firestore.indexes.json` and `firestore.rules`** (repo root): replace them with Appendix 2 and Appendix 1 respectively. Deploy the indexes at migration step 1,

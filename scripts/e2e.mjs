@@ -240,7 +240,7 @@ async function main() {
   });
 
   section('Bad input');
-  await test('400s for invalid requests (and 405/401 where relevant)', async () => {
+  await test('400s for invalid requests (and 405/401/404 where relevant)', async () => {
     const cases = [
       ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'Z9', days: 30 }, 400],
       ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 0 }, 400],
@@ -266,7 +266,12 @@ async function main() {
       ['POST', '/api/admin/approve', { resourceIds: ['not-an-id'], approve: true }, 400, admin],
       ['POST', '/api/admin/approve', { resourceIds: ['0123456789abcdef01234567'], approve: 'yes' }, 400, admin],
       ['POST', '/api/admin/review-profile', { exam: 'x', reviewed: true }, 400, admin],
-      ['GET', '/api/cron/recheck-links', undefined, 401]
+      ['GET', '/api/cron/recheck-links', undefined, 401],
+      // unknown names on the dispatcher functions (api/[route].js, admin/[action].js, ...) -> JSON 404
+      ['GET', '/api/no-such-route', undefined, 404],
+      ['POST', '/api/admin/no-such-action', {}, 404, admin],
+      ['POST', '/api/webhooks/no-such-provider', {}, 404],
+      ['GET', '/api/cron/no-such-job', undefined, 404]
     ];
     for (const [m, p, body, want, headers] of cases) {
       const r = await http(m, p, { body, headers });

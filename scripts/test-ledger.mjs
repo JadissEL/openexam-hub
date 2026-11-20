@@ -6,10 +6,14 @@ import { Readable } from 'node:stream';
 import { setStoreForTests } from '../lib/store.js';
 import { setClockForTests, setOcFetchForTests } from '../lib/ledger.js';
 import { setLinkCheckerForTests, recheckLinks } from '../lib/agents/linkMaintenance.js';
-import ghHandler from '../api/webhooks/github-sponsors.js';
-import kofiHandler from '../api/webhooks/kofi.js';
-import ocHandler from '../api/webhooks/open-collective.js';
-import cronHandler from '../api/cron/recheck-links.js';
+import ghHandler from '../lib/routes/webhooks/github-sponsors.js';
+import kofiHandler from '../lib/routes/webhooks/kofi.js';
+import ocHandler from '../lib/routes/webhooks/open-collective.js';
+import cronHandler from '../lib/routes/cron/recheck-links.js';
+import webhookDispatcher from '../api/webhooks/[provider].js';
+import cronDispatcher from '../api/cron/[job].js';
+import adminDispatcher from '../api/admin/[action].js';
+import publicDispatcher from '../api/[route].js';
 
 // ------------------------------------------------------------ in-memory Firestore fake
 class FakeFirestore {
@@ -144,10 +148,11 @@ const ledger = () => fs.docs.get(`${PUB}/treasury/monthly_ledger`);
 const eventDocs = () => [...fs.docs.entries()].filter(([p]) => p.startsWith(`${PUB}/ledger_events/`));
 
 // ------------------------------------------------------------ fake req/res
-function mkReq({ method = 'POST', url = '/', headers = {}, body = '' }) {
+function mkReq({ method = 'POST', url = '/', headers = {}, body = '', query }) {
   const req = Readable.from([Buffer.from(body)]);
   req.method = method;
   req.url = url;
+  if (query) req.query = query;
   req.headers = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]));
   return req;
 }
@@ -430,6 +435,34 @@ test('Cron: missing/wrong bearer -> 401', async () => {
   reset();
   assert.equal((await call(cronHandler, { method: 'GET', headers: {} })).status, 401);
   assert.equal((await call(cronHandler, { method: 'GET', headers: { authorization: 'Bearer nope' } })).status, 401);
+});
+
+test('Dispatchers: webhooks via api/webhooks/[provider].js keep the raw body (HMAC ok); unknown -> 404; cron/admin routed', async () => {
+  reset();
+  const payload = sponsorship('created', 500);
+  const body = JSON.stringify(payload);
+  const headers = { 'content-type': 'application/json', 'x-github-event': 'sponsorship', 'x-github-delivery': 'disp-0000-0001', 'x-hub-signature-256': sign(body) };
+  // Vercel passes the dynamic segment in req.query; the dispatcher must not consume the body stream.
+  const viaQuery = await call(webhookDispatcher, { url: '/api/webhooks/github-sponsors', headers, body, query: { provider: 'github-sponsors' } });
+  assert.equal(viaQuery.status, 200, JSON.stringify(viaQuery.json));
+  assert.equal(viaQuery.json.counted, true);
+  // Fallback: segment taken from the URL path; same delivery id -> idempotent duplicate.
+  const viaUrl = await call(webhookDispatcher, { url: '/api/webhooks/github-sponsors', headers, body });
+  assert.equal(viaUrl.status, 200);
+  assert.equal(viaUrl.json.duplicate, true);
+  const badSig = await call(webhookDispatcher, { url: '/api/webhooks/github-sponsors', headers: { ...headers, 'x-hub-signature-256': sign(body, 'wrong') }, body });
+  assert.equal(badSig.status, 401);
+  const k = await call(webhookDispatcher, { url: '/api/webhooks/kofi', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ data: JSON.stringify(kofiPayload({ verification_token: 'nope' })) }).toString() });
+  assert.equal(k.status, 401);
+  assert.equal((await call(webhookDispatcher, { url: '/api/webhooks/stripe', body: '{}' })).status, 404);
+  assert.equal((await call(webhookDispatcher, { url: '/api/webhooks/_private', body: '{}' })).status, 404);
+  assert.equal((await call(cronDispatcher, { method: 'GET', url: '/api/cron/recheck-links', headers: {} })).status, 401);
+  assert.equal((await call(cronDispatcher, { method: 'GET', url: '/api/cron/nope', headers: {} })).status, 404);
+  process.env.ADMIN_SECRET = 'admin-test-secret';
+  assert.equal((await call(adminDispatcher, { url: '/api/admin/approve', headers: {}, body: '{}' })).status, 401);
+  delete process.env.ADMIN_SECRET;
+  assert.equal((await call(adminDispatcher, { url: '/api/admin/delete-everything', headers: {}, body: '{}' })).status, 404);
+  assert.equal((await call(publicDispatcher, { method: 'GET', url: '/api/nope', headers: {} })).status, 404);
 });
 
 // ------------------------------------------------------------ runner

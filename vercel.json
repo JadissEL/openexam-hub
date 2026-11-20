@@ -5,10 +5,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/cron/recheck-links.js": {
+    "api/cron/*.js": {
       "maxDuration": 300
     },
-    "api/admin/expand.js": {
+    "api/admin/*.js": {
       "maxDuration": 300
     }
   },
