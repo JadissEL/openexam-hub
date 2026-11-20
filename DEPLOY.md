@@ -127,7 +127,14 @@ firebase deploy --only firestore:indexes
 firebase deploy --only firestore:rules
 ```
 
-**TTL policies** (one-time, Google Cloud console or gcloud):
+**Expiry without billing:** Firestore TTL needs a billing account, which this project does not have. The nightly
+`/api/cron/cleanup` job (04:15 UTC, `lib/routes/cron/cleanup.js`) does the same work: it deletes docs in the four
+collections below whose `expireAt` has passed (old shared plans without `expireAt` use `cachedAt` + 30 days) and removes
+anonymous Firebase Auth users older than 7 days together with their `users/{uid}` data. It logs the counts.
+`GET /api/cron/cleanup?dry=1` with `Authorization: Bearer $CRON_SECRET` only counts. If billing is ever enabled, the
+TTL policies below can take over the expiry part.
+
+**TTL policies** (optional, needs billing; one-time, Google Cloud console or gcloud):
 ```bash
 for c in plans usage_buckets calib_buckets link_checks; do
   gcloud firestore fields ttls update expireAt --collection-group=$c --enable-ttl --project openexam-hub
