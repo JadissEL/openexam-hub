@@ -14,5 +14,15 @@
       "enabled": false
     },
     "singleProjectMode": true
+  },
+  "auth": {
+    "providers": {
+      "anonymous": true,
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "OpenExam Hub",
+        "supportEmail": "elantaki.dijadiss@gmail.com"
+      }
+    }
   }
 }
