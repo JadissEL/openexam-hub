@@ -40,7 +40,8 @@ import {
   ShieldAlert,
   Activity,
   Home,
-  Heart
+  Heart,
+  ChevronDown
 } from 'lucide-react';
 import { initializeApp, getApps } from 'firebase/app';
 import {
@@ -60,10 +61,20 @@ import {
   setDoc,
   getDoc,
   onSnapshot,
-  collection
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  updateDoc,
+  deleteField
 } from 'firebase/firestore';
 import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { DONATION_LINKS } from './donations.js';
+import StudyToday from './StudyToday.jsx';
+import ReviewDeck, { SaveToDeckButton, cardFromPractice, cardIdFor } from './ReviewDeck.jsx';
+import { dueQueue, retention as srsRetention } from '../lib/algo/srs.js';
+import { quantiseProfile, localDate, hasSchedule, planDays, currentDay } from './lib/plan.js';
 
 // ============================================================================
 // FIREBASE INITIALIZATION (MANDATORY CONFIG + SAFE FALLBACK)
@@ -501,7 +512,9 @@ function StatusDot({ tone = 'slate', className = '' }) {
 const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const ROADMAP_ALLOWED_KEYS = [
   'id', 'exam', 'level', 'days', 'createdAt', 'summary', 'completedTasks',
-  'verifiedResources', 'phases', 'examProfile', 'pipeline', 'source'
+  'verifiedResources', 'phases', 'examProfile', 'pipeline', 'source',
+  // v3 (deterministic scheduler): compact day codes + per-task completion map
+  'planKey', 'scheduleMethod', 'calendar', 'allocation', 'progress'
 ];
 function sanitizeRoadmapForStore(raw, docId) {
   if (!raw || typeof raw !== 'object' || !docId) return null;
@@ -524,6 +537,20 @@ function sanitizeRoadmapForStore(raw, docId) {
   if (out.verifiedResources) out.verifiedResources = Array.isArray(out.verifiedResources) ? out.verifiedResources.slice(0, 60) : undefined;
   if (out.pipeline) out.pipeline = Array.isArray(out.pipeline) ? out.pipeline.slice(0, 40) : undefined;
   if (out.createdAt !== undefined && typeof out.createdAt !== 'string') out.createdAt = String(out.createdAt);
+  if (out.planKey !== undefined) out.planKey = String(out.planKey).slice(0, 64);
+  if (out.scheduleMethod !== undefined) out.scheduleMethod = String(out.scheduleMethod).slice(0, 32);
+  // calendar must have exactly one entry per day, otherwise the plan falls back to the phase checklist.
+  if (out.calendar && (!Array.isArray(out.calendar) || out.calendar.length !== days)) {
+    delete out.calendar;
+    delete out.progress;
+  }
+  if (out.allocation && (typeof out.allocation !== 'object' || Array.isArray(out.allocation))) delete out.allocation;
+  if (out.progress) {
+    const p = out.progress;
+    const done = p && typeof p.done === 'object' && !Array.isArray(p.done) ? p.done : {};
+    out.progress = { done: Object.fromEntries(Object.entries(done).filter(([, v]) => Number.isInteger(v)).slice(0, 2000)) };
+    if (typeof p.onTrack === 'boolean') out.progress.onTrack = p.onTrack;
+  }
   // JSON round-trip drops undefined values, which Firestore rejects.
   return JSON.parse(JSON.stringify(out));
 }
@@ -570,6 +597,7 @@ export default function App() {
   const [cacheLayerHit, setCacheLayerHit] = useState('personal'); // 'personal' | 'global' | 'live'
   const [cacheHitsCount, setCacheHitsCount] = useState(0); // this session only
   const [pipelineTrace, setPipelineTrace] = useState([]);
+  const [srsCards, setSrsCards] = useState([]); // spaced-repetition cards for the selected exam
   const [diagnosticResult, setDiagnosticResult] = useState(null); // {skillScores, estimatedLevel, advice}
   const [linkStatuses, setLinkStatuses] = useState({});
   const [statusNotice, setStatusNotice] = useState(null);
@@ -733,8 +761,9 @@ export default function App() {
       'ledger_events'
     );
 
+    // Bounded feed: newest 20 only (the v3 rules reject unbounded lists of public collections).
     const unsubEvents = onSnapshot(
-      eventsColRef,
+      query(eventsColRef, orderBy('createdAt', 'desc'), limit(20)),
       (snapshot) => {
         const fetched = snapshot.docs.map((d) => ({
           id: d.id,
@@ -752,6 +781,38 @@ export default function App() {
       unsubEvents();
     };
   }, [firebaseUser]);
+
+  // Spaced-repetition deck for the selected exam (users/{uid}/srs, one doc per card, bounded).
+  useEffect(() => {
+    if (!db || !firebaseUser) return undefined;
+    const col = collection(db, 'artifacts', appId, 'users', firebaseUser.uid, 'srs');
+    const unsub = onSnapshot(
+      query(col, where('exam', '==', String(selectedExam).toUpperCase()), limit(200)),
+      (snap) => setSrsCards(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      (err) => console.warn('Review deck sync standby:', err)
+    );
+    return () => unsub();
+  }, [firebaseUser, selectedExam]);
+
+  const SRS_KEYS = ['id', 'exam', 'skill', 'front', 'back', 'state', 'due', 'stability', 'difficulty', 'reps', 'lapses', 'lastReview', 'interval', 'retrievability', 'source', 'createdAt'];
+  const saveSrsCard = async (card) => {
+    setSrsCards((prev) => [card, ...prev.filter((c) => c.id !== card.id)]);
+    if (!db || !firebaseUser) return;
+    const clean = Object.fromEntries(SRS_KEYS.filter((k) => card[k] !== undefined && card[k] !== null).map((k) => [k, card[k]]));
+    try {
+      await setDoc(doc(db, 'artifacts', appId, 'users', firebaseUser.uid, 'srs', card.id), clean);
+    } catch (err) {
+      console.warn('Review card save skipped:', err);
+    }
+  };
+  const srsSummary = useMemo(() => {
+    const now = Date.now();
+    return { due: dueQueue(srsCards, now).length, retentionBySkill: srsRetention(srsCards, now).bySkill };
+  }, [srsCards]);
+  const openReview = () => {
+    setActiveTab('practice');
+    setTimeout(() => document.getElementById('oe-review')?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' }), 60);
+  };
 
   // Helper: Persist roadmap to user's Layer 1 personal cache
   const saveToPersonalCache = async (roadmapObj) => {
@@ -803,47 +864,69 @@ export default function App() {
       return;
     }
 
-    // LAYER 2 DEFENSE: Check shared Global Firestore Cache across all learners (€0.00 cost)
-    if (db && firebaseUser && !forceRefresh) {
+    // LAYER 2 DEFENSE: shared plan cache (€0.00 cost).
+    //  - server mode: GET /api/plan (CDN-cached, rescheduled for exactly these days); 404 = miss
+    //  - preview mode: legacy client read of global_verified_roadmaps
+    if (!forceRefresh && SERVER_ENABLED) {
       try {
-        const globalRef = doc(
-          db,
-          'artifacts',
-          appId,
-          'public',
-          'data',
-          'global_verified_roadmaps',
-          cacheKey
-        );
+        const profile = diagnosticResult ? quantiseProfile(diagnosticResult.skillScores) : null;
+        const qs = new URLSearchParams({
+          exam: selectedExam.toUpperCase(),
+          level: selectedLevel,
+          days: String(Number(daysUntilExam)),
+          ...(profile ? { profile } : {})
+        });
+        const { roadmap } = await apiGet(`/api/plan?${qs}`);
+        if (roadmap && Array.isArray(roadmap.phases)) {
+          const clonedForUser = {
+            ...roadmap,
+            id: cacheKey,
+            exam: selectedExam,
+            createdAt: localDate(),
+            completedTasks: {},
+            progress: { done: {} }
+          };
+          setSavedRoadmaps((prev) => [clonedForUser, ...prev.filter((item) => item.id !== cacheKey)]);
+          setActiveRoadmapId(cacheKey);
+          setCacheLayerHit('global');
+          setAgentStep(5);
+          setPipelineTrace(roadmap.pipeline || []);
+          await saveToPersonalCache(clonedForUser);
+          await recordCacheHitMetric();
+          setStatusNotice(
+            `Loaded a shared plan for "${cacheKey}" that other learners already built, rescheduled for your ${daysUntilExam} days at €0.00 API cost.`
+          );
+          return;
+        }
+      } catch (err) {
+        // 404 = no shared plan yet; anything else: fall through to the generator.
+        if (!/No shared plan/i.test(String(err?.message))) console.warn('Shared plan lookup skipped:', err);
+      }
+    } else if (db && firebaseUser && !forceRefresh) {
+      try {
+        const globalRef = doc(db, 'artifacts', appId, 'public', 'data', 'global_verified_roadmaps', cacheKey);
         const globalSnap = await getDoc(globalRef);
         if (globalSnap.exists()) {
           const sharedDoc = globalSnap.data();
-          // Server stores { roadmap: {...}, serverVerified, pipelineVersion, ... }
           const sharedData = sharedDoc.roadmap ?? sharedDoc;
           const clonedForUser = {
             id: cacheKey,
             exam: sharedData.exam || selectedExam,
             level: sharedData.level || selectedLevel,
             days: Number(sharedData.days || daysUntilExam),
-            createdAt: new Date().toISOString().split('T')[0],
+            createdAt: localDate(),
             completedTasks: {},
             summary: sharedData.summary,
             verifiedResources: sharedData.verifiedResources,
             phases: sharedData.phases
           };
-
-          setSavedRoadmaps((prev) => [
-            clonedForUser,
-            ...prev.filter((item) => item.id !== cacheKey)
-          ]);
+          setSavedRoadmaps((prev) => [clonedForUser, ...prev.filter((item) => item.id !== cacheKey)]);
           setActiveRoadmapId(cacheKey);
           setCacheLayerHit('global');
           setAgentStep(5);
           await saveToPersonalCache(clonedForUser);
           await recordCacheHitMetric();
-          setStatusNotice(
-            `Layer 2 Global Community Cache Hit: Another learner already audited "${cacheKey}". Cloned to your profile at €0.00 API token cost!`
-          );
+          setStatusNotice(`Loaded "${cacheKey}" from the community cache at €0.00 API token cost.`);
           return;
         }
       } catch (err) {
@@ -880,7 +963,9 @@ export default function App() {
           id: cacheKey,
           exam: selectedExam,
           completedTasks: {},
-          createdAt: roadmap.createdAt || today
+          // The plan's day 1 is the learner's local today (server dates are UTC).
+          createdAt: localDate(),
+          ...(Array.isArray(roadmap.calendar) ? { progress: { done: {} } } : {})
         };
         stepTimers.forEach(clearTimeout);
         setAgentStep(5);
@@ -1071,6 +1156,33 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
     await saveToPersonalCache(updatedRoadmap);
   };
 
+  // v3 plans: one checkable task per calendar slot, stored as progress.done[key] = epoch seconds.
+  // A field-path update touches one key, so ticks on two devices never overwrite each other.
+  const toggleCalendarTask = async (task) => {
+    if (!activeRoadmap || !task?.key) return;
+    const prevDone = activeRoadmap.progress?.done || {};
+    const wasDone = task.key in prevDone;
+    const nextDone = { ...prevDone };
+    const stamp = Math.floor(Date.now() / 1000);
+    if (wasDone) delete nextDone[task.key];
+    else nextDone[task.key] = stamp;
+    const updatedRoadmap = { ...activeRoadmap, progress: { ...(activeRoadmap.progress || {}), done: nextDone } };
+    setSavedRoadmaps((prev) => prev.map((r) => (r.id === updatedRoadmap.id ? updatedRoadmap : r)));
+    if (db && firebaseUser) {
+      const ref = doc(db, 'artifacts', appId, 'users', firebaseUser.uid, 'roadmaps', updatedRoadmap.id);
+      try {
+        await updateDoc(ref, { [`progress.done.${task.key}`]: wasDone ? deleteField() : stamp });
+      } catch (err) {
+        // Doc not saved yet (or offline first write): fall back to a full, rule-checked save.
+        await saveToPersonalCache(updatedRoadmap);
+      }
+    }
+    // Anonymous completion signal for resource ranking (no user id is sent).
+    if (!wasDone && task.resourceId && SERVER_ENABLED && activeRoadmap.planKey) {
+      apiPost('/api/events', { type: 'task_done', planKey: activeRoadmap.planKey, resourceId: task.resourceId }).catch(() => {});
+    }
+  };
+
   // ==========================================================================
   // 4. EXPORT STUDY PLAN (MARKDOWN & JSON DOWNLOADS)
   // ==========================================================================
@@ -1088,6 +1200,16 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
         (r) => `- **[${r.title}](${r.url})** — *${r.license}* (${r.category})`
       ),
       '',
+      ...(hasSchedule(activeRoadmap)
+        ? [
+            `## Day-by-Day Schedule`,
+            ...planDays(activeRoadmap).flatMap((d) => [
+              `### Day ${d.day}`,
+              ...d.tasks.map((t) => `- [${activeRoadmap.progress?.done?.[t.key] !== undefined ? 'x' : ' '}] ${t.text} (${t.minutes} min)`),
+              ''
+            ])
+          ]
+        : []),
       `## Chronological Study Schedule`,
       ...(activeRoadmap.phases || []).flatMap((p, pIdx) => [
         `### ${p.phaseTitle}`,
@@ -1200,8 +1322,19 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
     });
   }, [activeRoadmap]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Scheduled (v3) plans carry a compact calendar; older plans only have phase checklists.
+  const activeIsScheduled = hasSchedule(activeRoadmap);
+  const activeDays = useMemo(() => (activeIsScheduled ? planDays(activeRoadmap) : []), [activeRoadmap, activeIsScheduled]);
+
   // Active roadmap milestone progress calculation
   const roadmapProgress = useMemo(() => {
+    if (activeIsScheduled) {
+      const done = activeRoadmap.progress?.done || {};
+      let total = 0;
+      let n = 0;
+      activeDays.forEach((d) => d.tasks.forEach((t) => { total += 1; if (t.key in done) n += 1; }));
+      return { done: n, total, pct: total > 0 ? Math.round((n / total) * 100) : 0 };
+    }
     if (!activeRoadmap?.phases) return { done: 0, total: 0, pct: 0 };
     let total = 0;
     let done = 0;
@@ -1216,10 +1349,20 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
       total,
       pct: total > 0 ? Math.round((done / total) * 100) : 0
     };
-  }, [activeRoadmap]);
+  }, [activeRoadmap, activeIsScheduled, activeDays]);
 
-  // First unchecked task of the active plan (for "Continue your plan").
+  // Next open task (for "Continue your plan"): scheduled plans start at today's day.
   const nextTask = useMemo(() => {
+    if (activeIsScheduled) {
+      const done = activeRoadmap.progress?.done || {};
+      const today = Math.max(1, currentDay(activeRoadmap));
+      const ordered = [...activeDays.filter((d) => d.day >= today), ...activeDays.filter((d) => d.day < today)];
+      for (const d of ordered) {
+        const t = d.tasks.find((x) => !(x.key in done));
+        if (t) return { cal: t, task: t.text, phaseTitle: `Day ${d.day} of ${activeDays.length}${d.day < today ? ' (catch-up)' : ''}` };
+      }
+      return null;
+    }
     if (!activeRoadmap?.phases) return null;
     for (let p = 0; p < activeRoadmap.phases.length; p++) {
       const tasks = activeRoadmap.phases[p].tasks || [];
@@ -1230,7 +1373,12 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
       }
     }
     return null;
-  }, [activeRoadmap]);
+  }, [activeRoadmap, activeIsScheduled, activeDays]);
+  const markNextDone = () => {
+    if (!nextTask) return;
+    if (nextTask.cal) toggleCalendarTask(nextTask.cal);
+    else toggleTaskCompletion(nextTask.pIdx, nextTask.tIdx);
+  };
 
   const isSupportTab = activeTab === 'treasury' || activeTab === 'roadmap3yr';
   const showAside = activeTab === 'generator' || isSupportTab;
@@ -1777,6 +1925,17 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       <p className="mt-4 text-sm text-neutral-600 leading-relaxed">{activeRoadmap.summary}</p>
                     </div>
 
+                    {activeIsScheduled && (
+                      <StudyToday
+                        roadmap={activeRoadmap}
+                        onToggle={toggleCalendarTask}
+                        dueCards={firebaseUser ? srsSummary.due : 0}
+                        onOpenReview={firebaseUser ? openReview : null}
+                        abilityScores={diagnosticResult?.skillScores}
+                        retentionBySkill={srsSummary.retentionBySkill}
+                      />
+                    )}
+
                     {/* FREE OFFICIAL RESOURCES */}
                     <div className="p-5 sm:p-7 border-b border-black/5 bg-[#FAFAF8]">
                       <h3 className={`${THEME.label} mb-3 flex items-center gap-1.5`}>
@@ -1808,6 +1967,15 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                                   <ExternalLink className="w-4 h-4 text-neutral-400 group-hover:text-[#C2410C] transition" aria-hidden="true" />
                                 </div>
                                 <div className="text-sm font-bold text-neutral-950 leading-snug">{res.title}</div>
+                                {Array.isArray(res.skills) && res.skills.length > 0 && (
+                                  <div className="mt-2 flex flex-wrap gap-1">
+                                    {res.skills.slice(0, 4).map((sk) => (
+                                      <span key={sk} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#F4F4F2] text-neutral-600">
+                                        {SKILL_LABELS[sk] || sk}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                               <div className="mt-3 pt-2.5 border-t border-black/5 space-y-1">
                                 <div className={`text-[11px] font-semibold flex items-center gap-1.5 ${toneClass}`}>
@@ -1826,17 +1994,42 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     {/* CHECKLIST BY PHASE */}
                     <div className="p-5 sm:p-7 space-y-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <h3 className={THEME.label}>Your checklist</h3>
-                        <span className="text-xs text-neutral-500">Ticks save to your profile</span>
+                        <h3 className={THEME.label}>{activeIsScheduled ? 'Plan overview' : 'Your checklist'}</h3>
+                        <span className="text-xs text-neutral-500">{activeIsScheduled ? 'Tick tasks in the day view above' : 'Ticks save to your profile'}</span>
                       </div>
                       <CoachPanel
                         roadmap={activeRoadmap}
                         onApply={async (phases) => {
-                          const updated = { ...activeRoadmap, phases: toClientPhases(phases), completedTasks: {} };
+                          // A rebalanced plan is a phase checklist again (the day calendar no longer applies).
+                          const { calendar, progress, allocation, scheduleMethod, ...rest } = activeRoadmap; // eslint-disable-line no-unused-vars
+                          const updated = { ...rest, phases: toClientPhases(phases), completedTasks: {} };
                           setSavedRoadmaps((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
                           await saveToPersonalCache(updated);
                         }}
                       />
+                      {activeIsScheduled ? (
+                        <details className="group rounded-2xl border border-black/5 bg-[#FAFAF8]">
+                          <summary className="cursor-pointer list-none min-h-[52px] px-4 py-3 flex items-center justify-between gap-3 text-sm font-semibold text-neutral-900">
+                            <span>{activeRoadmap.phases?.length || 0} phases · how your {activeRoadmap.days} days are split</span>
+                            <ChevronDown className="w-4 h-4 text-neutral-500 transition group-open:rotate-180" aria-hidden="true" />
+                          </summary>
+                          <ol className="px-4 pb-4 space-y-3">
+                            {activeRoadmap.phases?.map((phase, pIdx) => (
+                              <li key={pIdx} className="rounded-xl bg-white border border-black/5 p-3.5">
+                                <p className="font-bold text-sm text-neutral-950">{phase.phaseTitle}</p>
+                                <p className="text-xs text-neutral-500 mt-0.5">
+                                  {phase.startDay && phase.endDay ? `Days ${phase.startDay}–${phase.endDay} · ` : ''}
+                                  {phase.focus}
+                                </p>
+                                <ul className="mt-2 list-disc pl-5 text-xs text-neutral-700 space-y-1">
+                                  {(phase.tasks || []).slice(0, 6).map((t, i) => <li key={i}>{t}</li>)}
+                                  {(phase.tasks || []).length > 6 && <li className="list-none -ml-5 text-neutral-400">+{phase.tasks.length - 6} more</li>}
+                                </ul>
+                              </li>
+                            ))}
+                          </ol>
+                        </details>
+                      ) : (
                       <ol className="space-y-4">
                         {activeRoadmap.phases?.map((phase, pIdx) => {
                           const phaseTotal = phase.tasks?.length || 0;
@@ -1922,6 +2115,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                           );
                         })}
                       </ol>
+                      )}
                     </div>
                   </section>
                 )}
@@ -2050,7 +2244,15 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     handleGenerateStudyPath(true);
                   }}
                 />
-                <PracticePanel exam={selectedExam} level={selectedLevel} />
+                {firebaseUser && (
+                  <ReviewDeck exam={selectedExam} cards={srsCards} onGrade={saveSrsCard} />
+                )}
+                <PracticePanel
+                  exam={selectedExam}
+                  level={selectedLevel}
+                  deckIds={new Set(srsCards.map((c) => c.id))}
+                  onSaveToDeck={firebaseUser ? (item, sk) => saveSrsCard(cardFromPractice(item, selectedExam, sk)) : null}
+                />
               </div>
             )}
 
@@ -2366,7 +2568,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       </button>
                       <button
                         type="button"
-                        onClick={() => nextTask && toggleTaskCompletion(nextTask.pIdx, nextTask.tIdx)}
+                        onClick={markNextDone}
                         disabled={!nextTask}
                         className={`${THEME.ghostBtn} min-h-[48px] px-4 text-sm disabled:opacity-50`}
                       >
@@ -3018,6 +3220,9 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
         id: q.id,
         skill: q.skill,
         cefr: q.cefr,
+        // IRT scoring + calibration: stable item key and difficulty sent back with the answer
+        ...(q.itemKey ? { itemKey: q.itemKey } : {}),
+        ...(typeof q.b === 'number' ? { b: q.b } : {}),
         correct: answers[q.id] === q.answerIndex
       }));
       const out = await apiPost('/api/diagnostic', { action: 'score', exam: exam.toUpperCase(), level, answers: payload });
@@ -3092,6 +3297,12 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
               <p className="text-sm text-neutral-800">
                 Estimated level: <strong>{result.estimatedLevel || 'not enough data'}</strong>
               </p>
+              {typeof result.confidence === 'number' && (
+                <p className="text-xs text-neutral-500">
+                  Confidence: <strong className="text-neutral-800">{result.confidence >= 0.75 ? 'high' : result.confidence >= 0.5 ? 'medium' : 'low'}</strong>
+                  {' '}({Math.round(result.confidence * 100)}%). Scored with an item-response model; more questions make it sharper.
+                </p>
+              )}
               <div className="space-y-1.5">
                 {Object.entries(result.skillScores || {}).map(([sk, v]) => (
                   <div key={sk} className="flex items-center gap-2 text-xs">
@@ -3126,7 +3337,7 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
 // ============================================================================
 // PRACTICE GENERATOR: original, clearly-labelled unofficial practice items
 // ============================================================================
-function PracticePanel({ exam, level }) {
+function PracticePanel({ exam, level, deckIds, onSaveToDeck }) {
   const [skill, setSkill] = useState('reading');
   const [data, setData] = useState(null);
   const [revealed, setRevealed] = useState({});
@@ -3203,6 +3414,11 @@ function PracticePanel({ exam, level }) {
                       ))}
                     </ul>
                   )}
+                  {onSaveToDeck && (
+                    <div className="mt-3 flex justify-end">
+                      <SaveToDeckButton saved={deckIds?.has(cardIdFor(exam, it))} onSave={() => onSaveToDeck(it, data.skill || skill)} />
+                    </div>
+                  )}
                   {revealed[i] ? (
                     <div className="mt-2 text-xs text-neutral-700 bg-[#FAFAF8] rounded-lg p-2.5 whitespace-pre-line">
                       <strong>{it.modelAnswer ? 'Model answer:' : 'Answer:'}</strong> {it.modelAnswer ?? String(it.answer)}
@@ -3238,7 +3454,8 @@ function PracticePanel({ exam, level }) {
 // PROGRESS COACH: checks pace and offers to rebalance the remaining tasks
 // ============================================================================
 function CoachPanel({ roadmap, onApply }) {
-  const [daysElapsed, setDaysElapsed] = useState(1);
+  const scheduled = hasSchedule(roadmap);
+  const [daysElapsed, setDaysElapsed] = useState(() => (scheduled ? Math.min(Math.max(currentDay(roadmap), 1), roadmap.days) : 1));
   const [advice, setAdvice] = useState(null);
   const [state, setState] = useState('idle');
 
@@ -3247,7 +3464,11 @@ function CoachPanel({ roadmap, onApply }) {
   const ask = async () => {
     setState('loading');
     try {
-      const out = await apiPost('/api/coach', { roadmap, daysElapsed: Number(daysElapsed) });
+      // Scheduled plans: the server derives the day from createdAt and scores pace from progress.done.
+      const body = scheduled
+        ? { roadmap: { ...roadmap, calendar: roadmap.calendar, progress: roadmap.progress || { done: {} } }, daysElapsed: Number(daysElapsed) }
+        : { roadmap, daysElapsed: Number(daysElapsed) };
+      const out = await apiPost('/api/coach', body);
       setAdvice(out);
       setState('done');
     } catch (e) {
@@ -3290,6 +3511,12 @@ function CoachPanel({ roadmap, onApply }) {
             )}
             {advice.summary}
           </p>
+          {typeof advice.pace === 'number' && (
+            <p className="text-neutral-600">
+              Pace {advice.pace} tasks/day · planned {advice.plannedPace} · needed {advice.requiredPace}
+              {advice.projectedFinishDate ? ` · projected finish ${advice.projectedFinishDate}` : ''}
+            </p>
+          )}
           {(advice.tips || []).map((t, i) => (
             <p key={i}>• {t}</p>
           ))}
@@ -3301,6 +3528,9 @@ function CoachPanel({ roadmap, onApply }) {
             >
               Use the rebalanced plan for my remaining days
             </button>
+          )}
+          {!advice.onTrack && advice.rebalancedPhases?.length > 0 && scheduled && (
+            <p className="text-[11px] text-neutral-500">This swaps the day-by-day view for a checklist of your remaining tasks.</p>
           )}
         </div>
       )}
