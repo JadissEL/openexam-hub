@@ -129,7 +129,7 @@ function Exams() {
           {SOURCES.map((group) => (
             <div key={group.exam} className="border-t-2 border-[#1A1714] pt-5">
               <h3 className={`font-display ${ink} text-[28px] font-medium`}>{group.exam}</h3>
-              <p className="text-[15px] text-[#8A8178]">{group.language}</p>
+              <p className="text-[15px] text-[#6B635A]">{group.language}</p>
               <ul className="mt-6 divide-y divide-[#E7E1D7] border-t border-[#E7E1D7]">
                 {group.orgs.map((o) => (
                   <li key={o.name}>

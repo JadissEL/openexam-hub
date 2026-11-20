@@ -70,7 +70,7 @@ function Story() {
             <span aria-hidden="true" className="w-12 h-12 rounded-full bg-[#1A1714] text-white font-display text-lg flex items-center justify-center">J</span>
             <div className="leading-tight">
               <p className={`${ink} font-semibold text-[17px]`}>Jadiss El Antaki</p>
-              <p className="text-[15px] text-[#8A8178]">Built OpenExam Hub · <a className="underline underline-offset-4 hover:text-[#C2410C]" href={`mailto:${CONTACT_EMAIL}`}>write to me</a></p>
+              <p className="text-[15px] text-[#6B635A]">Built OpenExam Hub · <a className="underline underline-offset-4 hover:text-[#C2410C]" href={`mailto:${CONTACT_EMAIL}`}>write to me</a></p>
             </div>
           </div>
         </div>

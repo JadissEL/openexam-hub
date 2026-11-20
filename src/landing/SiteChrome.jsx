@@ -135,7 +135,7 @@ export function SiteFooter() {
         </div>
         {FOOTER_COLS.map((col) => (
           <div key={col.title}>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8A8178]">{col.title}</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#6B635A]">{col.title}</h2>
             <ul className="mt-4 space-y-2.5 text-[15px] text-[#3B352F]">
               {col.links.map((l) => (
                 <li key={l.href + l.label}>
@@ -152,7 +152,7 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 pb-10 text-[13px] text-[#8A8178]">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8 pb-10 text-[13px] text-[#6B635A]">
         © {new Date().getFullYear()} OpenExam Hub. Exam names belong to their owners and are used only to describe what a plan prepares you for.
       </div>
     </footer>

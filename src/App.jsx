@@ -74,7 +74,7 @@ import {
 import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { DONATION_LINKS } from './donations.js';
 import { FIVE_YEAR_GOAL_EUR, FUNDING_PROMISE } from './funding.js';
-import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant, parsePlannerQuery } from '../lib/exams.js';
+import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant, parsePlannerQuery, IELTS_BANDS, ieltsBandLevel } from '../lib/exams.js';
 import StudyToday from './StudyToday.jsx';
 import DashboardAd from './DashboardAd.jsx';
 import AuthGate from './AuthGate.jsx';
@@ -581,10 +581,36 @@ const TAB_FROM_HASH = {
   practice: 'practice'
 };
 
+// Linkable tabs: /app/library, /app/plans, /app/practice, /app/support (also ?tab=<name> and the
+// older #hash form). Home is plain /app. The auth gate still wraps every one of these URLs.
+const TAB_FROM_SLUG = { ...TAB_FROM_HASH, plans: 'saved', home: 'generator' };
+const SLUG_FOR_TAB = { generator: '', saved: 'plans', library: 'library', practice: 'practice', treasury: 'support' };
+
 function tabFromLocation() {
   if (typeof window === 'undefined') return null;
-  const h = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+  const { pathname, search, hash } = window.location;
+  let q = null;
+  try {
+    q = new URLSearchParams(search).get('tab');
+  } catch {
+    q = null;
+  }
+  const fromQuery = TAB_FROM_SLUG[String(q || '').toLowerCase()];
+  if (fromQuery) return fromQuery;
+  const m = /^\/app\/([a-z-]+)\/?$/i.exec(pathname || '');
+  const fromPath = m ? TAB_FROM_SLUG[m[1].toLowerCase()] : null;
+  if (fromPath) return fromPath;
+  const h = (hash || '').replace(/^#/, '').toLowerCase();
   return TAB_FROM_HASH[h] || null;
+}
+
+/** Canonical URL for a tab, keeping other query params (e.g. ?exam=) but dropping ?tab and #hash. */
+function urlForTab(tab) {
+  const params = new URLSearchParams(window.location.search);
+  params.delete('tab');
+  const qs = params.toString();
+  const slug = SLUG_FOR_TAB[tab] ?? '';
+  return `/app${slug ? `/${slug}` : ''}${qs ? `?${qs}` : ''}`;
 }
 
 function isRegisteredUser(user) {
@@ -719,7 +745,9 @@ const ROADMAP_ALLOWED_KEYS = [
   'id', 'exam', 'level', 'days', 'createdAt', 'summary', 'completedTasks',
   'verifiedResources', 'phases', 'examProfile', 'pipeline', 'source',
   // v3 (deterministic scheduler): compact day codes + per-task completion map
-  'planKey', 'scheduleMethod', 'calendar', 'allocation', 'progress'
+  'planKey', 'scheduleMethod', 'calendar', 'allocation', 'progress',
+  // IELTS target band label, e.g. 'Band 6.5' (the plan level is the mapped CEFR level)
+  'targetScore'
 ];
 function sanitizeRoadmapForStore(raw, docId) {
   if (!raw || typeof raw !== 'object' || !docId) return null;
@@ -743,6 +771,7 @@ function sanitizeRoadmapForStore(raw, docId) {
   if (out.pipeline) out.pipeline = Array.isArray(out.pipeline) ? out.pipeline.slice(0, 40) : undefined;
   if (out.createdAt !== undefined && typeof out.createdAt !== 'string') out.createdAt = String(out.createdAt);
   if (out.planKey !== undefined) out.planKey = String(out.planKey).slice(0, 64);
+  if (out.targetScore !== undefined) out.targetScore = String(out.targetScore).slice(0, 24);
   if (out.scheduleMethod !== undefined) out.scheduleMethod = String(out.scheduleMethod).slice(0, 32);
   // calendar must have exactly one entry per day, otherwise the plan falls back to the phase checklist.
   if (out.calendar && (!Array.isArray(out.calendar) || out.calendar.length !== days)) {
@@ -836,6 +865,8 @@ function Dashboard({ initialUser }) {
   const [selectedExam, setSelectedExam] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').exam || DEFAULT_PICKER_EXAM);
   const [selectedTcfVariant, setSelectedTcfVariant] = useState('tout_public');
   const [selectedLevel, setSelectedLevel] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').level || 'B2');
+  // IELTS target band (e.g. '6.5'); null = not picked yet. The plan uses the mapped CEFR level.
+  const [selectedBand, setSelectedBand] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').band || null);
   const [daysUntilExam, setDaysUntilExam] = useState(30);
   const [publicStats, setPublicStats] = useState(null);
 
@@ -939,13 +970,25 @@ function Dashboard({ initialUser }) {
   }, []);
 
   useEffect(() => {
-    const onHash = () => {
-      const tab = tabFromLocation();
-      if (tab) setActiveTab(tab);
+    const onNav = () => setActiveTab(tabFromLocation() || 'generator');
+    window.addEventListener('hashchange', onNav);
+    window.addEventListener('popstate', onNav);
+    return () => {
+      window.removeEventListener('hashchange', onNav);
+      window.removeEventListener('popstate', onNav);
     };
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
   }, []);
+
+  // Keep the address bar in step with the open tab so it can be bookmarked, shared and refreshed.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.history?.pushState) return;
+    const target = urlForTab(activeTab);
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (current === target) return;
+    const sameTab = (tabFromLocation() || 'generator') === activeTab;
+    if (sameTab) window.history.replaceState(window.history.state, '', target); // normalise ?tab= / #hash forms
+    else window.history.pushState({ tab: activeTab }, '', target);
+  }, [activeTab]);
 
   // ==========================================================================
   // 2. FIRESTORE REAL-TIME SYNC: PERSONAL ROADMAPS + PUBLIC TREASURY LEDGER
@@ -1129,6 +1172,9 @@ function Dashboard({ initialUser }) {
     setStatusNotice(message);
   };
 
+  // IELTS: the band the learner picked is kept on the plan (the plan itself is built for the mapped CEFR level).
+  const targetTag = (exam) => (exam === 'IELTS' && selectedExam === 'IELTS' && selectedBand ? { targetScore: `Band ${selectedBand}` } : {});
+
   const handleGenerateStudyPath = async (forceRefresh = false) => {
     // Firebase is configured: a real (non-anonymous) account is required before
     // we spend AI tokens or hit the shared plan cache on behalf of a learner.
@@ -1177,6 +1223,7 @@ function Dashboard({ initialUser }) {
             completedTasks: {},
             progress: { done: {} }
           };
+          Object.assign(clonedForUser, targetTag(clonedForUser.exam));
           setSavedRoadmaps((prev) => [clonedForUser, ...prev.filter((item) => item.id !== cacheKey)]);
           setActiveRoadmapId(cacheKey);
           setCacheLayerHit('global');
@@ -1211,6 +1258,7 @@ function Dashboard({ initialUser }) {
             verifiedResources: sharedData.verifiedResources,
             phases: sharedData.phases
           };
+          Object.assign(clonedForUser, targetTag(clonedForUser.exam));
           setSavedRoadmaps((prev) => [clonedForUser, ...prev.filter((item) => item.id !== cacheKey)]);
           setActiveRoadmapId(cacheKey);
           setCacheLayerHit('global');
@@ -1264,6 +1312,7 @@ function Dashboard({ initialUser }) {
         setAgentStep(5);
         setPipelineTrace(roadmap.pipeline || []);
         if (roadmap.source === 'global_cache') setCacheLayerHit('global');
+        Object.assign(newRoadmap, targetTag(newRoadmap.exam));
         setSavedRoadmaps((prev) => [
           newRoadmap,
           ...prev.filter((item) => item.id !== cacheKey)
@@ -1393,6 +1442,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
 
       stepTimers.forEach(clearTimeout);
       setAgentStep(5);
+      Object.assign(newRoadmap, targetTag(newRoadmap.exam));
       setSavedRoadmaps((prev) => [newRoadmap, ...prev.filter((item) => item.id !== cacheKey)]);
       setActiveRoadmapId(cacheKey);
       await saveToPersonalCache(newRoadmap);
@@ -1423,6 +1473,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
       summary: `${daysUntilExam}-day ${examLabel(selectedExam)} (${selectedLevel}) study roadmap built from hand-picked official examination portals.`
     };
     setAgentStep(5);
+    Object.assign(fallbackRoadmap, targetTag(fallbackRoadmap.exam));
     setSavedRoadmaps((prev) => [fallbackRoadmap, ...prev.filter((item) => item.id !== cacheKey)]);
     setActiveRoadmapId(cacheKey);
     await saveToPersonalCache(fallbackRoadmap);
@@ -2044,6 +2095,32 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       <legend className="text-sm font-semibold text-neutral-900 mb-2">
                         <span className="text-[#C2410C] mr-1.5">2</span>Target level
                       </legend>
+                      {selectedExam === 'IELTS' ? (
+                        <>
+                          <p id="oe-band-help" className="text-xs text-neutral-600 mb-2">IELTS band score you need</p>
+                          <div className="flex flex-wrap gap-2" role="group" aria-describedby="oe-band-help">
+                            {IELTS_BANDS.map((band) => (
+                              <button
+                                key={band}
+                                type="button"
+                                aria-pressed={selectedBand === band}
+                                aria-label={`Band ${band}`}
+                                onClick={() => {
+                                  setSelectedBand(band);
+                                  setSelectedLevel(ieltsBandLevel(band));
+                                }}
+                                className={`min-h-[44px] min-w-[44px] px-3 rounded-full text-sm font-semibold border transition ${
+                                  selectedBand === band
+                                    ? 'bg-[#111111] text-white border-[#111111]'
+                                    : 'bg-white border-black/10 text-neutral-700 hover:bg-neutral-50'
+                                }`}
+                              >
+                                {band}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
                       <div className="flex flex-wrap gap-2">
                         {LEVEL_OPTIONS.map((lv) => (
                           <button
@@ -2061,9 +2138,14 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                           </button>
                         ))}
                       </div>
+                      )}
                       <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                        <p className="text-xs text-neutral-500">
-                          {LEVEL_OPTIONS.find((l) => l.value === selectedLevel)?.hint}
+                        <p className="text-xs text-neutral-500" aria-live="polite">
+                          {selectedExam === 'IELTS'
+                            ? selectedBand
+                              ? `Band ${selectedBand} ≈ CEFR ${selectedLevel} (${LEVEL_OPTIONS.find((l) => l.value === selectedLevel)?.hint}), per the official IELTS–CEFR alignment`
+                              : `Pick a band. Planning for CEFR ${selectedLevel} until you do.`
+                            : LEVEL_OPTIONS.find((l) => l.value === selectedLevel)?.hint}
                         </p>
                         <button
                           type="button"
@@ -2194,7 +2276,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                                 ? 'bg-[#FAFAF8] border-black/5 text-neutral-950'
                                 : isCurrent
                                 ? 'bg-orange-50 border-orange-200 text-neutral-950'
-                                : 'bg-white border-black/5 text-neutral-400'
+                                : 'bg-white border-black/5 text-neutral-500'
                             }`}
                           >
                             <div className="flex items-center justify-between mb-2">
@@ -2271,7 +2353,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                             </span>
                           )}
                           <span className="px-3 py-1 rounded-full bg-[#111111] text-white font-bold text-xs">
-                            {examLabel(activeRoadmap.exam)} · {activeRoadmap.level}
+                            {examLabel(activeRoadmap.exam)} · {activeRoadmap.targetScore ? `${activeRoadmap.targetScore} (${activeRoadmap.level})` : activeRoadmap.level}
                           </span>
                           <span className={THEME.chip}>
                             <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
@@ -2282,20 +2364,20 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                           <button
                             type="button"
                             onClick={handleExportMarkdown}
-                            aria-label="Download plan as Markdown"
+                            title="Download plan as Markdown"
                             className={`${THEME.ghostBtn} h-11 px-4 text-xs`}
                           >
                             <FileText className="w-4 h-4" aria-hidden="true" />
-                            .md
+                            .md<span className="sr-only"> download (plan as Markdown)</span>
                           </button>
                           <button
                             type="button"
                             onClick={handleExportJSON}
-                            aria-label="Download plan as JSON"
+                            title="Download plan as JSON"
                             className={`${THEME.ghostBtn} h-11 px-4 text-xs`}
                           >
                             <FileJson className="w-4 h-4" aria-hidden="true" />
-                            .json
+                            .json<span className="sr-only"> download (plan as JSON)</span>
                           </button>
                         </div>
                       </div>
@@ -2360,7 +2442,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                                   <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#F4F4F2] text-neutral-700">
                                     {res.category}
                                   </span>
-                                  <ExternalLink className="w-4 h-4 text-neutral-400 group-hover:text-[#C2410C] transition" aria-hidden="true" />
+                                  <ExternalLink className="w-4 h-4 text-neutral-500 group-hover:text-[#C2410C] transition" aria-hidden="true" />
                                 </div>
                                 <div className="text-sm font-bold text-neutral-950 leading-snug">{res.title}</div>
                                 {Array.isArray(res.skills) && res.skills.length > 0 && (
@@ -2424,7 +2506,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                                 </p>
                                 <ul className="mt-2 list-disc pl-5 text-xs text-neutral-700 space-y-1">
                                   {(phase.tasks || []).slice(0, 6).map((t, i) => <li key={i}>{t}</li>)}
-                                  {(phase.tasks || []).length > 6 && <li className="list-none -ml-5 text-neutral-400">+{phase.tasks.length - 6} more</li>}
+                                  {(phase.tasks || []).length > 6 && <li className="list-none -ml-5 text-neutral-500">+{phase.tasks.length - 6} more</li>}
                                 </ul>
                               </li>
                             ))}
@@ -2504,7 +2586,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                                         ) : (
                                           <Circle className="w-5 h-5 text-neutral-300 shrink-0 mt-0.5" aria-hidden="true" />
                                         )}
-                                        <span className={`text-sm leading-snug ${isChecked ? 'text-neutral-400 line-through' : 'text-neutral-800'}`}>
+                                        <span className={`text-sm leading-snug ${isChecked ? 'text-neutral-500 line-through' : 'text-neutral-800'}`}>
                                           {task}
                                         </span>
                                       </button>
@@ -2595,7 +2677,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <span className="px-2.5 py-0.5 rounded bg-[#111111] text-white text-xs font-bold">
-                              {examLabel(rm.exam)} • {rm.level}
+                              {examLabel(rm.exam)} • {rm.targetScore ? `${rm.targetScore} (${rm.level})` : rm.level}
                             </span>
                             <span className="text-xs text-neutral-500">
                               Saved {rm.createdAt}
@@ -2830,7 +2912,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-neutral-900">{ev.contributor}</span>
                               <span className="px-2 py-0.5 rounded bg-[#F4F4F2] text-neutral-600 font-medium">{ev.source}</span>
-                              <span className="text-neutral-400">{ev.date}</span>
+                              <span className="text-neutral-500">{ev.date}</span>
                             </div>
                             <p className="text-neutral-600 mt-0.5">{ev.note}</p>
                           </div>
@@ -2865,7 +2947,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       <ProgressRing pct={roadmapProgress.pct} size={64} />
                       <div className="min-w-0">
                         <h2 id="oe-continue" className="font-bold text-lg leading-tight">
-                          {examLabel(activeRoadmap.exam)} · {activeRoadmap.level}
+                          {examLabel(activeRoadmap.exam)} · {activeRoadmap.targetScore ? `${activeRoadmap.targetScore} (${activeRoadmap.level})` : activeRoadmap.level}
                         </h2>
                         <p className="text-sm text-neutral-500">
                           {activeRoadmap.days}-day plan · {roadmapProgress.done}/{roadmapProgress.total} done
@@ -2979,7 +3061,15 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     {FIVE_YEAR_GOAL_EUR != null ? ` / €${Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB')}` : ''}
                   </span>
                 </div>
-                <div className="w-full h-2.5 bg-neutral-200 rounded-full overflow-hidden">
+                <div
+                  className="w-full h-2.5 bg-neutral-200 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-label="Progress toward the 5-year funding goal"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={fundingPercentage ?? 0}
+                  aria-valuetext={fundingPercentage != null ? `${fundingPercentage}% funded` : 'No income yet'}
+                >
                   <div
                     className="h-full bg-[#111111] transition-all duration-500"
                     style={{ width: `${fundingPercentage ?? 0}%` }}
@@ -3227,7 +3317,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
 
                 <div className="relative flex py-1 items-center">
                   <div className="grow border-t border-black/[0.08]" />
-                  <span className="shrink mx-3 text-[11px] uppercase text-neutral-400 font-semibold">
+                  <span className="shrink mx-3 text-[11px] uppercase text-neutral-500 font-semibold">
                     or email account
                   </span>
                   <div className="grow border-t border-black/[0.08]" />
@@ -3239,7 +3329,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       Email Address
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+                      <Mail className="w-4 h-4 text-neutral-500 absolute left-3 top-3" />
                       <input
                         type="email"
                         required
@@ -3256,7 +3346,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       Password
                     </label>
                     <div className="relative">
-                      <KeyRound className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+                      <KeyRound className="w-4 h-4 text-neutral-500 absolute left-3 top-3" />
                       <input
                         type="password"
                         required
@@ -3357,8 +3447,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                 { label: 'GitHub Sponsors (0% fee, monthly)', url: DONATION_LINKS.githubSponsors, icon: Code2 },
                 { label: 'Open Collective (public fiscal host)', url: DONATION_LINKS.openCollective, icon: ShieldCheck },
                 { label: 'Ko-fi (one-off tip)', url: DONATION_LINKS.kofi, icon: Coins }
-              ].filter(({ url }) => !!url).map(({ label, url, icon: Icon }) =>
-                url ? (
+              ].filter(({ url }) => !!url).map(({ label, url, icon: Icon }) => (
                   <a
                     key={label}
                     href={url}
@@ -3367,22 +3456,12 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     className="min-h-[44px] w-full py-2.5 px-3.5 rounded-xl border border-neutral-300 hover:border-orange-300 text-sm font-semibold flex items-center justify-between transition"
                   >
                     <span className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-orange-700" />
+                      <Icon className="w-4 h-4 text-orange-700" aria-hidden="true" />
                       {label}
                     </span>
-                    <ExternalLink className="w-4 h-4 text-neutral-400" />
+                    <ExternalLink className="w-4 h-4 text-neutral-500" aria-hidden="true" />
+                    <span className="sr-only"> (opens in a new tab)</span>
                   </a>
-                ) : (
-                  <div
-                    key={label}
-                    className="min-h-[44px] w-full py-2.5 px-3.5 rounded-xl border border-dashed border-black/[0.08] text-sm text-neutral-400 flex items-center justify-between"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Icon className="w-4 h-4" />
-                      {label}
-                    </span>
-                    <span className="text-xs">Coming soon</span>
-                  </div>
                 )
               )}
             </div>
@@ -3551,7 +3630,7 @@ function LibraryTab({ defaultExam }) {
                   {badge.label}
                 </div>
                 {r.lastCheckedAt && (
-                  <div className="text-[10px] text-neutral-400">
+                  <div className="text-[10px] text-neutral-500">
                     Last checked {String(r.lastCheckedAt).slice(0, 10)}
                   </div>
                 )}
@@ -3913,7 +3992,7 @@ function CoachPanel({ roadmap, onApply, needsAccount, getAccessToken, onNeedAcco
           {typeof advice.pace === 'number' && !advice.insufficientHistory && (
             <p className="text-neutral-600">
               Pace {advice.pace} tasks/day · planned {advice.plannedPace} · needed {advice.requiredPace}
-              {advice.projectedFinishDate ? ` · projected finish ${advice.projectedFinishDate}` : ''}
+              {advice.projectedFinishDate ? ` · projected finish ${advice.projectedFinishDate}` : advice.behindText ? ` · ${advice.behindText}` : ''}
             </p>
           )}
           {(advice.tips || []).map((t, i) => (

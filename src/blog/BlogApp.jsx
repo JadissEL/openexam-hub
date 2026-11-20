@@ -107,7 +107,7 @@ function PostCard({ post }) {
           <CoverImage cover={post.cover} href={post.url} />
         </div>
       ) : null}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#8A8178]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#6B635A]">
         <time dateTime={post.date}>{formatDate(post.date)}</time>
         <span aria-hidden="true">·</span>
         <span>{post.readingMinutes} min read</span>
@@ -203,8 +203,8 @@ function TableOfContents({ headings }) {
       <details className="group rounded-2xl border border-[#E7E1D7] bg-white/70 px-5 py-4" open>
         <summary className="cursor-pointer list-none font-semibold text-[15px] text-[#1A1714] [&::-webkit-details-marker]:hidden flex items-center justify-between gap-3">
           <span id="toc-title">On this page</span>
-          <span className="lg:hidden text-[13px] font-medium text-[#8A8178] group-open:hidden">Show</span>
-          <span className="lg:hidden text-[13px] font-medium text-[#8A8178] hidden group-open:inline">Hide</span>
+          <span className="lg:hidden text-[13px] font-medium text-[#6B635A] group-open:hidden">Show</span>
+          <span className="lg:hidden text-[13px] font-medium text-[#6B635A] hidden group-open:inline">Hide</span>
         </summary>
         <ol className="mt-3 space-y-2 text-[15px] leading-snug text-[#3B352F]">
           {headings.map((h) => (
@@ -253,7 +253,7 @@ export function BlogPost({ post }) {
       <article className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
         <p className="text-[14px]">
           <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Blog</a>
-          <span className="text-[#8A8178]"> / {post.exams.map(examLabel).join(', ')}</span>
+          <span className="text-[#6B635A]"> / {post.exams.map(examLabel).join(', ')}</span>
         </p>
         <header className="mt-5 max-w-3xl">
           {post.draft ? (

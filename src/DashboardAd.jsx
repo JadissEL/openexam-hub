@@ -34,7 +34,7 @@ export default function DashboardAd({ enabled }) {
   if (!active || state === 'off') return null;
   return (
     <section aria-label="Advertisement" className="rounded-3xl border border-black/5 bg-white p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 mb-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-2">
         Advertisement · <a href="/funding" className="underline underline-offset-2">why ads?</a>
       </p>
       <div style={{ minHeight: AD_HEIGHT }}>

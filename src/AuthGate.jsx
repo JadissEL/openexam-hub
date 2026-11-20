@@ -209,7 +209,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
                   <GoogleIcon />
                   Continue with Google
                 </button>
-                <div className="my-5 flex items-center gap-3 text-xs text-[#8A8178]">
+                <div className="my-5 flex items-center gap-3 text-xs text-[#6B635A]">
                   <span className="h-px flex-1 bg-black/10" />
                   or with email
                   <span className="h-px flex-1 bg-black/10" />
@@ -244,7 +244,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
                     className="mt-1 w-full min-h-[48px] rounded-xl border border-black/15 bg-white px-4 text-[16px] focus:outline-none focus:ring-2 focus:ring-[#C2410C]"
                     required
                   />
-                  {mode === 'signup' && <span className="mt-1 block text-xs text-[#8A8178]">At least 6 characters.</span>}
+                  {mode === 'signup' && <span className="mt-1 block text-xs text-[#6B635A]">At least 6 characters.</span>}
                 </label>
               )}
 
@@ -292,7 +292,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
                 </button>
               </p>
             )}
-            <p className="mt-6 text-center text-xs text-[#8A8178]">
+            <p className="mt-6 text-center text-xs text-[#6B635A]">
               Free, no payment details. <a href="/privacy" className="underline">Privacy</a> · <a href="/terms" className="underline">Terms</a>
             </p>
           </>

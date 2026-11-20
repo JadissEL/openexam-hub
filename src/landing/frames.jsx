@@ -7,7 +7,7 @@ export function BrowserFrame({ src, alt, width, height, className = '', eager = 
         <span className="w-2.5 h-2.5 rounded-full bg-[#E9E4DC]" />
         <span className="w-2.5 h-2.5 rounded-full bg-[#E9E4DC]" />
         <span className="w-2.5 h-2.5 rounded-full bg-[#E9E4DC]" />
-        <span className="ml-3 text-[11px] text-[#8A8178] truncate">openexamhub.org/app</span>
+        <span className="ml-3 text-[11px] text-[#6B635A] truncate">openexamhub.org/app</span>
       </div>
       <img src={src} alt={alt} width={width} height={height} loading={eager ? 'eager' : 'lazy'} decoding="async" fetchpriority={eager ? 'high' : undefined} className="block w-full h-auto" />
     </figure>
