@@ -24,14 +24,30 @@ export async function fetchPublicBooks() {
   return res.json();
 }
 
+/**
+ * Build-time snapshot of GET /api/stats, baked into the prerendered /funding page by
+ * scripts/prerender-pages.mjs (globalThis.__OEH_BOOKS__ = { fetchedAt, treasury, usage, usageTotal, stats }).
+ * The server render and the first client render both read it, so hydration matches; the live fetch
+ * then replaces it. Absent (build had no network) -> a neutral loading state, never made-up numbers.
+ */
+export function booksSnapshot() {
+  const g = typeof globalThis !== 'undefined' ? globalThis.__OEH_BOOKS__ : null;
+  if (!g || typeof g !== 'object' || !g.treasury || !g.usageTotal || typeof g.fetchedAt !== 'string') return null;
+  return g;
+}
+
 export function usePublicBooks({ treasury: treasuryProp, usage: usageProp, usageTotal: usageTotalProp, stats: statsProp } = {}) {
-  const [data, setData] = useState({
-    treasury: treasuryProp || null,
-    usage: usageProp || null,
-    usageTotal: usageTotalProp || null,
-    stats: statsProp || null,
-    loaded: Boolean(treasuryProp || usageProp),
-    error: false
+  const [data, setData] = useState(() => {
+    const snap = treasuryProp || usageProp ? null : booksSnapshot();
+    return {
+      treasury: treasuryProp || snap?.treasury || null,
+      usage: usageProp || snap?.usage || null,
+      usageTotal: usageTotalProp || snap?.usageTotal || null,
+      stats: statsProp || snap?.stats || null,
+      loaded: Boolean(treasuryProp || usageProp || snap),
+      asOf: snap ? snap.fetchedAt : null,
+      error: false
+    };
   });
 
   useEffect(() => {
@@ -63,11 +79,13 @@ export function usePublicBooks({ treasury: treasuryProp, usage: usageProp, usage
           usageTotal: out.usageTotal || null,
           stats: out.stats || null,
           loaded: true,
+          asOf: null,
           error: false
         });
       })
       .catch(() => {
-        if (!cancelled) setData((d) => ({ ...d, loaded: true, error: true }));
+        // Keep a build snapshot if we have one; otherwise say the figures are unavailable (no fake zeros).
+        if (!cancelled) setData((d) => ({ ...d, loaded: Boolean(d.asOf), error: !d.asOf }));
       });
     return () => {
       cancelled = true;
@@ -117,7 +135,15 @@ export function AiFrugality({ variant = 'page', stats }) {
   );
 }
 
-export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stats, earnings: earningsProp, loaded = true }) {
+function asOfLabel(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  // Fixed UTC format so the server render and the hydrating client agree.
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stats, earnings: earningsProp, loaded = true, error = false, asOf = null }) {
   const isPage = variant === 'page';
   const wrap = isPage ? 'text-[#1A1714]' : 'text-neutral-800';
   const muted = isPage ? 'text-[#6B635A]' : 'text-neutral-600';
@@ -130,14 +156,20 @@ export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stat
   const net = netBalanceEur(earnings, listedEur, aiCost);
   const monthUsage = usage || { calls: 0, promptTokens: 0, completionTokens: 0, costEur: 0, month: null };
 
+  const pendingText = error ? 'Not available right now' : 'Loading…';
+  const pendingCls = `mt-2 text-base font-medium ${muted}`;
+  const valueCls = `mt-2 text-2xl font-bold tabular-nums ${isPage ? 'text-[#1A1714]' : 'text-neutral-900'}`;
+  const asOfText = asOf ? asOfLabel(asOf) : null;
+
   return (
     <div className={`space-y-8 ${wrap}`}>
+      {asOfText ? (
+        <p className={`text-sm ${muted}`} data-testid="books-as-of">{`Figures as of ${asOfText}. Live numbers load in your browser.`}</p>
+      ) : null}
       <div className={isPage ? 'grid md:grid-cols-3 gap-8 max-w-4xl' : 'grid grid-cols-1 gap-4'}>
         <div className={box}>
           <h3 className={h}>Earnings so far</h3>
-          <p className={`mt-2 text-2xl font-bold tabular-nums ${isPage ? 'text-[#1A1714]' : 'text-neutral-900'}`}>
-            {loaded ? formatEur(earnings) : '—'}
-          </p>
+          <p className={loaded ? valueCls : pendingCls}>{loaded ? formatEur(earnings) : pendingText}</p>
           <p className={`mt-1 text-sm ${muted}`}>
             Donations and dashboard ads
             {FIVE_YEAR_GOAL_EUR != null ? ` · toward the €${Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB')} goal` : ''}.
@@ -145,18 +177,14 @@ export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stat
         </div>
         <div className={box}>
           <h3 className={h}>Expenses so far</h3>
-          <p className={`mt-2 text-2xl font-bold tabular-nums ${isPage ? 'text-[#1A1714]' : 'text-neutral-900'}`}>
-            {loaded ? formatEur(listedEur + aiCost) : '—'}
-          </p>
+          <p className={loaded ? valueCls : pendingCls}>{loaded ? formatEur(listedEur + aiCost) : pendingText}</p>
           <p className={`mt-1 text-sm ${muted}`}>
             Recorded costs plus AI usage{pending ? ` · ${pending} amount${pending === 1 ? '' : 's'} pending` : ''}.
           </p>
         </div>
         <div className={box}>
           <h3 className={h}>Net</h3>
-          <p className={`mt-2 text-2xl font-bold tabular-nums ${isPage ? 'text-[#1A1714]' : 'text-neutral-900'}`}>
-            {loaded ? formatEur(net, { sign: true }) : '—'}
-          </p>
+          <p className={loaded ? valueCls : pendingCls}>{loaded ? formatEur(net, { sign: true }) : pendingText}</p>
           <p className={`mt-1 text-sm ${muted}`}>
             {loaded
               ? net < 0
@@ -222,7 +250,7 @@ export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stat
             </div>
           </dl>
         ) : (
-          <p className={`mt-3 text-sm ${muted}`}>Loading usage…</p>
+          <p className={`mt-3 text-sm ${muted}`}>{error ? 'Usage is not available right now.' : 'Loading usage…'}</p>
         )}
         {aiCost > 0 && (Number(monthUsage.costEur) || 0) !== aiCost ? (
           <p className={`mt-3 text-sm ${muted}`}>Lifetime AI cost included in expenses: {formatEur(aiCost)}.</p>

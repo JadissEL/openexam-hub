@@ -25,6 +25,42 @@ import {
 
 const HYDRATED = ['/about', '/faq', '/funding', '/privacy', '/terms'];
 
+/**
+ * Real numbers for the /funding books, fetched once at build time from the public GET /api/stats
+ * (the same endpoint the page calls in the browser). Returns null on any failure or odd shape, and
+ * the page then shows a neutral "Loading…" state until the live fetch lands. Never invents figures.
+ * OEH_STATS_URL overrides the source; OEH_PRERENDER_STATS=0 skips the fetch (offline builds).
+ */
+export async function fetchBooksSnapshot({
+  url = process.env.OEH_STATS_URL || `${SITE_ORIGIN}/api/stats`,
+  timeoutMs = 6000,
+  fetchImpl = globalThis.fetch
+} = {}) {
+  if (process.env.OEH_PRERENDER_STATS === '0' || typeof fetchImpl !== 'function') return null;
+  try {
+    const res = await fetchImpl(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) return null;
+    const out = await res.json();
+    const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+    if (!isObj(out) || !isObj(out.treasury) || !isObj(out.usageTotal)) return null;
+    return {
+      fetchedAt: new Date().toISOString(),
+      treasury: out.treasury,
+      usage: isObj(out.usage) ? out.usage : null,
+      usageTotal: out.usageTotal,
+      stats: isObj(out.stats) ? out.stats : null
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Inline script that hands the snapshot to the hydrating client (JSON with "<" escaped). */
+export function booksSnapshotScript(snap) {
+  const json = JSON.stringify(snap).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+  return `<script>window.__OEH_BOOKS__=${json};</script>`;
+}
+
 async function bundleSsr() {
   const outfile = path.join(REPO_ROOT, 'dist', '.pages-ssr.mjs');
   await esbuild.build({
@@ -57,11 +93,22 @@ export async function prerenderPages(distDir, template, { applyHead, injectRoot,
     return applyHead(template, { ...meta, type, jsonLd, rss: false });
   };
 
+  const books = await fetchBooksSnapshot();
+  console.log(books ? `prerender: /funding books baked from /api/stats (${books.fetchedAt})` : 'prerender: /funding books not baked (stats unavailable); page shows a loading state');
+
   for (const p of HYDRATED) {
     const jsonLd = [breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: nameFor(p), path: p }])];
     if (p === '/faq') jsonLd.push(faqPageJsonLd(ssr.FAQ));
-    const body = ssr.renderPage(p, posts);
-    writePage(distDir, p, injectRoot(headFor(p, jsonLd), body));
+    const withBooks = p === '/funding' && books;
+    if (withBooks) globalThis.__OEH_BOOKS__ = books;
+    let html;
+    try {
+      html = injectRoot(headFor(p, jsonLd), ssr.renderPage(p, posts));
+    } finally {
+      delete globalThis.__OEH_BOOKS__;
+    }
+    if (withBooks) html = html.replace('</head>', `    ${booksSnapshotScript(books)}\n  </head>`);
+    writePage(distDir, p, html);
     written.push(p);
   }
 

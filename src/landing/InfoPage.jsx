@@ -181,10 +181,10 @@ export function FaqPage() {
 }
 
 function FundingBooks() {
-  const { treasury, usage, usageTotal, stats, loaded } = usePublicBooks();
+  const { treasury, usage, usageTotal, stats, loaded, error, asOf } = usePublicBooks();
   return (
     <div className="mt-14 mb-4">
-      <BooksPanel variant="page" treasury={treasury} usage={usage} usageTotal={usageTotal} stats={stats} loaded={loaded} />
+      <BooksPanel variant="page" treasury={treasury} usage={usage} usageTotal={usageTotal} stats={stats} loaded={loaded} error={error} asOf={asOf} />
     </div>
   );
 }
