@@ -431,7 +431,7 @@ DNS records before the cutover (all DNS-only, TTL auto), zone `7e685b3f9438eaf3f
 
 Never touch the MX, SPF, DKIM (`cf2024-1._domainkey`) or `google-site-verification` TXT records.
 
-1. Uncomment `routes` in `wrangler.jsonc` (apex + www custom domains). Delete the three records above
+1. `routes` in `wrangler.jsonc` lists the apex + www custom domains. Delete the three records above
    (a Workers custom domain cannot sit on a hostname that already has an A/CNAME record), then run
    `npx --yes wrangler@4.166.0 deploy`. Expect a brief certificate issuance window for the hostnames.
 2. Add a zone Single Redirect rule: `http.host eq "www.openexamhub.org"` -> `concat("https://openexamhub.org", http.request.uri.path)`, 308, preserve query string.

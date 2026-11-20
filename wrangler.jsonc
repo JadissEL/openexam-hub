@@ -21,11 +21,11 @@
     // The Vercel deployment that still runs the Node API functions and the cron jobs.
     "API_ORIGIN": "https://openexam-hub.vercel.app"
   },
-  // Production custom domains (attached at cutover; see DEPLOY.md "Cloudflare Workers").
-  // "routes": [
-  //   { "pattern": "openexamhub.org", "custom_domain": true },
-  //   { "pattern": "www.openexamhub.org", "custom_domain": true }
-  // ],
+  // Production custom domains (attached at the cutover; see DEPLOY.md section 8).
+  "routes": [
+    { "pattern": "openexamhub.org", "custom_domain": true },
+    { "pattern": "www.openexamhub.org", "custom_domain": true }
+  ],
   "env": {
     // npx wrangler deploy --env staging  ->  Worker "openexam-hub-staging" on https://staging.openexamhub.org
     "staging": {
