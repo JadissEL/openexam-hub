@@ -16,7 +16,7 @@ const APEX = 'openexamhub.org';
 // Client-side routes without their own prerendered file: the dashboard's tab deep links (/app/plan, ...).
 const APP_SHELL_ROUTE = /^\/app\/[^/]+$/;
 // Hop-by-hop / host-specific request headers that must not be forwarded to the origin.
-const DROP_REQUEST_HEADERS = ['host', 'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'cf-worker', 'x-forwarded-proto', 'x-real-ip', 'x-oeh-client-ip', 'x-oeh-proxy-key'];
+const DROP_REQUEST_HEADERS = ['host', 'cf-connecting-ip', 'cf-ipcountry', 'cf-ray', 'cf-visitor', 'cf-worker', 'x-forwarded-proto', 'x-real-ip', 'x-oeh-client-ip', 'x-oeh-client-country', 'x-oeh-proxy-key'];
 
 function notFound() {
   return new Response('The page could not be found.\n\nNOT_FOUND\n', {
@@ -40,6 +40,9 @@ async function proxyToApi(request, env, url, pathname) {
     // travels in x-oeh-client-ip, trusted by the API only together with the shared key.
     headers.set('x-oeh-client-ip', ip);
     headers.set('x-oeh-proxy-key', env.PROXY_SHARED_SECRET);
+    // Visitor country (2-letter code from Cloudflare), shown in the founder's signup alert.
+    const country = request.cf && typeof request.cf.country === 'string' ? request.cf.country : '';
+    if (/^[A-Z]{2}$/.test(country)) headers.set('x-oeh-client-country', country);
   }
   const init = { method: request.method, headers, redirect: 'manual' };
   if (request.method !== 'GET' && request.method !== 'HEAD') init.body = request.body;

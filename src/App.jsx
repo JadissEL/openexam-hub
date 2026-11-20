@@ -43,6 +43,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { initializeApp, getApps } from 'firebase/app';
+import { notifySignupOnce } from './signupAlert.js';
 import {
   getAuth,
   signInWithCustomToken,
@@ -827,7 +828,10 @@ export default function App() {
 
   useEffect(() => {
     if (!auth) return undefined;
-    return onAuthStateChanged(auth, (user) => setState({ ready: true, user }));
+    return onAuthStateChanged(auth, (user) => {
+      setState({ ready: true, user });
+      notifySignupOnce(user); // founder's new-signup alert; fire-and-forget, fresh accounts only
+    });
   }, []);
 
   const signedIn = isRegisteredUser(state.user);

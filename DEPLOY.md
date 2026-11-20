@@ -55,6 +55,23 @@ use it), or with `vercel env add NAME production`. Never commit them.
 | `OPEN_COLLECTIVE_API_TOKEN` | no | An Open Collective Personal Token (personal settings → *For developers*), sent as the `Personal-Token` header on the re-confirmation query. Public reads work without it. It only raises rate limits. |
 | `FX_<CUR>_EUR` | per currency | Rate to EUR, for example `FX_USD_EUR=0.92`, `FX_GBP_EUR=1.17`, `FX_CHF_EUR=1.05`, `FX_CAD_EUR=0.66`. EUR is always 1. GitHub Sponsors is always **USD**, so `FX_USD_EUR` is effectively required. If a rate is missing, the event is still recorded, but it is **left out of the EUR total** and gets the flag `missing_fx_rate` (`amountEur: null`, `countedInTotal: false`; `monthly_ledger.pendingFxEvents` goes up by one). Update the rates monthly. |
 
+### Signup alerts (`lib/signupAlert.js`)
+
+The founder gets a branded email each time someone creates an account. The app calls
+`POST /api/account {action:'signup-notify'}` right after a new account signs in, fire-and-forget. The
+server checks the Firebase ID token, skips anonymous accounts and accounts older than 24h, and sends at
+most one alert per account. Dedupe uses the server-only doc `public/data/signup_alerts/{uid}`. The nightly
+`/api/cron/cleanup` run re-sends any alert from the last 48h that never went out. It reuses
+`FIREBASE_SERVICE_ACCOUNT`.
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `RESEND_API_KEY` | for alerts | Resend API key (domain openexamhub.org). If it is missing, alerts are logged and skipped, and sign-up still works. |
+| `SIGNUP_ALERT_TO` | no | Recipient. Default `elantaki.dijadiss@gmail.com`. |
+| `SIGNUP_ALERT_FROM` | no | Sender. Default `OpenExam Hub <notifications@openexamhub.org>`. |
+
+Tests: `node scripts/test-signup-alert.mjs` (offline) and `npm run test:signup-alert` (emulators plus a mock Resend).
+
 ### Library
 | Variable | Required | What it is |
 |---|---|---|
