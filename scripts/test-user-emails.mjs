@@ -94,6 +94,20 @@ test('welcome template: first name, exam deep link, GitHub, transactional footer
   assert.ok(bare.html.includes('Merci de rejoindre OpenExam Hub.'));
 });
 
+test('demo block: linked thumbnail with alt text in welcome + verify, link in plain text, EN/FR', () => {
+  const thumb = 'https://openexamhub.org/email/demo-thumb.jpg';
+  const yt = 'https://www.youtube.com/watch?v=dtRC_QJzLtU';
+  for (const m of [renderWelcomeEmail({ lang: 'en' }), renderVerifyEmail({ link: 'https://l', email: 'a@b.c', lang: 'en' })]) {
+    assert.ok(m.html.includes(`src="${thumb}"`));
+    assert.ok(m.html.includes(`href="${yt}"`));
+    assert.match(m.html, /alt="Play the OpenExam Hub demo video \(2:31\) on YouTube"/);
+    assert.ok(m.text.includes(yt));
+  }
+  const fr = renderWelcomeEmail({ lang: 'fr' });
+  assert.ok(fr.html.includes('Voir comment ça marche'));
+  assert.ok(fr.text.includes(`Regarder la démo sur YouTube: ${yt}`));
+});
+
 test('checkVerifyRate: 60s cooldown and 5 per 24h', () => {
   assert.equal(checkVerifyRate([], NOW).ok, true);
   const c = checkVerifyRate([NOW - 10_000], NOW);
