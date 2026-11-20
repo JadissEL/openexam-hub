@@ -127,10 +127,16 @@ function PostCard({ post }) {
 
 function EmptyList() {
   return (
-    <p className={`py-16 ${lead} max-w-2xl`}>
-      No posts yet. The first articles are on the way. If you want to be notified, write to{' '}
-      <a className="text-[#C2410C] underline underline-offset-4" href="mailto:hello@openexamhub.org">hello@openexamhub.org</a>.
-    </p>
+    <div className="py-16 max-w-2xl">
+      <h2 className={`font-display ${ink} text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium`}>
+        Articles coming soon
+      </h2>
+      <p className={`mt-4 ${lead}`}>
+        The first guides on language exams — for students, professionals and immigration applicants — are on the way.
+        If you want to be notified, write to{' '}
+        <a className="text-[#C2410C] underline underline-offset-4" href="mailto:hello@openexamhub.org">hello@openexamhub.org</a>.
+      </p>
+    </div>
   );
 }
 

@@ -14,6 +14,7 @@ import {
   SITE_ORIGIN,
   CONTENT_DIR
 } from './blog-data.mjs';
+import { parsePlannerQuery, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
@@ -173,6 +174,18 @@ Body of the post.
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+
+test('parsePlannerQuery pre-selects known exams and levels, ignores junk', () => {
+  assert.deepEqual(parsePlannerQuery('?exam=IELTS'), { exam: 'IELTS', level: null });
+  assert.deepEqual(parsePlannerQuery('exam=tef-canada&level=c1'), { exam: 'TEF_CANADA', level: 'C1' });
+  assert.deepEqual(parsePlannerQuery('?exam=IELTS&level=B2'), { exam: 'IELTS', level: 'B2' });
+  assert.deepEqual(parsePlannerQuery('?exam=not-an-exam&level=Z9'), { exam: null, level: null });
+  assert.deepEqual(parsePlannerQuery('?exam=DELF&level=B1'), { exam: null, level: 'B1' }); // known but not in the picker
+  assert.deepEqual(parsePlannerQuery(''), { exam: null, level: null });
+  assert.equal(parsePlannerQuery('?exam=IELTS').exam || DEFAULT_PICKER_EXAM, 'IELTS');
+  assert.equal(parsePlannerQuery('?exam=NOPE').exam || DEFAULT_PICKER_EXAM, DEFAULT_PICKER_EXAM);
+});
+
 if (process.argv.includes('--built')) {
   const dist = path.join(root, 'dist');
   test('built sitemap and RSS exist', () => {
@@ -210,6 +223,13 @@ if (process.argv.includes('--built')) {
       assert.equal(fs.existsSync(path.join(dist, 'blog/example-when-to-start-preparing/index.html')), false);
       const sitemap = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
       assert.doesNotMatch(sitemap, /example-when-to-start-preparing/);
+      for (const pathUrl of ['/', '/app', '/about', '/faq', '/funding', '/privacy', '/terms', '/blog']) {
+        const loc = pathUrl === '/' ? 'https://openexamhub.org/' : `https://openexamhub.org${pathUrl}`;
+        assert.match(sitemap, new RegExp(loc.replace(/[/.]/g, r => '\\' + r)));
+      }
+      const index = fs.readFileSync(path.join(dist, 'blog/index.html'), 'utf8');
+      assert.match(index, /Articles coming soon/);
+      assert.doesNotMatch(index, /example-when-to-start-preparing/);
     });
   }
 }

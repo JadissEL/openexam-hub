@@ -70,7 +70,7 @@ import {
 import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { DONATION_LINKS } from './donations.js';
 import { FIVE_YEAR_GOAL_EUR, FUNDING_PROMISE } from './funding.js';
-import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant } from '../lib/exams.js';
+import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant, parsePlannerQuery } from '../lib/exams.js';
 import StudyToday from './StudyToday.jsx';
 import DashboardAd from './DashboardAd.jsx';
 import ReviewDeck, { SaveToDeckButton, cardFromPractice, cardIdFor } from './ReviewDeck.jsx';
@@ -760,9 +760,9 @@ export default function App() {
   const [authFeedback, setAuthFeedback] = useState(null);
 
   // Multi-Agent Generator Inputs
-  const [selectedExam, setSelectedExam] = useState(DEFAULT_PICKER_EXAM);
+  const [selectedExam, setSelectedExam] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').exam || DEFAULT_PICKER_EXAM);
   const [selectedTcfVariant, setSelectedTcfVariant] = useState('tout_public');
-  const [selectedLevel, setSelectedLevel] = useState('B2');
+  const [selectedLevel, setSelectedLevel] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').level || 'B2');
   const [daysUntilExam, setDaysUntilExam] = useState(30);
   const [publicStats, setPublicStats] = useState(null);
 
