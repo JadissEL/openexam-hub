@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { initializeApp, getApps } from 'firebase/app';
 import { notifySignupOnce } from './signupAlert.js';
+import VerifyEmailBanner from './VerifyEmailBanner.jsx';
 import {
   getAuth,
   signInWithCustomToken,
@@ -1977,6 +1978,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-32 sm:pb-12">
+        {isRegisteredUser(firebaseUser) && <VerifyEmailBanner user={firebaseUser} />}
         {/* HOME HERO: greeting over the orange → pink glow, with real stats only */}
         {activeTab === 'generator' && (
           <section

@@ -24,14 +24,18 @@ const MOCK_PORT = 3419;
 const API = `http://127.0.0.1:${PORT}`;
 
 // ---- mock Resend
-const mails = [];
+const allMails = [];
+const FOUNDER = 'founder@demo.local';
+// Founder alerts only (learner emails are checked separately via learnerMails()).
+const mails = new Proxy(allMails, { get: (t, k) => { const f = t.filter((m) => (m.body.to || [])[0] === FOUNDER); const v = f[k]; return typeof v === 'function' ? v.bind(f) : v; } });
+const learnerMails = (to) => allMails.filter((m) => (m.body.to || [])[0] === to);
 const mock = createServer((req, res) => {
   let body = '';
   req.on('data', (c) => (body += c));
   req.on('end', () => {
-    mails.push({ auth: req.headers.authorization, body: JSON.parse(body || '{}') });
+    allMails.push({ auth: req.headers.authorization, body: JSON.parse(body || '{}') });
     res.writeHead(200, { 'content-type': 'application/json' });
-    res.end(JSON.stringify({ id: `mock_${mails.length}` }));
+    res.end(JSON.stringify({ id: `mock_${allMails.length}` }));
   });
 });
 await new Promise((r) => mock.listen(MOCK_PORT, '127.0.0.1', r));
@@ -135,12 +139,68 @@ try {
     assert.equal(again.sent, 0);
     assert.equal(mails.length, 2);
   });
+  await check('learner email: email/password signup got a branded verify email with a real link', async () => {
+    const got = learnerMails('newbie@demo.local');
+    assert.equal(got.length, 1);
+    assert.equal(got[0].body.from, 'OpenExam Hub <hello@openexamhub.org>');
+    assert.equal(got[0].body.reply_to, 'hello@openexamhub.org');
+    assert.match(got[0].body.subject, /Confirmez votre adresse/); // locale fr-CA in the request
+    assert.match(got[0].body.text, /mode=verifyEmail/);
+    assert.match(got[0].body.text, /oobCode=/);
+    assert.match(got[0].body.text, /continueUrl=https%3A%2F%2Fopenexamhub\.org%2Fapp/);
+  });
+  const resend = (token) => fetch(`${API}/api/account`, {
+    method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action: 'resend-verification', locale: 'en-US' })
+  });
+  await check('resend-verification: within 60s of the first email -> 429 with Retry-After', async () => {
+    const r = await resend(a.token);
+    assert.equal(r.status, 429);
+    assert.ok(Number(r.headers.get('retry-after')) > 0);
+    assert.equal((await r.json()).reason, 'cooldown');
+    assert.equal(learnerMails('newbie@demo.local').length, 1);
+  });
+  await check('resend-verification: after the cooldown -> a new email (simulated by ageing the slot)', async () => {
+    const st = db.collection('artifacts').doc(APP_ID).collection('public').doc('data').collection('user_emails').doc(a.uid);
+    await st.set({ verifySends: [Date.now() - 61_000] }, { merge: true });
+    const r = await resend(a.token);
+    assert.equal(r.status, 200);
+    assert.equal((await r.json()).status, 'sent');
+    const got = learnerMails('newbie@demo.local');
+    assert.equal(got.length, 2);
+    assert.match(got[1].body.subject, /Verify your email/);
+  });
+  await check('resend-verification: 5 per day cap', async () => {
+    const st = db.collection('artifacts').doc(APP_ID).collection('public').doc('data').collection('user_emails').doc(a.uid);
+    const t = Date.now();
+    await st.set({ verifySends: [1, 2, 3, 4, 5].map((h) => t - h * 3600_000) }, { merge: true });
+    const r = await resend(a.token);
+    assert.equal(r.status, 429);
+    assert.equal((await r.json()).reason, 'daily');
+  });
+  await check('learner email: provider-verified account gets one welcome email, no verify email', async () => {
+    const u = await getAuth().createUser({ email: 'gina@demo.local', emailVerified: true, displayName: 'Gina Rossi' });
+    const { token } = await idp('accounts:signInWithCustomToken', { token: await getAuth().createCustomToken(u.uid), returnSecureToken: true });
+    const j = await (await notify(token, { locale: 'en-GB', exam: 'ielts' })).json();
+    assert.deepEqual(j.userEmail, { kind: 'welcome', status: 'sent' });
+    const got = learnerMails('gina@demo.local');
+    assert.equal(got.length, 1);
+    assert.match(got[0].body.subject, /Welcome to OpenExam Hub/);
+    assert.ok(got[0].body.html.includes('Hi Gina,'));
+    assert.ok(got[0].body.html.includes('/app?exam=IELTS'));
+    const again = await (await notify(token)).json();
+    assert.equal(again.userEmail.status, 'duplicate');
+    assert.equal(learnerMails('gina@demo.local').length, 1);
+  });
   await check('delete action still works on the same route', async () => {
     const r = await fetch(`${API}/api/account`, {
       method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${a.token}` },
       body: JSON.stringify({ action: 'delete', confirm: 'DELETE' })
     });
     assert.equal(r.status, 200);
+    const st = db.collection('artifacts').doc(APP_ID).collection('public').doc('data');
+    assert.equal((await st.collection('user_emails').doc(a.uid).get()).exists, false);
+    assert.equal((await st.collection('signup_alerts').doc(a.uid).get()).exists, false);
   });
   console.log(`\n${passed} signup-alert emulator checks passed`);
 } finally {

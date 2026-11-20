@@ -69,6 +69,17 @@ most one alert per account. Dedupe uses the server-only doc `public/data/signup_
 | `RESEND_API_KEY` | for alerts | Resend API key (domain openexamhub.org). If it is missing, alerts are logged and skipped, and sign-up still works. |
 | `SIGNUP_ALERT_TO` | no | Recipient. Default `elantaki.dijadiss@gmail.com`. |
 | `SIGNUP_ALERT_FROM` | no | Sender. Default `OpenExam Hub <notifications@openexamhub.org>`. |
+| `USER_EMAIL_FROM` | no | Sender of learner emails (verify / welcome). Default `OpenExam Hub <hello@openexamhub.org>`, reply-to hello@. |
+
+**Learner emails (`lib/userEmails.js`).** The same `signup-notify` call sends email/password accounts a branded
+"Verify your email" message. Its link comes from firebase-admin `generateEmailVerificationLink` and continues to
+`https://openexamhub.org/app`. Google accounts, which Google has already verified, get a one-time welcome email
+instead. `POST /api/account {action:'resend-verification'}` allows one send per 60s and 5 per 24h per account,
+tracked in the server-only doc `public/data/user_emails/{uid}`. When Resend is missing or fails, the API
+answers `fallback` and the app sends Firebase's own verification email. The app shows a dismissible
+"verify your email" banner (EN/FR) to unverified email/password users and never blocks them. Verification links
+need openexamhub.org and www.openexamhub.org in Firebase Auth > Authorized domains (both were present on
+21 Nov 2026).
 
 Tests: `node scripts/test-signup-alert.mjs` (offline) and `npm run test:signup-alert` (emulators plus a mock Resend).
 

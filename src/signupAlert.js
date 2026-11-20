@@ -1,12 +1,15 @@
 // Tells the server a brand-new account was just created, so the founder gets a signup alert email
+// and the learner gets their own email (verify link for email/password, welcome for Google)
 // (POST /api/account {action:'signup-notify'}, see lib/signupAlert.js). Fire-and-forget: it never
 // blocks or delays sign-up, never throws, and runs at most once per account per browser. The server
 // re-checks everything (verified token, account age < 24h, one alert per account), so this is only
 // a hint; a nightly sweep catches any alert this call misses.
 import { API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
+import { sendFirebaseVerification } from './verifyEmail.js';
 
 const NEW_ACCOUNT_MS = 24 * 60 * 60 * 1000;
 const flagKey = (uid) => `oeh_signup_alert_${uid}`;
+const fallbackKey = (uid) => `oeh_verify_fallback_${uid}`;
 const inflight = new Set();
 
 function storageGet(key) {
@@ -38,6 +41,10 @@ function examHint() {
   }
 }
 
+function needsVerificationLocal(user) {
+  return !!(user && user.email && !user.emailVerified && (user.providerData || []).some((p) => p?.providerId === 'password'));
+}
+
 export function isFreshAccount(user, now = Date.now()) {
   if (!user || user.isAnonymous) return false;
   const created = Date.parse(user.metadata?.creationTime || '');
@@ -66,11 +73,23 @@ export function notifySignupOnce(user) {
         keepalive: true
       });
       const data = await res.json().catch(() => ({}));
+      // The learner's own "verify your email": the server could not send the branded one, so send
+      // Firebase's. Only when the server says so (it rate limits), and once per account per browser.
+      if (data?.userEmail?.kind === 'verify' && data.userEmail.status === 'fallback' && !storageGet(fallbackKey(user.uid))) {
+        storageSet(fallbackKey(user.uid), '1');
+        sendFirebaseVerification(user).catch(() => {});
+      }
       // 'sent' / 'duplicate' / 'not-new' are final; anything else retries on a later visit.
       if (res.ok && ['sent', 'duplicate', 'not-new'].includes(data.status)) storageSet(flagKey(user.uid), '1');
     };
     run()
-      .catch(() => {})
+      .catch(() => {
+        // API unreachable: still make sure an unverified email/password learner gets a link.
+        if (needsVerificationLocal(user) && !storageGet(fallbackKey(user.uid))) {
+          storageSet(fallbackKey(user.uid), '1');
+          sendFirebaseVerification(user).catch(() => {});
+        }
+      })
       .finally(() => inflight.delete(user.uid));
   } catch {
     /* never let an alert break the app */
