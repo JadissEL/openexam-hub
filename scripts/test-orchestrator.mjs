@@ -30,26 +30,64 @@ function mergeInto(target, data, merge) {
 class DocRef {
   constructor(db, path) { this.db = db; this.path = path; this.id = path.split('/').pop(); }
   collection(n) { return new ColRef(this.db, `${this.path}/${n}`); }
-  async get() { const d = this.db.docs.get(this.path); return { exists: !!d, id: this.id, data: () => (d ? structuredClone(d) : undefined) }; }
+  async get() { const d = this.db.docs.get(this.path); return { exists: !!d, id: this.id, ref: this, data: () => (d ? structuredClone(d) : undefined) }; }
   async set(data, opts = {}) { this.db.docs.set(this.path, mergeInto(this.db.docs.get(this.path), data, !!opts.merge)); }
+  async create(data) {
+    if (this.db.docs.has(this.path)) { const e = new Error('ALREADY_EXISTS'); e.code = 6; throw e; }
+    this.db.docs.set(this.path, mergeInto(undefined, data, false));
+  }
+  async update(data) {
+    if (!this.db.docs.has(this.path)) { const e = new Error('NOT_FOUND'); e.code = 5; throw e; }
+    this.db.docs.set(this.path, mergeInto(this.db.docs.get(this.path), data, true));
+  }
+  async delete() { this.db.docs.delete(this.path); }
+  async listCollections() { return []; }
 }
+const cmp = (a, b) => (a?.toMillis ? a.toMillis() : a) < (b?.toMillis ? b.toMillis() : b) ? -1 : (a?.toMillis ? a.toMillis() : a) > (b?.toMillis ? b.toMillis() : b) ? 1 : 0;
+const OPS = {
+  '==': (x, v) => JSON.stringify(x) === JSON.stringify(v),
+  '!=': (x, v) => x !== undefined && JSON.stringify(x) !== JSON.stringify(v),
+  in: (x, v) => v.some((y) => JSON.stringify(y) === JSON.stringify(x)),
+  'array-contains': (x, v) => Array.isArray(x) && x.includes(v),
+  'array-contains-any': (x, v) => Array.isArray(x) && x.some((y) => v.includes(y)),
+  '<': (x, v) => x != null && cmp(x, v) < 0,
+  '<=': (x, v) => x != null && cmp(x, v) <= 0,
+  '>': (x, v) => x != null && cmp(x, v) > 0,
+  '>=': (x, v) => x != null && cmp(x, v) >= 0
+};
+const field = (d, f) => String(f).split('.').reduce((o, k) => (o == null ? undefined : o[k]), d);
 class ColRef {
-  constructor(db, path, filters = [], lim = Infinity) { Object.assign(this, { db, path, filters, lim }); }
-  doc(id) { return new DocRef(this.db, `${this.path}/${id}`); }
-  where(f, op, v) { return new ColRef(this.db, this.path, [...this.filters, [f, op, v]], this.lim); }
-  limit(n) { return new ColRef(this.db, this.path, this.filters, n); }
+  constructor(db, path, filters = [], lim = Infinity, order = []) { Object.assign(this, { db, path, filters, lim, order }); }
+  doc(id) { return new DocRef(this.db, `${this.path}/${id ?? Math.random().toString(36).slice(2, 12)}`); }
+  where(f, op, v) { return new ColRef(this.db, this.path, [...this.filters, [f, op, v]], this.lim, this.order); }
+  limit(n) { return new ColRef(this.db, this.path, this.filters, n, this.order); }
+  orderBy(f, dir = 'asc') { return new ColRef(this.db, this.path, this.filters, this.lim, [...this.order, [f, dir]]); }
+  select() { return this; }
+  count() { return { get: async () => { const s = await this.limit(Infinity).get(); return { data: () => ({ count: s.size }) }; } }; }
+  async listDocuments() { return (await this.get()).docs.map((d) => d.ref); }
   async get() {
-    const docs = [];
+    let rows = [];
     for (const [p, d] of this.db.docs) {
       if (!p.startsWith(`${this.path}/`) || p.slice(this.path.length + 1).includes('/')) continue;
-      const ok = this.filters.every(([f, op, v]) =>
-        op === '==' ? d[f] === v : op === 'in' ? v.includes(d[f]) : op === 'array-contains' ? (d[f] || []).includes(v) : false);
-      if (ok) docs.push({ id: p.split('/').pop(), data: () => structuredClone(d) });
-      if (docs.length >= this.lim) break;
+      if (this.filters.every(([f, op, v]) => OPS[op] && OPS[op](field(d, f), v))) rows.push([p, d]);
     }
-    return { docs, empty: !docs.length };
+    for (const [f] of this.order) rows = rows.filter(([, d]) => field(d, f) !== undefined); // Firestore drops docs missing the field
+    if (this.order.length) rows.sort(([, a], [, b]) => { for (const [f, dir] of this.order) { const c = cmp(field(a, f), field(b, f)); if (c) return dir === 'desc' ? -c : c; } return 0; });
+    const docs = rows.slice(0, this.lim).map(([p, d]) => ({ id: p.split('/').pop(), ref: new DocRef(this.db, p), exists: true, data: () => structuredClone(d) }));
+    return { docs, empty: !docs.length, size: docs.length, forEach: (fn) => docs.forEach(fn) };
   }
 }
+FakeDb.prototype.batch = function batch() {
+  const ops = [];
+  return {
+    set: (ref, data, opts) => ops.push(() => ref.set(data, opts)),
+    update: (ref, data) => ops.push(() => ref.update(data)),
+    delete: (ref) => ops.push(() => ref.delete()),
+    create: (ref, data) => ops.push(() => ref.create(data)),
+    commit: async () => { for (const op of ops) await op(); }
+  };
+};
+FakeDb.prototype.doc = function doc(path) { return new DocRef(this, path); };
 // structuredClone drops functions on fake timestamps; keep them as plain objects with millis.
 const origClone = globalThis.structuredClone;
 globalThis.structuredClone = (v) => JSON.parse(JSON.stringify(v, (k, x) => (x && x._ts ? { _ms: x.toMillis() } : x)), (k, x) => (x && x._ms != null ? TS(x._ms) : x));
@@ -254,7 +292,24 @@ llm.discovery = () => ({ candidates: [
   { title: 'FEI', url: 'https://www.france-education-international.fr/test/tcf-tout-public', category: 'Official', skills: ['exam_format', 'mock_exam'], levels: [] },
   { title: 'Invented', url: 'https://www.tv5monde.com/does-not-exist', category: 'x', skills: ['reading'], levels: [] },
   { title: 'Off', url: 'https://some-blog.com/tcf', category: 'x', skills: ['reading'], levels: [] }] });
-llm.planner = (b) => plannerOut(Number(/Total days: (\d+)/.exec(b.messages[1].content)[1]));
+// v3: the planner only re-words the deterministic skeleton (polishPlan). Legacy prompts still get plannerOut.
+const polishOut = (b) => {
+  const { skeleton } = JSON.parse(b.messages.find((m) => m.role === 'user').content);
+  return { summary: `Polished: ${skeleton.summary}`, phases: skeleton.phases.map((p) => ({ phaseTitle: `Polished ${p.phaseTitle}`, focus: p.focus, tasks: p.tasks })) };
+};
+llm.planner = (b) => (b.messages.some((m) => m.role === 'user' && m.content.includes('"skeleton"'))
+  ? polishOut(b)
+  : plannerOut(Number(/Total days: (\d+)/.exec(b.messages[1].content)[1])));
+const counter = async (name) => {
+  const snap = await globalThis.__fakeDb.pub().collection('counters').doc(name).collection('shards').get();
+  return snap.docs.reduce((a, d) => a + (d.data().n || 0), 0);
+};
+const usageTotals = async (kind = 'u') => {
+  const out = {};
+  for (const d of (await globalThis.__fakeDb.pub().collection('usage_buckets').get()).docs) for (const [k, v] of Object.entries(d.data()[kind] || {})) out[k] = (out[k] || 0) + v;
+  return out;
+};
+const { clearPlanCache } = await import('../lib/orchestrator.js');
 llm.format = () => ({ sections: [{ name: 'TCF tout public', durationMinutes: 999, questionCount: null, description: 'd' }], scoring: null, notes: null });
 
 await test('400 on bad input, never throws', async () => {
@@ -273,7 +328,11 @@ await test('empty library -> discovery -> audit -> library -> planner -> cache',
   assert.ok(first.verifiedResources.every((v) => v.lastCheckedAt && v.license && ['ok', 'unverified'].includes(v.linkStatus)));
   assert.ok(!first.verifiedResources.some((v) => /does-not-exist|some-blog/.test(v.url)));
   assert.deepEqual(P.checkPlan(first, 30), []);
-  assert.match(first.phases[0].phaseTitle, /^Days 1–\d+: Listening$/);
+  assert.match(first.phases[0].phaseTitle, /^Days 1–\d+: Polished /);
+  assert.equal(first.scheduleMethod, 'deterministic_v1');
+  assert.equal(first.calendar.length, 30);
+  assert.equal(first.planKey, 'TCF_B2_30');
+  assert.deepEqual(first.progress, { done: {} });
   assert.equal(first.examProfile.sourceUrl, 'https://www.france-education-international.fr/test/tcf-tout-public');
   assert.equal(first.examProfile.sections[0].durationMinutes, null, 'ungrounded 999 must be nulled');
   assert.equal(first.examProfile.reviewed, false);
@@ -281,28 +340,46 @@ await test('empty library -> discovery -> audit -> library -> planner -> cache',
   for (const a of ['global_cache:ok', 'resource_library:ok', 'discovery:ok', 'link_verifier:ok', 'copyright_auditor:ok', 'exam_format:ok', 'planner:ok']) assert.ok(agents.includes(a), a);
   const lib = await globalThis.__fakeDb.pub().collection('resources').where('exams', 'array-contains', 'TCF').get();
   assert.equal(lib.docs.length, 3);
-  assert.ok(lib.docs.every((d) => d.data().approved === true && d.data().usageCount === 1));
-  const usage = (await globalThis.__fakeDb.pub().collection('metrics').doc('usage').get()).data();
-  assert.equal(usage.pipeline.roadmapsGenerated, 1);
+  assert.ok(lib.docs.every((d) => d.data().approved === true && d.data().usageCount === 0), 'usage is counted in buckets, not on the resource doc');
+  const used = await usageTotals('u');
+  assert.ok(lib.docs.every((d) => used[d.id] === 1), JSON.stringify(used));
+  assert.equal(await counter('roadmapsGenerated'), 1);
+  const plan = (await globalThis.__fakeDb.pub().collection('plans').doc('TCF_B2_30').get()).data();
+  assert.equal(plan.pipelineVersion, 3); assert.equal(plan.resourceIds.length, 3); assert.ok(plan.wording?.summary.startsWith('Polished'));
 });
 await test('second identical request is served from the global cache', async () => {
   fetchLog = [];
   const r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 30 });
   assert.equal(r.status, 200); assert.equal(r.body.roadmap.source, 'global_cache');
   assert.equal(fetchLog.length, 0, 'no network on cache hit');
+  assert.equal(await counter('cacheHits'), 1);
+});
+await test('plan cache: other day counts in the same bucket are rescheduled exactly (no LLM)', async () => {
+  clearPlanCache(); fetchLog = [];
+  const r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 25 });
+  assert.equal(r.status, 200); assert.equal(r.body.roadmap.source, 'global_cache');
+  assert.equal(r.body.roadmap.calendar.length, 25); assert.equal(r.body.roadmap.days, 25);
+  assert.deepEqual(P.checkPlan(r.body.roadmap, 25), []);
+  assert.ok(r.body.roadmap.phases.some((p) => p.phaseTitle.includes('Polished')), 'wording comes from the cached polish');
+  assert.equal(fetchLog.length, 0);
 });
 await test('client-written (unverified) cache entries are ignored', async () => {
-  await globalThis.__fakeDb.pub().collection('global_verified_roadmaps').doc('TCF-B2-20').set({ roadmap: { exam: 'TCF', fake: true } });
-  const r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 20 });
+  await globalThis.__fakeDb.pub().collection('global_verified_roadmaps').doc('TCF-B2-100').set({ roadmap: { exam: 'TCF', fake: true } });
+  const r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 100 });
   assert.equal(r.status, 200); assert.equal(r.body.roadmap.source, 'library'); assert.ok(!r.body.roadmap.fake);
 });
-await test('diagnostic -> personalised, library-first, not cached', async () => {
+await test('diagnostic -> personalised, library-first, cached per profile band', async () => {
   fetchLog = [];
   const r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 30, diagnostic: { skillScores: { listening: 0.2, reading: 0.8 } } });
   assert.equal(r.status, 200); assert.equal(r.body.roadmap.source, 'library');
   assert.match(r.body.roadmap.id, /^TCF-B2-30-p-/);
+  assert.equal(r.body.roadmap.planKey, 'TCF_B2_30_ws----');
   assert.ok(!fetchLog.some((l) => l.includes('discovery')));
-  assert.ok(r.body.roadmap.pipeline.some((p) => p.agent === 'global_cache' && p.status === 'skipped'));
+  // Same band (0.25 / 0.9 quantise to w / s) -> shared personalised plan, no LLM.
+  fetchLog = [];
+  const r2 = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 30, diagnostic: { skillScores: { listening: 0.25, reading: 0.9 } } });
+  assert.equal(r2.body.roadmap.source, 'global_cache'); assert.equal(fetchLog.length, 0);
+  assert.match(r2.body.roadmap.id, /^TCF-B2-30-p-/);
 });
 await test('LLM planner down -> deterministic fallback, not cached', async () => {
   const saved = llm.planner; llm.planner = () => ({ httpStatus: 400 });
@@ -311,7 +388,16 @@ await test('LLM planner down -> deterministic fallback, not cached', async () =>
   assert.equal(r.status, 200);
   assert.ok(r.body.roadmap.pipeline.some((p) => p.agent === 'planner' && p.status === 'failed'));
   assert.deepEqual(P.checkPlan(r.body.roadmap, 12), []);
+  assert.equal(r.body.roadmap.scheduleMethod, 'deterministic_v1');
+  assert.equal(await counter('fallbackPlans'), 1);
   assert.equal((await globalThis.__fakeDb.pub().collection('global_verified_roadmaps').doc('TCF-B2-12').get()).exists, false);
+  // The deterministic plan is cached without wording; with an LLM configured it is re-polished next time.
+  const cached = (await globalThis.__fakeDb.pub().collection('plans').doc('TCF_B2_14').get()).data();
+  assert.equal(cached.wording, null);
+  clearPlanCache();
+  const again = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 12 });
+  assert.notEqual(again.body.roadmap.source, 'global_cache');
+  assert.ok((await globalThis.__fakeDb.pub().collection('plans').doc('TCF_B2_14').get()).data().wording);
 });
 await test('not enough verified resources -> 422 with trace (discovery retried once)', async () => {
   llm.discovery = () => ({ candidates: [{ title: 'Off', url: 'https://some-blog.com/x', category: 'x', skills: ['reading'], levels: [] }] });

@@ -180,17 +180,22 @@ await test('diagnostic: scoring math and estimatedLevel', () => {
     a('speaking', false, 'B2'), a('speaking', false, 'B2')
   ];
   const r = scoreDiagnostic({ exam: 'TCF', level: 'B1', answers });
-  assert.deepEqual(r.skillScores, { listening: 0.5, reading: 1, grammar: 1, vocabulary: 0.5, writing: 0.5, speaking: 0 });
+  // v3: CEFR-tagged answers are scored with IRT (EAP, lib/algo/placement.js); raw ratios are kept.
+  assert.equal(r.method, 'irt_eap');
+  assert.deepEqual(r.rawSkillScores, { listening: 0.5, reading: 1, grammar: 1, vocabulary: 0.5, writing: 0.5, speaking: 0 });
+  assert.ok(Object.values(r.skillScores).every((v) => v > 0 && v < 1), 'IRT skill scores are shrunk away from 0/1');
+  assert.ok(r.skillScores.reading > r.skillScores.speaking && r.skillScores.grammar > r.skillScores.writing);
+  assert.ok(r.confidence > 0 && r.confidence <= 1 && typeof r.theta === 'number' && r.se > 0);
   // A2: 3/4 = .75, B1: 3/4 = .75, B2: 1/4 = .25  -> highest band >= 60% is B1
   assert.equal(r.bandScores.A2.ratio, 0.75);
   assert.equal(r.bandScores.B2.ratio, 0.25);
   assert.equal(r.estimatedLevel, 'B1');
-  assert.deepEqual(r.weakSkills, ['speaking']);
+  assert.ok(r.weakSkills.includes('speaking') && !r.weakSkills.includes('reading'));
   assert.ok(r.advice.some((s) => /Priority — speaking/.test(s)));
   assert.match(r.notice, /Self-check only/);
 
   const all = scoreDiagnostic({ exam: 'TCF', level: 'B1', answers: answers.map((x) => ({ ...x, correct: true })) });
-  assert.equal(all.estimatedLevel, 'B2');
+  assert.ok(['B2', 'C1'].includes(all.estimatedLevel), all.estimatedLevel); // at most one band above the hardest item
   const none = scoreDiagnostic({ exam: 'TCF', level: 'B1', answers: answers.map((x) => ({ ...x, correct: false })) });
   assert.equal(none.estimatedLevel, 'A1'); // one below the lowest tested band
   const a1 = scoreDiagnostic({ exam: 'TCF', level: 'A1', answers: [a('reading', false, 'A1'), a('grammar', false, 'A2')] });
@@ -277,6 +282,52 @@ await test('coach: deterministic fallback when LLM keeps failing', async () => {
   const one = fallbackRebalance(remainingTasks.map((t, i) => ({ task: t, phaseIdx: i, phaseTitle: 'P', focus: '' })), 1, 10);
   assert.equal(one.length, 1);
   assert.equal(one[0].tasks.length, 9);
+});
+
+// ---------- coach v3 (calendar + progress.done, lib/algo/progress.js) ----------
+const { buildSchedule, compactCalendar, expandCalendar, calendarTasks } = await import('../lib/algo/schedule.js');
+function v3Roadmap(days, startDaysAgo) {
+  const res = [{ id: 'r1', title: 'TV5', skills: ['listening'] }, { id: 'r2', title: 'RFI', skills: ['reading'] }, { id: 'r3', title: 'FEI', skills: ['mock_exam', 'exam_format'] }];
+  const sched = buildSchedule({ exam: 'TCF', level: 'B2', days, resources: res });
+  const createdAt = new Date(Date.now() - startDaysAgo * 864e5).toISOString().slice(0, 10);
+  const rm = { exam: 'TCF', level: 'B2', days, createdAt, summary: sched.summary, phases: sched.phases.map(({ kind, ...p }) => p), calendar: compactCalendar(sched.calendar, res), verifiedResources: res, completedTasks: {}, progress: { done: {} } };
+  const cal = calendarTasks(expandCalendar(rm.calendar, res), res);
+  return { rm, cal };
+}
+await test('coach v3: on-track from progress.done (pace model, no LLM)', async () => {
+  const llm = fakeLlm([]);
+  setLearnerDeps({ generateJson: llm, pub: fakeFirestore().pub });
+  const { rm, cal } = v3Roadmap(20, 4); // today is day 5
+  const startS = Math.floor(Date.parse(`${rm.createdAt}T09:00:00Z`) / 1000);
+  for (const d of cal.filter((x) => x.day <= 5)) for (const t of d.tasks) rm.progress.done[t.key] = startS + (d.day - 1) * 86400;
+  const r = await coachProgress({ roadmap: rm });
+  assert.equal(r.method, 'progress_v1');
+  assert.equal(r.onTrack, true);
+  assert.deepEqual(llm.calls, []);
+  assert.ok(r.pace > 0 && typeof r.requiredPace === 'number' && r.projectedFinishDate);
+});
+await test('coach v3: behind -> rebalance of remaining calendar tasks only', async () => {
+  setLearnerDeps({ generateJson: fakeLlm([new Error('down'), new Error('down'), new Error('down')]), pub: fakeFirestore().pub });
+  const { rm, cal } = v3Roadmap(20, 9); // day 10, nothing done
+  const r = await coachProgress({ roadmap: rm });
+  assert.equal(r.onTrack, false);
+  assert.equal(r.source, 'fallback');
+  const total = cal.reduce((a, d) => a + d.tasks.length, 0);
+  const tasks = r.rebalancedPhases.flatMap((p) => p.tasks);
+  assert.equal(tasks.length, total);
+  assert.ok(tasks.every((t) => /^Day \d+ — /.test(t)));
+  assert.equal(r.rebalancedPhases.reduce((a, p) => a + p.days, 0), 11);
+});
+await test('diagnostic: itemKey + b travel with answers; calibration delta only for IRT', async () => {
+  const { itemKey, calibrationDelta } = await import('../lib/agents/diagnostic.js');
+  const k = itemKey('TCF', 'B1', { cefr: 'B1', prompt: 'Q?' });
+  assert.equal(k, itemKey('TCF', 'B1', { cefr: 'B1', prompt: 'Q?' }));
+  assert.match(k, /^B1_[0-9a-f]{8}$/);
+  const answers = [{ id: 'q1', skill: 'reading', cefr: 'B1', correct: true, itemKey: k, b: 0 }, { id: 'q2', skill: 'grammar', cefr: 'B2', correct: false, itemKey: 'B2_00000001', b: 1 }];
+  const scored = scoreDiagnostic({ exam: 'TCF', level: 'B1', answers });
+  assert.equal(scored.method, 'irt_eap');
+  const delta = calibrationDelta(scored, answers);
+  assert.ok(delta && delta[k] && delta[k].n === 1 && delta[k].err > 0 && delta.B2_00000001.err < 0);
 });
 
 await test('coach: bad input throws BadInput', async () => {

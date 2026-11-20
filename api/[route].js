@@ -6,10 +6,16 @@
 import { createDispatcher } from '../lib/dispatch.js';
 import checkLink from '../lib/routes/check-link.js';
 import library from '../lib/routes/library.js';
+import plan from '../lib/routes/plan.js';
+import stats from '../lib/routes/stats.js';
+import events from '../lib/routes/events.js';
 
 export const ROUTES = {
   'check-link': checkLink, // GET /api/check-link?url=
-  library // GET /api/library?exam=&level=&skill=
+  library, // GET /api/library?exam=&level=&skill=  (served from the ranked shelf)
+  plan, // GET /api/plan?exam=&level=&days=&profile=  (CDN-cached shared plan, 404 on miss)
+  stats, // GET /api/stats  (stats/public)
+  events // POST /api/events {type:'task_done', planKey, resourceId}
 };
 
 export default createDispatcher(ROUTES, 'route');

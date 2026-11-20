@@ -123,11 +123,22 @@ class ColRef {
   select() {
     return this;
   }
+  where(f, op, v) {
+    return new ColRef(this.fs, this.path, { ...this.q, where: [...(this.q.where || []), [f, op, v]] });
+  }
   async get() {
     const prefix = `${this.path}/`;
+    const match = ([f, op, v], d) =>
+      op === '==' ? d[f] === v
+        : op === 'in' ? v.includes(d[f])
+        : op === 'array-contains' ? Array.isArray(d[f]) && d[f].includes(v)
+        : op === 'array-contains-any' ? Array.isArray(d[f]) && d[f].some((x) => v.includes(x))
+        : op === '<=' ? d[f] !== undefined && ms(d[f]) <= ms(v)
+        : false;
     let docs = [...this.fs.docs.entries()]
       .filter(([p]) => p.startsWith(prefix) && !p.slice(prefix.length).includes('/'))
-      .map(([p, d]) => new Snap(p.slice(prefix.length), clone(d)));
+      .filter(([, d]) => (this.q.where || []).every((w) => match(w, d)))
+      .map(([p, d]) => Object.assign(new Snap(p.slice(prefix.length), clone(d)), { ref: new DocRef(this.fs, p) }));
     if (this.q.orderBy) {
       const [f, dir] = this.q.orderBy;
       docs = docs.filter((s) => s._d[f] !== undefined); // Firestore omits docs missing the order field
@@ -399,8 +410,13 @@ test('Link maintenance: dead twice -> approved:false + deadSince, cached roadmap
     inFlight--;
     return { status: verdict[url], httpCode: verdict[url] === 'dead' ? 404 : verdict[url] === 'ok' ? 200 : 503, finalUrl: url };
   });
+  // v3 scheduling: each check sets nextCheckAt in the future; rewind it to simulate time passing.
+  const rewind = () => { for (const [p, d] of fs.docs) if (p.startsWith(`${PUB}/resources/`)) fs.docs.set(p, { ...d, nextCheckAt: new Date('2026-01-01') }); };
   const s1 = await recheckLinks();
   assert.equal(s1.checked, 3);
+  assert.ok(fs.docs.get(`${PUB}/resources/${'c'.repeat(24)}`).nextCheckAt > new Date(), 'healthy link scheduled for later');
+  assert.ok(fs.docs.get(`${PUB}/link_checks/${'a'.repeat(24)}_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`), 'status change logged');
+  rewind();
   const a1 = fs.docs.get(`${PUB}/resources/${'a'.repeat(24)}`);
   assert.equal(a1.linkStatus, 'dead');
   assert.equal(a1.consecutiveDead, 1);
@@ -420,11 +436,13 @@ test('Link maintenance: dead twice -> approved:false + deadSince, cached roadmap
   assert.equal(b.approved, true, 'errors never disable');
   assert.ok(fs.docs.get(`${PUB}/metrics/link_health`).counts);
   // third run: already disabled -> not "newly" disabled again, deadSince unchanged
+  rewind();
   const s3 = await recheckLinks();
   assert.equal(s3.newlyDisabled.length, 0);
   assert.equal(fs.docs.get(`${PUB}/resources/${'a'.repeat(24)}`).deadSince.getTime(), a2.deadSince.getTime());
   // a dead result after an ok resets the streak
   verdict['https://www.goethe.de/fine'] = 'dead';
+  rewind();
   await recheckLinks();
   assert.equal(fs.docs.get(`${PUB}/resources/${'c'.repeat(24)}`).approved, true);
   assert.ok(maxInFlight <= 5, `concurrency ${maxInFlight} > 5`);

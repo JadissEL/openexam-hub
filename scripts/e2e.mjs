@@ -150,6 +150,12 @@ async function initAdmin() {
   pub = () => db.collection('artifacts').doc(APP_ID).collection('public').doc('data');
 }
 const docData = async (col, id) => (await pub().collection(col).doc(id).get()).data();
+const counter = async (name) => (await pub().collection('counters').doc(name).collection('shards').get()).docs.reduce((a, d) => a + (d.data().n || 0), 0);
+async function usageTotals(kind = 'u') {
+  const out = {};
+  for (const d of (await pub().collection('usage_buckets').get()).docs) for (const [k, v] of Object.entries(d.data()[kind] || {})) out[k] = (out[k] || 0) + v;
+  return out;
+}
 
 async function clearEmulator() {
   const r = await fetch(`http://${EMU}/emulator/v1/projects/${PROJECT}/databases/(default)/documents`, { method: 'DELETE' });
@@ -195,6 +201,13 @@ function assertRoadmap(r, { exam, level, days }) {
     assert.equal(typeof s.agent, 'string');
     assert.ok(['ok', 'skipped', 'failed'].includes(s.status), `pipeline status ${s.status}`);
     assert.equal(typeof s.detail, 'string');
+  }
+  // v3 deterministic schedule (lib/algo/schedule.js): one compact code per day + empty progress map.
+  if (r.calendar !== undefined) {
+    assert.equal(r.calendar.length, days, 'calendar covers every day');
+    assert.equal(r.scheduleMethod, 'deterministic_v1');
+    assert.match(r.planKey, new RegExp(`^${exam}_${level}_\\d+(_[wms-]{6})?$`));
+    assert.deepEqual(r.progress, { done: {} });
   }
   if (r.examProfile) {
     assert.ok(Array.isArray(r.examProfile.sections));
@@ -261,6 +274,13 @@ async function main() {
       ['GET', '/api/check-link', undefined, 400],
       ['GET', '/api/check-link?url=ftp%3A%2F%2Fgoethe.de%2Fx', undefined, 400],
       ['GET', '/api/generate-roadmap', undefined, 405],
+      ['GET', '/api/plan?exam=TCF&level=B2', undefined, 400],
+      ['GET', '/api/plan?exam=TCF&level=B2&days=30&profile=zzzzzz', undefined, 400],
+      ['POST', '/api/plan', {}, 405],
+      ['POST', '/api/stats', {}, 405],
+      ['POST', '/api/events', { type: 'hack', planKey: 'TCF_B2_30', resourceId: '0123456789abcdef01234567' }, 400],
+      ['POST', '/api/events', { type: 'task_done', planKey: '../x', resourceId: '0123456789abcdef01234567' }, 400],
+      ['GET', '/api/events', undefined, 405],
       ['POST', '/api/admin/expand', { exam: 'TEF', levels: ['Q7'] }, 400, admin],
       ['POST', '/api/admin/expand', { exam: 'TEF', levels: ['B1'] }, 401],
       ['POST', '/api/admin/approve', { resourceIds: ['not-an-id'], approve: true }, 400, admin],
@@ -307,11 +327,17 @@ async function main() {
       assert.ok(agents.includes('PLANNER'));
       assert.equal(step(rm, 'planner')[0].status, 'ok');
       assert.ok(rm.verifiedResources.every((v) => v.id.length === 24));
-      const cache = await docData('global_verified_roadmaps', key);
-      assert.equal(cache?.serverVerified, true);
-      assert.equal(cache.roadmap.id, key);
-      assert.ok(!('completedTasks' in cache.roadmap), 'cache doc has no learner state');
-      for (const v of rm.verifiedResources) assert.ok((await docData('resources', v.id)).usageCount >= 1, 'usageCount bumped');
+      assert.ok(rm.calendar, 'v3 schedule present');
+      assert.equal(rm.planKey, `${exam}_${level}_30`);
+      // v3 shared cache: plans/{planKey} holds ranked resource snapshots + wording, never a learner's roadmap
+      const cache = await docData('plans', rm.planKey);
+      assert.equal(cache?.pipelineVersion, 3);
+      assert.deepEqual(cache.resourceIds, rm.verifiedResources.map((v) => v.id));
+      assert.ok(cache.wording?.summary, 'polished wording cached');
+      assert.ok(!('completedTasks' in cache) && !('progress' in cache), 'cache doc has no learner state');
+      assert.equal(await docData('global_verified_roadmaps', key), undefined, 'legacy cache no longer written');
+      const used = await usageTotals('u');
+      for (const v of rm.verifiedResources) assert.ok(used[v.id] >= 1, 'usage recorded in a sharded bucket');
       roadmaps[key] = rm;
     });
     await test(`${key}: repeat request is served from global_cache with zero LLM calls`, async () => {
@@ -321,8 +347,33 @@ async function main() {
       assert.equal(r.json.roadmap.source, 'global_cache');
       assert.equal(calls.length, 0);
       assert.deepEqual(r.json.roadmap.phases, roadmaps[key].phases);
+      assert.deepEqual(r.json.roadmap.calendar, roadmaps[key].calendar);
     });
   }
+  await test('GET /api/plan: CDN-cacheable shared plan, rescheduled for exactly the requested days; 404 on a miss', async () => {
+    const { out: r, calls } = await callsDuring(() => get('/api/plan?exam=TCF&level=B2&days=30'));
+    assert.equal(r.status, 200, r.text);
+    assert.equal(calls.length, 0);
+    assert.match(r.headers.get('cache-control'), /s-maxage=3600/);
+    assertRoadmap(r.json.roadmap, { exam: 'TCF', level: 'B2', days: 30 });
+    assert.deepEqual(r.json.roadmap.calendar, roadmaps['TCF-B2-30'].calendar);
+    const r25 = await get('/api/plan?exam=tcf&level=b2&days=25');
+    assert.equal(r25.status, 200, r25.text);
+    assertRoadmap(r25.json.roadmap, { exam: 'TCF', level: 'B2', days: 25 });
+    assert.equal(r25.json.roadmap.planKey, 'TCF_B2_30');
+    const miss = await get('/api/plan?exam=TCF&level=C2&days=30');
+    assert.equal(miss.status, 404);
+    assert.equal(miss.headers.get('cache-control'), 'no-store');
+    assert.equal(miss.json.planKey, 'TCF_C2_30');
+  });
+  await test('POST /api/events: completion signal for a cited resource -> 202 + usage bucket; uncited -> 400', async () => {
+    const rid = roadmaps['TCF-B2-30'].verifiedResources[0].id;
+    const ok = await post('/api/events', { type: 'task_done', planKey: 'TCF_B2_30', resourceId: rid });
+    assert.equal(ok.status, 202, ok.text);
+    assert.ok((await usageTotals('c'))[rid] >= 1);
+    const bad = await post('/api/events', { type: 'task_done', planKey: 'TCF_B2_30', resourceId: 'abcdefabcdefabcdefabcdef' });
+    assert.ok([400, 404].includes(bad.status), bad.text);
+  });
   await test('TCF exam format profile was extracted from the official page text and saved unreviewed', async () => {
     const prof = await docData('exam_profiles', 'TCF');
     assert.ok(prof, 'exam_profiles/TCF exists');
@@ -332,28 +383,33 @@ async function main() {
     assert.ok(roadmaps['TCF-B2-30'].examProfile?.sections?.length >= 1);
   });
   await test('forceRefresh skips the cache, re-plans from the library and rewrites the cache', async () => {
-    const before = await docData('global_verified_roadmaps', 'TCF-B2-30');
+    const before = await docData('plans', 'TCF_B2_30');
     const { out: r, agents } = await callsDuring(() => post('/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30, forceRefresh: true }));
     assert.equal(r.status, 200, r.text);
     assertRoadmap(r.json.roadmap, { exam: 'TCF', level: 'B2', days: 30 });
     assert.equal(r.json.roadmap.source, 'library');
     assert.match(step(r.json.roadmap, 'global_cache')[0].detail, /forceRefresh/);
     assert.ok(agents.includes('PLANNER') && !agents.includes('DISCOVERY'));
-    const after = await docData('global_verified_roadmaps', 'TCF-B2-30');
-    assert.ok(after.cachedAt >= before.cachedAt);
+    const after = await docData('plans', 'TCF_B2_30');
+    assert.ok(after.cachedAt.toMillis() >= before.cachedAt.toMillis());
   });
-  await test('planner outage -> deterministic fallback plan, not cached', async () => {
+  await test('planner outage -> deterministic plan, cached without wording, re-polished when the LLM is back', async () => {
     await llmControl({ fail: ['PLANNER'] });
     try {
       const r = await post('/api/generate-roadmap', { exam: 'IELTS', level: 'C1', days: 10 });
       assert.equal(r.status, 200, r.text);
       assertRoadmap(r.json.roadmap, { exam: 'IELTS', level: 'C1', days: 10 });
       assert.equal(step(r.json.roadmap, 'planner')[0].status, 'failed');
-      assert.match(step(r.json.roadmap, 'global_cache').at(-1).detail, /fallback/);
-      assert.equal(await docData('global_verified_roadmaps', 'IELTS-C1-10'), undefined);
+      assert.match(step(r.json.roadmap, 'global_cache').at(-1).detail, /deterministic wording/);
+      assert.equal((await docData('plans', 'IELTS_C1_14')).wording, null);
+      assert.ok((await counter('fallbackPlans')) >= 1);
     } finally {
       await llmControl({ fail: [] });
     }
+    const { out: again, agents } = await callsDuring(() => post('/api/generate-roadmap', { exam: 'IELTS', level: 'C1', days: 10 }));
+    assert.equal(again.status, 200, again.text);
+    assert.ok(agents.includes('PLANNER'), 'unpolished cache entry is re-polished');
+    assert.ok((await docData('plans', 'IELTS_C1_14')).wording?.summary);
   });
 
   section('Discovery: material found outside is stored, then reused');
@@ -421,14 +477,20 @@ async function main() {
     const doc = await docData('practice_sets', 'diagnostic-TCF-B2');
     assert.equal(doc.variants.length, 1);
     // score: listening and grammar wrong, everything else right
-    const answers = d.questions.map((q) => ({ id: q.id, skill: q.skill, cefr: q.cefr, correct: !['listening', 'grammar'].includes(q.skill) }));
+    for (const q of d.questions) assert.ok(/^[A-C][12]_[0-9a-f]{8}$/.test(q.itemKey) && typeof q.b === 'number', 'IRT item key + difficulty');
+    const answers = d.questions.map((q) => ({ id: q.id, skill: q.skill, cefr: q.cefr, itemKey: q.itemKey, b: q.b, correct: !['listening', 'grammar'].includes(q.skill) }));
     const s = await post('/api/diagnostic', { action: 'score', exam: 'TCF', level: 'B2', answers });
     assert.equal(s.status, 200, s.text);
-    assert.equal(s.json.skillScores.listening, 0);
-    assert.equal(s.json.skillScores.reading, 1);
+    assert.equal(s.json.method, 'irt_eap');
+    assert.equal(s.json.rawSkillScores.listening, 0);
+    assert.equal(s.json.rawSkillScores.reading, 1);
+    assert.ok(s.json.skillScores.listening < 0.5 && s.json.skillScores.reading > 0.5);
+    assert.ok(s.json.confidence > 0 && s.json.confidence <= 1);
+    const calib = (await pub().collection('calib_buckets').get()).docs.filter((x) => x.id.endsWith('_TCF_B2'));
+    assert.ok(calib.length >= 1, 'calibration bucket written');
     assert.ok(['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'pre-A1'].includes(s.json.estimatedLevel));
     assert.ok(Array.isArray(s.json.advice) && s.json.advice.some((a) => /listening/.test(a)));
-    assert.deepEqual(s.json.weakSkills.sort(), ['grammar', 'listening']);
+    assert.ok(s.json.weakSkills.includes('grammar') && s.json.weakSkills.includes('listening') && !s.json.weakSkills.includes('reading'));
     skillScores = s.json.skillScores;
   });
   await test('score without per-question CEFR tags falls back to the overall ratio', async () => {
@@ -436,19 +498,23 @@ async function main() {
     assert.equal(s.status, 200, s.text);
     assert.equal(s.json.method, 'overall_ratio');
   });
-  await test('generate-roadmap with the diagnostic: personalised, never written to the shared cache', async () => {
-    const before = await docData('global_verified_roadmaps', 'TCF-B2-30');
+  await test('generate-roadmap with the diagnostic: personalised, cached per profile band (no raw scores stored)', async () => {
+    const before = await docData('plans', 'TCF_B2_30');
     const r = await post('/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30, diagnostic: { skillScores } });
     assert.equal(r.status, 200, r.text);
     const rm = r.json.roadmap;
     assertRoadmap(rm, { exam: 'TCF', level: 'B2', days: 30 });
     assert.match(rm.id, /^TCF-B2-30-p-[0-9a-f]{8}$/);
     assert.equal(rm.source, 'library');
-    assert.ok(step(rm, 'global_cache').every((s) => s.status === 'skipped'));
-    const after = await docData('global_verified_roadmaps', 'TCF-B2-30');
-    assert.equal(after.cachedAt, before.cachedAt, 'shared cache untouched');
-    const cached = await pub().collection('global_verified_roadmaps').get();
-    assert.ok(!cached.docs.some((d) => d.id.includes('-p-')));
+    assert.match(rm.planKey, /^TCF_B2_30_[wms-]{6}$/);
+    const after = await docData('plans', 'TCF_B2_30');
+    assert.equal(after?.cachedAt?.toMillis(), before?.cachedAt?.toMillis(), 'non-personalised plan untouched');
+    const pers = await docData('plans', rm.planKey);
+    assert.ok(pers && !JSON.stringify(pers).includes(String(skillScores.reading)), 'only the band is stored');
+    const profile = rm.planKey.split('_').pop();
+    const { out: g, calls } = await callsDuring(() => get(`/api/plan?exam=TCF&level=B2&days=30&profile=${profile}`));
+    assert.equal(g.status, 200, g.text); assert.equal(calls.length, 0);
+    assert.equal(g.json.roadmap.planKey, rm.planKey);
   });
   await test('diagnostic variants rotate (3 live, then served from cache)', async () => {
     for (let i = 0; i < 3; i++) assert.equal((await post('/api/diagnostic', { action: 'create', exam: 'TCF', level: 'B2' })).status, 200);
@@ -460,7 +526,8 @@ async function main() {
   });
 
   section('Progress coach');
-  const rm = roadmaps['TCF-B2-30'];
+  // Phase-checklist (pre-v3) roadmaps keep the old coach semantics: completedTasks + daysElapsed.
+  const { calendar: _c, progress: _p, allocation: _a, scheduleMethod: _s, planKey: _k, ...rm } = roadmaps['TCF-B2-30'];
   const totalTasks = rm.phases.reduce((n, p) => n + p.tasks.length, 0);
   await test('on track -> deterministic answer, no LLM call', async () => {
     const completedTasks = { '0-0': true, '0-1': true };
@@ -484,6 +551,17 @@ async function main() {
     assert.equal(scheduled.length + c.dropped.length, totalTasks - 1);
     assert.ok(!scheduled.includes(rm.phases[0].tasks[0]) || rm.phases.flatMap((p) => p.tasks).filter((t) => t === rm.phases[0].tasks[0]).length > 1, 'completed task not rescheduled');
     for (const p of c.rebalancedPhases) for (const k of ['phaseTitle', 'focus', 'tasks']) assert.ok(k in p);
+  });
+  await test('v3 roadmap: pace from progress.done (EWMA), day derived from createdAt', async () => {
+    const start = new Date(Date.now() - 9 * 864e5).toISOString().slice(0, 10);
+    const v3 = roadmaps['TCF-B2-30'];
+    const { out: r, calls } = await callsDuring(() => post('/api/coach', { roadmap: { ...v3, createdAt: start, progress: { done: {} } } }));
+    assert.equal(r.status, 200, r.text);
+    assert.equal(r.json.method, 'progress_v1');
+    assert.equal(r.json.onTrack, false);
+    assert.ok(typeof r.json.requiredPace === 'number' && r.json.requiredPace > 0);
+    assert.ok(r.json.rebalancedPhases.flatMap((p) => p.tasks).every((t) => /^Day \d+ — /.test(t)), 'remaining calendar tasks only');
+    assert.ok(calls.length <= 3);
   });
   await test('behind + coach LLM down -> deterministic even spread', async () => {
     await llmControl({ fail: ['COACH'] });
@@ -559,6 +637,13 @@ async function main() {
     assert.ok(f.json.resources.length >= 1 && f.json.resources.every((x) => x.skills.includes('listening')));
     const none = await get('/api/library?exam=TEF');
     assert.deepEqual(none.json.resources, []);
+    // level -> served from the precomputed shelf (ranked, CDN-cacheable)
+    const shelf = await get('/api/library?exam=TCF&level=B2');
+    assert.equal(shelf.status, 200, shelf.text);
+    assert.ok(typeof shelf.json.shelfVersion === 'number');
+    assert.match(shelf.headers.get('cache-control'), /s-maxage=600/);
+    assert.ok(shelf.json.resources.every((x, i, a) => i === 0 || a[i - 1].rank < x.rank));
+    assert.ok(await docData('shelves', 'TCF_B2'));
   });
   await test('check-link: good (ok), 404 (dead), off-allowlist (no request made)', async () => {
     const ok = await get(`/api/check-link?url=${encodeURIComponent('https://ielts.org')}`);
@@ -640,20 +725,23 @@ async function main() {
     const { Timestamp } = await import('firebase-admin/firestore');
     await pub().collection('resources').doc(deadId).set({ url: deadUrl, title: 'Gone', category: 'x', skills: ['reading'], exams: ['GOETHE'], levels: [], license: 'x', linkStatus: 'ok', httpCode: 200, approved: true, consecutiveDead: 1, lastCheckedAt: Timestamp.fromMillis(0), usageCount: 0 });
     await pub().collection('global_verified_roadmaps').doc('GOETHE-B1-99').set({ serverVerified: true, pipelineVersion: 2, cachedAt: new Date().toISOString(), roadmap: { verifiedResources: [{ id: deadId, url: deadUrl }] } });
+    await pub().collection('plans').doc('GOETHE_B1_7').set({ planKey: 'GOETHE_B1_7', pipelineVersion: 3, resourceIds: [deadId], cachedAt: new Date() });
     const total = (await pub().collection('resources').get()).size;
     const r = await get('/api/cron/recheck-links', { headers: { authorization: 'Bearer cron-secret-e2e' } });
     assert.equal(r.status, 200, r.text);
     const s = r.json.summary;
-    assert.equal(s.checked, total);
+    assert.ok(s.checked >= 1 && s.checked < total, `only due links are checked (${s.checked}/${total})`);
     assert.ok(s.counts.dead >= 1);
     assert.deepEqual(s.newlyDisabled.map((x) => x.id), [deadId]);
-    assert.deepEqual(s.invalidatedRoadmaps, ['GOETHE-B1-99']);
+    assert.deepEqual([...s.invalidatedRoadmaps].sort(), ['GOETHE-B1-99', 'plans/GOETHE_B1_7']);
     const d = await docData('resources', deadId);
     assert.equal(d.approved, false);
     assert.equal(d.linkStatus, 'dead');
     assert.equal(d.consecutiveDead, 2);
     assert.equal(await docData('global_verified_roadmaps', 'GOETHE-B1-99'), undefined);
-    assert.ok(await docData('global_verified_roadmaps', 'GOETHE-B1-30'), 'unrelated cache kept');
+    assert.equal(await docData('plans', 'GOETHE_B1_7'), undefined);
+    assert.ok(await docData('plans', 'GOETHE_B1_30'), 'unrelated cache kept');
+    assert.ok(d.nextCheckAt?.toMillis() > Date.now(), 'next check scheduled');
     assert.ok(await docData('metrics', 'link_health'));
     assert.equal(r.json.ledger.month, new Date().toISOString().slice(0, 7));
   });
@@ -699,18 +787,63 @@ async function main() {
   });
 
   section('Metrics');
-  await test('metrics/usage records LLM calls per agent and pipeline counters', async () => {
+  await test('metrics/usage records LLM calls per agent; pipeline counters are sharded', async () => {
     const m = await docData('metrics', 'usage');
     for (const a of ['PLANNER', 'DISCOVERY', 'DIAGNOSTIC', 'COACH', 'PRACTICE', 'EXPANSION', 'FORMAT']) assert.ok(m.calls[a] >= 1, `calls.${a}`);
-    assert.ok(m.pipeline.cacheHits >= 3);
-    assert.ok(m.pipeline.roadmapsGenerated >= 5);
-    assert.ok(m.pipeline.fallbackPlans >= 1);
+    assert.ok((await counter('cacheHits')) >= 3);
+    assert.ok((await counter('roadmapsGenerated')) >= 5);
+    assert.ok((await counter('fallbackPlans')) >= 1);
+  });
+  await test('cron rollup: folds past usage buckets into resources, writes stats/public; GET /api/stats', async () => {
+    // Move every bucket into the past hour so it is foldable now.
+    for (const d of (await pub().collection('usage_buckets').get()).docs) {
+      await pub().collection('usage_buckets').doc(`${d.id.split('_')[0]}_2000010100`).set(d.data(), { merge: true });
+      await d.ref.delete();
+    }
+    const want = await usageTotals('u');
+    const rid = Object.keys(want)[0];
+    const before = (await docData('resources', rid)).usageCount || 0;
+    const r = await get('/api/cron/rollup', { headers: { authorization: 'Bearer cron-secret-e2e' } });
+    assert.equal(r.status, 200, r.text);
+    assert.equal((await docData('resources', rid)).usageCount, before + want[rid]);
+    assert.equal((await pub().collection('usage_buckets').get()).size, 0);
+    const again = await get('/api/cron/rollup', { headers: { authorization: 'Bearer cron-secret-e2e' } });
+    assert.equal(again.status, 200);
+    assert.equal((await docData('resources', rid)).usageCount, before + want[rid], 'idempotent');
+    const st = await get('/api/stats');
+    assert.equal(st.status, 200, st.text);
+    assert.ok(st.json.stats.approvedResources >= 9 && st.json.stats.plansBuilt >= 5, JSON.stringify(st.json));
+    assert.match(st.headers.get('cache-control'), /s-maxage=300/);
+    const noAuth = await get('/api/cron/rollup');
+    assert.equal(noAuth.status, 401);
+  });
+  await test('migrate-v3: dry run writes nothing; --write on the emulator backfills; second run is a no-op', async () => {
+    const { Timestamp } = await import('firebase-admin/firestore');
+    // A legacy-shaped doc (no v3 fields), like the 9 resources seeded in prod before v3.
+    await pub().collection('resources').doc('legacy00000000000000000a').set({ url: 'https://www.goethe.de/de/spr/kup/prf.html?b=1&a=2', title: 'Legacy Goethe', category: 'x', skills: ['reading'], exams: ['GOETHE'], levels: [], license: 'x', linkStatus: 'ok', httpCode: 200, approved: true, lastCheckedAt: Timestamp.now(), usageCount: 4 });
+    const snapBefore = JSON.stringify((await pub().collection('resources').get()).docs.map((d) => [d.id, d.data()]));
+    const dry = await runNode('scripts/migrate-v3.mjs');
+    assert.equal(dry.code, 0, dry.out);
+    assert.match(dry.out, /DRY RUN/i);
+    assert.equal(JSON.stringify((await pub().collection('resources').get()).docs.map((d) => [d.id, d.data()])), snapBefore, 'dry run wrote nothing');
+    const w = await runNode('scripts/migrate-v3.mjs', ['--write']);
+    assert.equal(w.code, 0, w.out);
+    const old = await docData('resources', 'legacy00000000000000000a');
+    assert.equal(old.approved, false);
+    assert.match(old.duplicateOf, /^[0-9a-f]{24}$/);
+    const moved = await docData('resources', old.duplicateOf);
+    assert.equal(moved.usageCount, 4); assert.ok(moved.dedupKey && moved.shelfKeys.includes('GOETHE_B1') && moved.nextCheckAt);
+    const all = (await pub().collection('resources').get()).docs.map((d) => d.data());
+    assert.ok(all.every((x) => x.site && x.dedupKey && Array.isArray(x.shelfKeys) && x.nextCheckAt), 'every doc backfilled');
+    const second = await runNode('scripts/migrate-v3.mjs', ['--write']);
+    assert.equal(second.code, 0, second.out);
+    assert.match(second.out, /field updates: 0; id moves: 0; near-duplicate clusters: 0/, second.out);
   });
 
   section('Firestore security rules (client SDK against the emulator)');
   await test('clients cannot write public data; owners can write only their own roadmaps', async () => {
     const { initializeTestEnvironment, assertFails, assertSucceeds } = await import('@firebase/rules-unit-testing');
-    const { doc, setDoc, getDoc, updateDoc, deleteDoc, setLogLevel } = await import('firebase/firestore');
+    const { doc, setDoc, getDoc, updateDoc, deleteDoc, setLogLevel, deleteField } = await import('firebase/firestore');
     setLogLevel('silent'); // denied writes are expected; keep the output readable
     const [host, port] = EMU.split(':');
     const env = await initializeTestEnvironment({ projectId: PROJECT, firestore: { host, port: Number(port), rules: readFileSync(path.join(ROOT, 'firestore.rules'), 'utf8') } });
@@ -743,6 +876,28 @@ async function main() {
       // private sub-collections
       await assertSucceeds(setDoc(doc(alice, `${base}/users/alice/settings/prefs`), { theme: 'warm' }));
       await assertFails(getDoc(doc(bob, `${base}/users/alice/settings/prefs`)));
+      // v3: per-task ticks via field paths, validated progress map
+      await assertSucceeds(updateDoc(mine, { 'progress.done.d1t0': Math.floor(Date.now() / 1000) }));
+      await assertSucceeds(updateDoc(mine, { 'progress.done.d1t0': deleteField() }));
+      await assertFails(updateDoc(mine, { progress: { done: 'all' } }));
+      await assertFails(updateDoc(mine, { progress: { done: {}, hacked: true } }));
+      await assertFails(updateDoc(mine, { calendar: Array.from({ length: 181 }, () => 's') }));
+      // public lists must be bounded (the App's ledger feed uses orderBy createdAt desc + limit 20)
+      const { collection, query, orderBy, limit, where, getDocs } = await import('firebase/firestore');
+      await assertSucceeds(getDocs(query(collection(anon, `${base}/public/data/ledger_events`), orderBy('createdAt', 'desc'), limit(20))));
+      await assertFails(getDocs(collection(anon, `${base}/public/data/ledger_events`)));
+      await assertFails(getDocs(query(collection(anon, `${base}/public/data/resources`), limit(500))));
+      await assertFails(getDoc(doc(anon, `${base}/public/data/usage_buckets/x`)));
+      await assertFails(getDoc(doc(anon, `${base}/public/data/counters/cacheHits`)));
+      await assertSucceeds(getDoc(doc(anon, `${base}/public/data/plans/TCF_B2_30`)));
+      // SRS cards: one doc each, validated; the App's deck query (exam ==, limit 200)
+      const card = { id: 'TCF_0a1b2c3d', exam: 'TCF', skill: 'reading', front: 'Q', back: 'A', state: 'new', due: Date.now(), stability: 0, difficulty: 0, reps: 0, lapses: 0, source: 'practice', createdAt: Date.now() };
+      await assertSucceeds(setDoc(doc(alice, `${base}/users/alice/srs/TCF_0a1b2c3d`), card));
+      await assertSucceeds(setDoc(doc(alice, `${base}/users/alice/srs/TCF_0a1b2c3d`), { ...card, state: 'review', stability: 3.17, difficulty: 5.2, reps: 1, lastReview: Date.now(), interval: 3, retrievability: 0 }));
+      await assertFails(setDoc(doc(alice, `${base}/users/alice/srs/TCF_bad`), { ...card, id: 'TCF_bad', state: 'mastered' }));
+      await assertFails(setDoc(doc(alice, `${base}/users/alice/srs/TCF_bad2`), { ...card, id: 'TCF_bad2', evil: 1 }));
+      await assertFails(setDoc(doc(bob, `${base}/users/alice/srs/TCF_x`), { ...card, id: 'TCF_x' }));
+      await assertSucceeds(getDocs(query(collection(alice, `${base}/users/alice/srs`), where('exam', '==', 'TCF'), limit(200))));
     } finally {
       await env.cleanup();
     }

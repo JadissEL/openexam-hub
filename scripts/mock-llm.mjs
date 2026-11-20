@@ -70,6 +70,14 @@ function discovery(b) {
 // ------------------------------------------------------------------ PLANNER
 function planner(b) {
   const p = promptOf(b);
+  // v3 polish request: re-word the deterministic skeleton 1:1 (same phases, tasks, order, quotes, day prefixes).
+  if (p.trim().startsWith('{') && p.includes('"skeleton"')) {
+    const { skeleton, exam, level, days } = JSON.parse(p);
+    return {
+      summary: `Your ${days}-day ${exam} ${level} plan, built from link-checked official resources. ${skeleton.summary}`.slice(0, 1500),
+      phases: skeleton.phases.map((ph) => ({ phaseTitle: `Step: ${ph.phaseTitle}`, focus: ph.focus || 'Steady progress', tasks: ph.tasks }))
+    };
+  }
   const days = Number((/Total days:\s*(\d+)/.exec(p) || [])[1] || 30);
   const exam = (/Exam:\s*(\S+)/.exec(p) || [])[1] || 'exam';
   const level = (/Target level:\s*(\S+)/.exec(p) || [])[1] || '';
