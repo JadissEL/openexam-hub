@@ -435,9 +435,14 @@ Never touch the MX, SPF, DKIM (`cf2024-1._domainkey`) or `google-site-verificati
    (a Workers custom domain cannot sit on a hostname that already has an A/CNAME record), then run
    `npx --yes wrangler@4.166.0 deploy`. Expect a brief certificate issuance window for the hostnames.
 2. Add a zone Single Redirect rule: `http.host eq "www.openexamhub.org"` -> `concat("https://openexamhub.org", http.request.uri.path)`, 308, preserve query string.
-3. Re-run the route parity check and `BASE_URL=https://openexamhub.org npm run e2e:gate`.
+3. Zone setting **Always Use HTTPS** must be on (Vercel used to do the http -> https redirect).
+4. Re-run the route parity check and `BASE_URL=https://openexamhub.org npm run e2e:gate`.
 
 ### Rollback (one step)
+
+Done on 2026-11-20 at 22:56 Europe/Athens. The deleted records, the new custom domain ids, the redirect rule id and
+the setting change are saved in `/workspace/oeh-cf-rollback.json` on the bot box.
+
 
 Remove the Worker custom domains (`openexamhub.org`, `www.openexamhub.org`) in Workers > openexam-hub >
 Settings > Domains & Routes, then re-create the three DNS-only records from the table above. The Vercel project
