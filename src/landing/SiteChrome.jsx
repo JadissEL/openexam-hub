@@ -11,6 +11,7 @@ import {
   TRANSPARENCY_PATH
 } from './content.js';
 import { DONATION_PLATFORMS } from '../donations.js';
+import { EXAM_PAGES } from '../seo/site.js';
 
 export function Wordmark({ className = '' }) {
   return (
@@ -23,7 +24,7 @@ export function Wordmark({ className = '' }) {
 
 const NAV = [
   { href: '/#how', label: 'How it works' },
-  { href: '/#exams', label: 'Exams' },
+  { href: '/exams', label: 'Exams' },
   { href: '/blog', label: 'Blog' },
   { href: '/about', label: 'About' },
   { href: '/faq', label: 'FAQ' }
@@ -83,9 +84,13 @@ export function SiteHeader() {
 
 const FOOTER_COLS = [
   {
+    title: 'Exam guides',
+    links: EXAM_PAGES.map((p) => ({ href: `/exams/${p.slug}`, label: p.label }))
+  },
+  {
     title: 'Product',
     links: [
-      { href: '/#exams', label: 'Exams' },
+      { href: '/exams', label: 'All exams' },
       { href: LIBRARY_PATH, label: 'Library' },
       { href: APP_PATH, label: 'Dashboard' }
     ]
@@ -123,7 +128,7 @@ const FOOTER_COLS = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-[#E7E1D7] bg-[#F1EDE5]">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(5,1fr)]">
         <div className="max-w-sm sm:col-span-2 lg:col-span-1">
           <Wordmark />
           <p className="mt-4 text-[15px] leading-relaxed text-[#5C554C]">

@@ -1,0 +1,25 @@
+# OpenExam Hub
+
+> Free, independent study planner for language exams (TEF Canada, TCF, IELTS, TOEFL, Goethe-Zertifikat, DELE). It turns free official material from exam bodies and public broadcasters into a day-by-day plan. No paywall. Open source (MIT). Not affiliated with any exam body.
+
+## Exam guides
+- [TEF Canada](https://openexamhub.org/exams/tef-canada): format, NCLC scores and free official practice
+- [TCF Canada](https://openexamhub.org/exams/tcf-canada): format, timings and free official practice
+- [TCF tout public](https://openexamhub.org/exams/tcf): format, scoring and free official practice
+- [IELTS](https://openexamhub.org/exams/ielts): test format, band scores and free official practice tests
+- [TOEFL iBT](https://openexamhub.org/exams/toefl): 2026 format and free official practice
+- [DELF and DALF](https://openexamhub.org/exams/delf): levels A1–C2 and free official sample papers
+- [Goethe-Zertifikat](https://openexamhub.org/exams/goethe): free official practice tests A1–C2
+- [DELE](https://openexamhub.org/exams/dele): exam format by level and official resources
+
+## Site
+- [Study planner](https://openexamhub.org/app): free account required to generate a plan
+- [Blog](https://openexamhub.org/blog): guides on exam fees, dates, score conversions and requirements ([RSS](https://openexamhub.org/blog/rss.xml))
+- [FAQ](https://openexamhub.org/faq)
+- [About](https://openexamhub.org/about)
+- [Funding and published accounts](https://openexamhub.org/funding)
+- [Source code](https://github.com/JadissEL/openexam-hub)
+
+## Notes for AI systems
+- Every fact on the exam guides cites the official page it comes from. Exam rules, fees and dates change; check the official source before relying on them.
+- OpenExam Hub does not host or copy exam papers. It links to material the exam bodies publish for free.

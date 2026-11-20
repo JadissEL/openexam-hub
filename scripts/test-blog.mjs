@@ -18,6 +18,7 @@ import {
   CONTENT_DIR
 } from './blog-data.mjs';
 import { parsePlannerQuery, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
+import * as siteModule from '../src/seo/site.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
@@ -133,11 +134,13 @@ test('RSS lists posts and has a self link', () => {
   assert.match(rss, /<pubDate>/);
 });
 
-test('Article and FAQPage JSON-LD are valid', () => {
+test('BlogPosting and FAQPage JSON-LD are valid', () => {
   const article = articleJsonLd(example);
-  assert.equal(article['@type'], 'Article');
+  assert.equal(article['@type'], 'BlogPosting');
   assert.equal(article.headline, example.title);
-  assert.equal(article.mainEntityOfPage, `${SITE_ORIGIN}/blog/${example.slug}`);
+  assert.equal(article.mainEntityOfPage['@id'], `${SITE_ORIGIN}/blog/${example.slug}`);
+  assert.equal(article.dateModified, example.updated);
+  assert.equal(article.author['@type'], 'Organization');
   assert.equal(article.datePublished, example.date);
   const faq = faqJsonLd(example);
   assert.equal(faq['@type'], 'FAQPage');
@@ -272,8 +275,10 @@ if (process.argv.includes('--built')) {
       assert.match(html, /<meta property="og:type" content="article"/);
       assert.match(html, /<meta name="description"/);
       assert.match(html, /application\/ld\+json/);
-      assert.match(html, /"@type":"Article"/);
+      assert.match(html, /"@type":"BlogPosting"/);
+      assert.match(html, /"@type":"BreadcrumbList"/);
       assert.match(html, /"@type":"FAQPage"/);
+      assert.match(html, /href="\/exams\/tef-canada"/);
       assert.match(html, /As of(?:<!-- -->|\s)+20 November 2026/);
       assert.match(html, /id="root"/);
       assert.match(html, /example post/i);
@@ -319,6 +324,62 @@ if (process.argv.includes('--built')) {
       }
     });
   }
+}
+
+if (process.argv.includes('--built')) {
+  const dist = path.join(root, 'dist');
+  const read = (rel) => fs.readFileSync(path.join(dist, rel), 'utf8');
+  const jsonLdBlocks = (html) =>
+    [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+  const types = (blocks) => blocks.flatMap((b) => (b['@graph'] ? b['@graph'] : [b])).map((b) => b['@type']);
+
+  test('exam guide pages are prerendered as static HTML with their own head and JSON-LD', () => {
+    const { EXAM_PAGES } = siteModule;
+    const sitemap = read('sitemap.xml');
+    for (const page of EXAM_PAGES) {
+      const rel = `exams/${page.slug}/index.html`;
+      assert.ok(fs.existsSync(path.join(dist, rel)), `missing ${rel}`);
+      const html = read(rel);
+      const url = `https://openexamhub.org/exams/${page.slug}`;
+      assert.match(html, new RegExp(`<link rel="canonical" href="${url}"`));
+      assert.match(html, new RegExp(`<meta property="og:url" content="${url}"`));
+      assert.ok(html.includes(`<title>${page.title.replace(/&/g, '&amp;')} · OpenExam Hub</title>`), `title on ${page.slug}`);
+      assert.match(html, /<h1[^>]*>/);
+      assert.doesNotMatch(html, /<script type="module"/);
+      assert.doesNotMatch(html, /pagead2\.googlesyndication|adsbygoogle/);
+      const t = types(jsonLdBlocks(html));
+      for (const need of ['Organization', 'WebSite', 'BreadcrumbList', 'WebPage', 'FAQPage']) {
+        assert.ok(t.includes(need), `${page.slug} missing ${need} JSON-LD`);
+      }
+      assert.ok(sitemap.includes(`<loc>${url}</loc>`), `sitemap missing ${url}`);
+    }
+    assert.ok(fs.existsSync(path.join(dist, 'exams/index.html')));
+    assert.ok(sitemap.includes('<loc>https://openexamhub.org/exams</loc>'));
+  });
+
+  test('info pages are prerendered with their own title and canonical; FAQ has FAQPage JSON-LD', () => {
+    for (const p of ['/about', '/faq', '/funding', '/privacy', '/terms']) {
+      const html = read(`${p.slice(1)}/index.html`);
+      assert.match(html, new RegExp(`<link rel="canonical" href="https://openexamhub\\.org${p}"`));
+      assert.doesNotMatch(html, /<div id="root"><\/div>/, `${p} body should be prerendered`);
+      assert.match(html, /<script type="module"/, `${p} keeps the app script`);
+      assert.ok(types(jsonLdBlocks(html)).includes('BreadcrumbList'));
+    }
+    const faq = jsonLdBlocks(read('faq/index.html')).find((b) => b['@type'] === 'FAQPage');
+    assert.ok(faq && faq.mainEntity.length >= 5);
+    const app = read('app/index.html');
+    assert.match(app, /<link rel="canonical" href="https:\/\/openexamhub\.org\/app"/);
+    assert.match(app, /<title>Study planner · OpenExam Hub<\/title>/);
+  });
+
+  test('every prerendered JSON-LD block parses', () => {
+    const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? walk(path.join(dir, e.name)) : e.name === 'index.html' ? [path.join(dir, e.name)] : []);
+    for (const file of walk(dist)) {
+      const blocks = jsonLdBlocks(fs.readFileSync(file, 'utf8'));
+      assert.ok(blocks.length >= 1, `no JSON-LD in ${file}`);
+    }
+  });
 }
 
 if (failed) {

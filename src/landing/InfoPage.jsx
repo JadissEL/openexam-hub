@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ArrowRight, ArrowUpRight, Plus } from 'lucide-react';
 import { SiteHeader, SiteFooter } from './SiteChrome.jsx';
 import { BrowserFrame } from './frames.jsx';
@@ -8,10 +8,8 @@ import { APP_PATH, CONTACT_EMAIL, FAQ, REPO_URL } from './content.js';
 import { DONATION_LINKS } from '../donations.js';
 import { BooksPanel, usePublicBooks } from '../BooksPanel.jsx';
 
+// <title> and meta tags come from src/seo/site.js (prerendered, and synced in src/main.jsx).
 function PageShell({ title, eyebrowText, intro, children }) {
-  useEffect(() => {
-    document.title = `${title} · OpenExam Hub`;
-  }, [title]);
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased" style={pageFont}>
       <SiteHeader />

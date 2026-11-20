@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { SiteHeader, SiteFooter } from './SiteChrome.jsx';
 import { APP_PATH, CONTACT_EMAIL, REPO_URL } from './content.js';
 
@@ -207,9 +207,7 @@ const PAGES = {
 
 export default function LegalPage({ kind }) {
   const page = PAGES[kind] || PAGES.privacy;
-  useEffect(() => {
-    document.title = `${page.title} · OpenExam Hub`;
-  }, [page.title]);
+  // <title> and meta tags come from src/seo/site.js (prerendered, and synced in src/main.jsx).
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" }}>
       <SiteHeader />

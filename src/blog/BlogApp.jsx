@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowRight, Rss } from 'lucide-react';
 import { SiteHeader, SiteFooter } from '../landing/SiteChrome.jsx';
 import { ink, muted, eyebrow, lead, pageFont } from '../landing/theme.js';
+import { examPagesForTag } from '../seo/site.js';
 
 export const EXAM_LABELS = {
   TCF: 'TCF',
@@ -87,24 +88,27 @@ function ExamFilter({ exams, active }) {
   );
 }
 
-function CoverImage({ cover, href, className = '' }) {
+function CoverImage({ cover, href, className = '', priority = false }) {
   if (!cover?.src) return null;
+  // The first cover on a page is usually the LCP element: fetch it early; lazy-load the rest.
   const img = (
     <img
       src={cover.src}
       alt={cover.alt || ''}
       className={`w-full h-auto object-cover ${className}`}
+      decoding="async"
+      {...(priority ? { fetchpriority: 'high' } : { loading: 'lazy' })}
     />
   );
   return href ? <a href={href} className="block">{img}</a> : img;
 }
 
-function PostCard({ post }) {
+function PostCard({ post, first = false }) {
   return (
     <article className="border-b border-[#D9D1C5] py-8 sm:py-10">
       {post.cover ? (
         <div className="mb-5 overflow-hidden rounded-2xl bg-[#EDE7DD]">
-          <CoverImage cover={post.cover} href={post.url} />
+          <CoverImage cover={post.cover} href={post.url} priority={first} />
         </div>
       ) : null}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#6B635A]">
@@ -157,6 +161,39 @@ function EmptyList() {
   );
 }
 
+/** Exam guide pages (/exams/<slug>) for a list of blog exam tags, without duplicates. */
+function examGuidesFor(tags) {
+  const seen = new Set();
+  const out = [];
+  for (const t of tags || []) {
+    for (const page of examPagesForTag(t)) {
+      if (!seen.has(page.slug)) {
+        seen.add(page.slug);
+        out.push(page);
+      }
+    }
+  }
+  return out;
+}
+
+function ExamGuideLinks({ tags, className = '' }) {
+  const guides = examGuidesFor(tags);
+  if (!guides.length) return null;
+  return (
+    <p className={`text-[15px] ${muted} ${className}`}>
+      <span className="font-semibold text-[#1A1714]">Exam {guides.length === 1 ? 'guide' : 'guides'}:</span>{' '}
+      {guides.map((g, i) => (
+        <React.Fragment key={g.slug}>
+          {i > 0 ? ', ' : null}
+          <a href={`/exams/${g.slug}`} className="text-[#C2410C] underline underline-offset-4">
+            {g.label} format and free official practice
+          </a>
+        </React.Fragment>
+      ))}
+    </p>
+  );
+}
+
 export function BlogIndex({ posts, exam = null }) {
   const exams = [...new Set(posts.flatMap((p) => p.exams))].sort((a, b) => examLabel(a).localeCompare(examLabel(b)));
   const list = exam ? posts.filter((p) => p.exams.includes(exam)) : posts;
@@ -180,12 +217,13 @@ export function BlogIndex({ posts, exam = null }) {
             <Rss className="w-4 h-4" aria-hidden="true" /> RSS feed
           </a>
         </div>
+        {exam ? <ExamGuideLinks tags={[exam]} className="mt-6" /> : null}
         {exam && !knownExam ? (
           <p className={`mt-8 ${muted}`}>There is no exam called “{exam}” on OpenExam Hub.</p>
         ) : null}
       </header>
       <section className="mx-auto max-w-6xl px-5 sm:px-8 pb-24" aria-label="Articles">
-        {list.length ? list.map((post) => <PostCard key={post.slug} post={post} />) : <EmptyList />}
+        {list.length ? list.map((post, i) => <PostCard key={post.slug} post={post} first={i === 0} />) : <EmptyList />}
         {exam ? (
           <p className="mt-10">
             <a href="/blog" className="text-[#C2410C] underline underline-offset-4">All blog posts</a>
@@ -251,10 +289,18 @@ export function BlogPost({ post }) {
   return (
     <PageShell title={post.title} lang={post.lang}>
       <article className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
-        <p className="text-[14px]">
+        <nav aria-label="Breadcrumb" className="text-[14px]">
+          <a href="/" className="text-[#C2410C] underline underline-offset-4">Home</a>
+          <span className="text-[#6B635A]"> / </span>
           <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Blog</a>
-          <span className="text-[#6B635A]"> / {post.exams.map(examLabel).join(', ')}</span>
-        </p>
+          <span className="text-[#6B635A]"> / </span>
+          {post.exams.map((id, i) => (
+            <React.Fragment key={id}>
+              {i > 0 ? <span className="text-[#6B635A]">, </span> : null}
+              <a href={`/blog/tag/${id}`} className="text-[#C2410C] underline underline-offset-4">{examLabel(id)}</a>
+            </React.Fragment>
+          ))}
+        </nav>
         <header className="mt-5 max-w-3xl">
           {post.draft ? (
             <p className="mb-5 rounded-2xl border border-[#E7C9B4] bg-[#FDF3EC] px-4 py-3 text-[15px] leading-relaxed text-[#7C2D12]" role="note">
@@ -288,12 +334,13 @@ export function BlogPost({ post }) {
               </li>
             ))}
           </ul>
+          <ExamGuideLinks tags={post.exams} className="mt-5" />
         </header>
 
         {post.cover ? (
           <figure className="mt-10 max-w-3xl">
             <div className="overflow-hidden rounded-2xl bg-[#EDE7DD]">
-              <CoverImage cover={post.cover} />
+              <CoverImage cover={post.cover} priority />
             </div>
             {post.cover.credit ? (
               <figcaption className={`mt-3 text-[14px] leading-relaxed ${muted}`}>{post.cover.credit}</figcaption>
