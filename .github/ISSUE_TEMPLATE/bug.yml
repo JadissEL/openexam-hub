@@ -1,0 +1,48 @@
+name: Bug report
+description: Something is broken or unexpected on the site or in local development.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the report. Please avoid pasting secrets, tokens or personal data.
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      description: The page where you saw the problem (for example https://openexam-hub.vercel.app/app).
+      placeholder: https://openexam-hub.vercel.app/app
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Live site
+        - Local development
+        - Tests
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        1.
+        2.
+        3.
+        Expected:
+        Actual:
+    validations:
+      required: true
+  - type: input
+    id: exam
+    attributes:
+      label: Exam / level / device (optional)
+      description: For example “TCF B2, Firefox on Android”.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or logs (optional)
+      description: Paste text logs rather than credentials. Redact tokens.

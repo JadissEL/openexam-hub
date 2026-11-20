@@ -1,52 +1,97 @@
 # OpenExam Hub
 
-Free, official-source study roadmaps for language exams (TCF / DELF / DALF, IELTS, Goethe).
-Pick an exam, a target level and a number of days and get a day-by-day plan. Every link comes
-from an official exam board or public broadcaster, and the server checks it before you see it.
-No paywalls, no accounts needed (anonymous by default, sign in to sync).
+**Free study roadmaps for language exams, built from official free materials.**
 
-| Desktop | Mobile |
+[Live site](https://openexam-hub.vercel.app) · [Ko-fi](https://ko-fi.com/openexamhub) · [Open Collective](https://opencollective.com/openexam-hub) · License: [MIT](LICENSE)
+
+OpenExam Hub turns the free material that exam boards and public broadcasters already publish into a calm, day-by-day study plan. Choose an exam, a target level and how many days you have. Every resource link is checked before you see it.
+
+No account is required. Sign in only if you want your plans to sync across devices.
+
+The planner currently covers **TCF**, **IELTS** and **Goethe-Zertifikat** (levels A2–C1). More official-source exams are planned.
+
+## Screenshots
+
+| Landing | Planner |
 |---|---|
-| ![Home, desktop](docs/screenshots/desktop-home.png) | ![Home, mobile](docs/screenshots/mobile-home.png) |
-| ![Library, desktop](docs/screenshots/desktop-library.png) | ![Practice, mobile](docs/screenshots/mobile-practice.png) |
+| ![Landing page, desktop](docs/screenshots/desktop-landing.png) | ![Landing page, mobile](docs/screenshots/mobile-landing.png) |
+| ![Study planner, desktop](docs/screenshots/desktop-home.png) | ![Study planner, mobile](docs/screenshots/mobile-home.png) |
+| ![Official resource library, desktop](docs/screenshots/desktop-library.png) | |
 
-## What's inside
+## Features
 
-| Path | What it is |
-|---|---|
-| `index.html`, `src/` | Vite + React 18 + Tailwind 3 frontend. `src/App.jsx` is the whole app; `src/firebaseConfig.js` holds the public Firebase web config and the `VITE_*` overrides. |
-| `api/` | Vercel Node 24 serverless functions (8 entrypoints; Hobby allows 12): `generate-roadmap`, `diagnostic`, `coach`, `practice`, plus dispatchers `[route].js` (check-link, library, plan, stats, events), `admin/[action].js`, `webhooks/[provider].js`, `cron/[job].js`. Route handlers live in `lib/routes/`; add new endpoints to a dispatcher, not as new `api/` files. |
-| `lib/` | Server code: the orchestrator and agents (`lib/agents/`), the LLM client (`lib/llm.js`, any OpenAI-compatible gateway such as OmniRoute), the library store, ledger, link checker, and the pure algorithm layer (`lib/algo/`: ranking, scheduling, FSRS spaced repetition, adaptive placement, progress). |
-| `scripts/` | Unit suites, the end-to-end test, the mock LLM, the local API server, the library seeder and the v3 backfill (`migrate-v3.mjs`, dry run by default). |
-| `firestore.rules`, `firestore.indexes.json`, `firebase.json`, `.firebaserc` | Firestore security rules and indexes for the `openexam-hub` Firebase project. |
-| `vercel.json` | One Vercel project: Vite static build in `dist/`, functions in `api/`, SPA rewrite, daily 03:00 UTC link-recheck cron and 03:30 UTC rollup cron (usage/calibration folding, public stats, shelves). |
+- **Day-by-day plans** from official exam-board and public-broadcaster sources, not paid courses.
+- **Link-checked library.** Resources are stored with their official domain and a reachability check.
+- **Placement self-check** (unofficial) and extra practice when you want a short diagnostic before you plan.
+- **Progress coach** that can adjust the remaining days of a plan.
+- **Guest by default.** Anonymous use is enough to build and download a plan as Markdown or JSON.
+- **Funding transparency.** Donations and the ad-sunset threshold are shown on the site. A small number of ads may appear on the planner (never on the public landing page) until that goal is met; then ads switch off for everyone.
+- **Open source (MIT).**
 
-Docs: [DEPLOY.md](DEPLOY.md) (env vars, Vercel, Firestore, webhooks, OmniRoute),
-[CONTRACT.md](CONTRACT.md) (API contract), [ARCHITECTURE.md](ARCHITECTURE.md) (algorithms and data model).
+This is a study aid. It is not affiliated with France Éducation international, IELTS or the Goethe-Institut, and it is not an official placement test.
 
-## Run locally
+## Tech stack
+
+- **Frontend:** Vite, React 18, Tailwind CSS 3
+- **API:** Vercel serverless functions (Node 24)
+- **Data:** Firebase Auth and Cloud Firestore
+- **Planning:** a small algorithm layer (ranking, scheduling, FSRS-style spaced repetition, placement) plus an optional OpenAI-compatible LLM gateway
+
+Deeper docs: [DEPLOY.md](DEPLOY.md) (environment, Firebase, webhooks), [CONTRACT.md](CONTRACT.md) (API), [ARCHITECTURE.md](ARCHITECTURE.md) (algorithms and data model).
+
+## Quick start
+
+You need Node.js 24.
 
 ```bash
 npm install
-npm run dev:api      # API on http://127.0.0.1:3001 (needs FIREBASE_SERVICE_ACCOUNT or FIRESTORE_EMULATOR_HOST, and LLM_* env)
+npm run dev:api      # API on http://127.0.0.1:3001
 npm run dev          # frontend on http://localhost:5173, /api proxied to :3001
 ```
 
-Without a running API, build the UI in preview mode: `VITE_SERVER_ENABLED=false npm run dev`.
+`dev:api` needs either `FIRESTORE_EMULATOR_HOST` (see below) or a Firebase service account, plus optional `LLM_*` variables from [`.env.example`](.env.example). Secrets stay in the environment, never in the repo.
 
-## Test
+To explore the UI without a backend: `VITE_SERVER_ENABLED=false npm run dev`.
+
+## Tests
 
 ```bash
-npm test             # offline unit suites: orchestrator, learner agents, ledger, algorithms, v3 integration
-npm run e2e          # Firestore emulator (demo-openexam, needs Java 11+) + mock LLM + real HTTP to api/**
+npm test             # offline unit suites
+npm run e2e          # Firestore emulator (project demo-openexam, needs Java 11+) + mock LLM
 npm run build        # production frontend build into dist/
 ```
 
-`npm run e2e` refuses any project id that does not start with `demo-`, so tests never touch the real project.
+`npm run e2e` refuses any Firebase project id that does not start with `demo-`, so tests never touch production.
 
 ## Deploy
 
-1. Import this repo in Vercel (root directory `./`). `vercel.json` sets the framework, build and output.
-2. Add the server environment variables from [`.env.example`](.env.example) (see DEPLOY.md §1). Secrets go only into Vercel.
-3. `firebase deploy --only firestore:rules,firestore:indexes` from the repo root.
-4. Enable Anonymous, Email/Password and Google sign-in in Firebase Auth, and add the Vercel domain to Auth → Settings → Authorized domains.
+See [DEPLOY.md](DEPLOY.md) for the full checklist. In short: import this repo on Vercel, set the environment variables from `.env.example`, deploy Firestore rules and indexes, and add the production domain to Firebase Auth authorized domains.
+
+## Contributing
+
+Contributions are welcome, including official-source exam resources, accessibility fixes and documentation. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Issues labelled [`good first issue`](https://github.com/JadissEL/openexam-hub/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) are a good place to start.
+
+## Funding and ads
+
+OpenExam Hub is free to use. Running costs are meant to be covered by donations and, until a publicly tracked funding goal is reached, by a few ads on the planner only.
+
+- [Ko-fi](https://ko-fi.com/openexamhub) (one-off tips)
+- [Open Collective](https://opencollective.com/openexam-hub) (fiscal host application pending)
+- GitHub Sponsors (pending, after the fiscal host on the Sponsors profile is corrected)
+
+When the goal is met, the site is intended to become ad-free. Figures on the live site are the source of truth; this README does not invent earnings or user counts.
+
+## License
+
+[MIT](LICENSE) © 2026 Jadiss EL ANTAKI
+
+## Repository layout
+
+| Path | What it is |
+|---|---|
+| `index.html`, `src/` | Vite + React frontend. The planner lives in `src/App.jsx`; the public landing page lives in `src/landing/`. |
+| `api/` | Vercel serverless entrypoints. Route handlers live in `lib/routes/`; add new endpoints to a dispatcher, not as new `api/` files. |
+| `lib/` | Server code: orchestrator, agents, LLM client, library store, ledger, link checker, and `lib/algo/`. |
+| `scripts/` | Unit suites, end-to-end test, mock LLM, local API server, library seeder. |
+| `firestore.rules`, `firestore.indexes.json`, `firebase.json` | Firestore rules and indexes for the `openexam-hub` Firebase project. |
+| `vercel.json` | Static build, functions, SPA rewrite, and scheduled crons. |

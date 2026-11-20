@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live site
+    url: https://openexam-hub.vercel.app
+    about: Try OpenExam Hub before filing a bug, and mention the URL of the page you were on.
+  - name: Ko-fi
+    url: https://ko-fi.com/openexamhub
+    about: One-off tips to keep the site running. Not for bug reports.

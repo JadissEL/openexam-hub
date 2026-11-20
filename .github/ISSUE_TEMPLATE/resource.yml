@@ -1,0 +1,30 @@
+name: Official resource or exam
+description: Suggest a free official resource, or a new exam that has official free material.
+title: "[Resource] "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: exam
+    attributes:
+      label: Exam
+      description: For example TEF Canada, DELE, or an exam we already list (TCF, IELTS, Goethe).
+      placeholder: TEF Canada
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Official URL
+      description: Must be on the exam board's or an official partner's / public broadcaster's domain.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does this belong in the library?
+      description: What the page offers (samples, candidate guide, exercises), whether it is free, and which skills or levels it covers.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: We only accept free official-source material. Please do not submit unofficial course dumps, personal Drive folders, or paid-only content.
