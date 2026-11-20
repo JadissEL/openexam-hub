@@ -18,6 +18,15 @@ import { AI_FRUGALITY_FAQ, AI_FRUGALITY_POINTS, AI_FRUGALITY_TITLE } from '../sr
 import { monthKey, presentTreasury, presentUsage, recordTokenUsage, setUsageClockForTests, USAGE_TOTAL_ID, usageDocId } from '../lib/usage.js';
 import statsHandler from '../lib/routes/stats.js';
 import { FAQ } from '../src/landing/content.js';
+import { FIRST_LEARNERS_MAX, learnersProof } from '../src/landing/learners.js';
+import {
+  getRegisteredUsers,
+  isAnonymousUser,
+  listRegisteredUserCount,
+  setCountRegisteredUsersForTests,
+  USER_COUNT_MAX_AGE_MS,
+  USERS_DOC_ID
+} from '../lib/userCount.js';
 
 class FakePub {
   constructor() {
@@ -235,6 +244,7 @@ test('GET /api/stats returns usage, lifetime totals and treasury; cacheHitRate o
   });
   setPubForTests(() => fake.root());
   setUsageClockForTests(() => new Date('2026-11-20T21:00:00Z'));
+  setCountRegisteredUsersForTests(async () => 12);
   const res = mockRes();
   await statsHandler({ method: 'GET', headers: {} }, res);
   assert.equal(res.statusCode, 200);
@@ -244,6 +254,7 @@ test('GET /api/stats returns usage, lifetime totals and treasury; cacheHitRate o
   assert.equal(res.body.usage.costEur, 0);
   assert.equal(res.body.usageTotal.calls, 3);
   assert.equal(res.body.treasury.communityTotalEur, 0);
+  assert.equal(res.body.registeredUsers, 12);
   assert.equal(res.body.stats.cacheHitRate, null, 'no percentage when no plans have been served');
   assert.equal(res.body.stats.plansBuilt, 0);
 
@@ -289,6 +300,72 @@ test('pending expenses are excluded from the total', () => {
   assert.equal(pending, 1);
 });
 
+test('learnersProof: no fake numbers; small counts stay honest; larger counts are exact', () => {
+  assert.equal(learnersProof(null), null);
+  assert.equal(learnersProof(undefined), null);
+  assert.equal(learnersProof('nope'), null);
+  assert.equal(learnersProof(-1), null);
+  assert.equal(learnersProof(0), 'Be one of the first learners.');
+  assert.equal(learnersProof(1), 'Be one of the first learners.');
+  assert.equal(learnersProof(FIRST_LEARNERS_MAX), 'Be one of the first learners.');
+  assert.equal(learnersProof(FIRST_LEARNERS_MAX + 1), `Join ${FIRST_LEARNERS_MAX + 1} learners.`);
+  assert.equal(learnersProof(12), 'Join 12 learners.');
+  assert.equal(learnersProof(1200), 'Join 1,200 learners.');
+});
+
+test('listRegisteredUserCount skips anonymous users and paginates', async () => {
+  const pages = [
+    {
+      users: [
+        { email: 'a@example.com', phoneNumber: null, providerData: [{ providerId: 'password' }] },
+        { email: null, phoneNumber: null, providerData: [] },
+        { email: 'b@example.com', phoneNumber: null, providerData: [{ providerId: 'google.com' }] }
+      ],
+      pageToken: 'next'
+    },
+    {
+      users: [{ email: 'c@example.com', phoneNumber: null, providerData: [{ providerId: 'password' }] }],
+      pageToken: undefined
+    }
+  ];
+  let i = 0;
+  const n = await listRegisteredUserCount(async () => pages[i++]);
+  assert.equal(n, 3);
+  assert.equal(i, 2);
+  assert.equal(isAnonymousUser({ email: null, phoneNumber: null, providerData: [] }), true);
+  assert.equal(isAnonymousUser({ email: 'a@example.com', providerData: [] }), false);
+});
+
+test('getRegisteredUsers reuses a fresh stats/users doc and recounts when stale', async () => {
+  const fake = new FakePub();
+  setPubForTests(() => fake.root());
+  const now = new Date('2026-11-20T21:00:00Z').getTime();
+  fake.docs.set(`stats/${USERS_DOC_ID}`, { registeredUsers: 7, updatedAt: new Date(now - 1000) });
+  let calls = 0;
+  setCountRegisteredUsersForTests(async () => {
+    calls += 1;
+    return 9;
+  });
+  assert.equal(await getRegisteredUsers({ now }), 7);
+  assert.equal(calls, 0);
+  fake.docs.set(`stats/${USERS_DOC_ID}`, { registeredUsers: 7, updatedAt: new Date(now - USER_COUNT_MAX_AGE_MS - 1) });
+  assert.equal(await getRegisteredUsers({ now }), 9);
+  assert.equal(calls, 1);
+  assert.equal(fake.docs.get(`stats/${USERS_DOC_ID}`).registeredUsers, 9);
+});
+
+test('GET /api/stats still returns books when the user count cannot be determined', async () => {
+  const fake = new FakePub();
+  setPubForTests(() => fake.root());
+  setCountRegisteredUsersForTests(async () => {
+    throw new Error('auth down');
+  });
+  const res = mockRes();
+  await statsHandler({ method: 'GET', headers: {} }, res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.registeredUsers, null);
+});
+
 // Prove FieldValue.increment is what we write (so production Firestore will accept it).
 test('increment helper matches firebase-admin NumericIncrementTransform', () => {
   const v = FieldValue.increment(3);
@@ -309,5 +386,6 @@ for (const { name, fn } of tests) {
 }
 setPubForTests(null);
 setUsageClockForTests(null);
+setCountRegisteredUsersForTests(null);
 console.log(`\n${tests.length - failed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
