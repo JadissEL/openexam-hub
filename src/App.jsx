@@ -3419,13 +3419,13 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
           CONTRIBUTE MODAL (LINKS OUT; LEDGER IS UPDATED ONLY BY SERVER WEBHOOKS)
       ==================================================================== */}
       {showContributeModal && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
+        <div role="dialog" aria-modal="true" aria-labelledby="oe-contribute-title" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
           <div className="oe-sheet bg-white w-full max-w-md rounded-t-[28px] sm:rounded-[28px] p-6 sm:p-7 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto shadow-2xl">
             <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
             <div className="flex items-center justify-between pb-3 border-b border-black/5">
               <div className="flex items-center gap-2">
                 <span className="w-10 h-10 rounded-full bg-[#111111] text-white flex items-center justify-center shrink-0"><Coins className="w-5 h-5" aria-hidden="true" /></span>
-                <h3 className="font-bold text-neutral-900 text-lg">
+                <h3 id="oe-contribute-title" className="font-bold text-neutral-900 text-lg">
                   Support OpenExam Hub
                 </h3>
               </div>
