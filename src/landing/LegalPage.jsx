@@ -128,8 +128,9 @@ const PAGES = {
         h: 'Source code',
         body: (
           <p>
-            The source code is public on <a href={REPO_URL} target="_blank" rel="noopener noreferrer">GitHub</a>. A formal open-source
-            licence has not been chosen yet; until one is added, please ask before reusing the code.
+            The source code is public on <a href={REPO_URL} target="_blank" rel="noopener noreferrer">GitHub</a> under the{' '}
+            <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noopener noreferrer">MIT licence</a>. The licence covers
+            our code, not the third-party resources we link to.
           </p>
         )
       },

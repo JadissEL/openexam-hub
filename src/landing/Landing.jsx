@@ -70,7 +70,7 @@ function Hero() {
             </a>
           </div>
           <p className={`mt-6 text-[15px] ${muted}`}>
-            Free forever · No account needed · Code public on GitHub
+            Free forever · No account needed · Open source (MIT)
           </p>
         </div>
 
@@ -360,8 +360,8 @@ function OpenSource() {
         <div>
           <p className={lead}>
             Everything on this page can be checked: the resource allowlist, the link checker, how plans are paced,
-            and exactly what is stored in the database. The full source code is public on GitHub, and issues and
-            suggestions for new official resources are welcome.
+            and exactly what is stored in the database. The full source code is on GitHub under the MIT licence, and
+            issues and suggestions for new official resources are welcome.
           </p>
           <a
             href={REPO_URL}
