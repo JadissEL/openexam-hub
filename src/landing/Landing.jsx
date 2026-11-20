@@ -55,7 +55,7 @@ function Hero() {
     <section className="relative overflow-hidden" aria-labelledby="hero-title">
       <div className="relative mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 lg:pt-20 pb-16 sm:pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
         <div>
-          <p className={eyebrow}>Free study plans · TCF · IELTS · Goethe</p>
+          <p className={eyebrow}>Free study plans · TEF Canada · TCF · IELTS · TOEFL · Goethe · DELE</p>
           <h1 id="hero-title" className={`mt-5 font-display ${ink} text-[44px] leading-[1.02] sm:text-6xl lg:text-[68px] lg:leading-[1.0] tracking-[-0.03em] font-medium`}>
             Prepare for your language exam <em className="italic text-[#C2410C]">without</em> paying for a course.
           </h1>
@@ -127,7 +127,7 @@ function Story() {
           </p>
           <p>
             The strange part is that the good material already exists. France Éducation international, the
-            Goethe-Institut, the British Council and public broadcasters publish free sample papers and practice
+            CCI Paris, France Éducation international, ETS, Instituto Cervantes, the Goethe-Institut, the British Council and public broadcasters publish free sample papers and practice
             for these exams. It is just scattered across dozens of pages, in different languages, with no plan
             attached.
           </p>
@@ -151,7 +151,7 @@ function Story() {
 const STEPS = [
   {
     title: 'Tell it about your exam',
-    body: 'Choose TCF, IELTS or Goethe, the level you’re aiming for (A2 to C1) and how many days you have. Not sure of your level? There’s a short placement check.'
+    body: 'Choose TEF Canada, TCF, IELTS, TOEFL, Goethe or DELE, the level you’re aiming for (A1 to C2) and how many days you have. Not sure of your level? There’s a short placement check.'
   },
   {
     title: 'Get a day-by-day plan',
@@ -421,7 +421,7 @@ function FinalCTA() {
 
 export default function Landing() {
   useEffect(() => {
-    document.title = 'OpenExam Hub · Free study plans for TCF, IELTS and Goethe exams';
+    document.title = 'OpenExam Hub · Free study plans for TEF Canada, TCF, IELTS, TOEFL, Goethe and DELE';
   }, []);
   return (
     <div className="relative overflow-x-clip min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased" style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" }}>

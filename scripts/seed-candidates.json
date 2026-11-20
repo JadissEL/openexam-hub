@@ -1,0 +1,1306 @@
+[
+  {
+    "exam": "TEF_CANADA",
+    "title": "TEF Canada — official exam overview and format",
+    "url": "https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/presentation/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Préparer le TEF Canada — official preparation hub (all four sections)",
+    "url": "https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/preparation/",
+    "category": "Practice tests",
+    "skills": [
+      "exam_format",
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "TEF Canada — understand your results (score /699, CEFR and NCLC)",
+    "url": "https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/resultats/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Official TEF–NCLC score correspondence table (PDF)",
+    "url": "https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/correspondance-tef-nclc.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Official TEF sample questions — compréhension écrite (PDF)",
+    "url": "https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuves-ce.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "reading",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Official TEF sample questions — compréhension orale (PDF)",
+    "url": "https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuves-co.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "listening",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Official TEF compréhension orale audio (ZIP of sample recordings)",
+    "url": "https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-bandes-sons-co.zip",
+    "category": "Sample tests",
+    "skills": [
+      "listening",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Official TEF sample tasks — expression écrite (PDF)",
+    "url": "https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuve-ee.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "writing",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Official TEF sample tasks — expression orale (PDF)",
+    "url": "https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuve-eo.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "speaking",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Se préparer à l’épreuve de compréhension écrite du TEF",
+    "url": "https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-de-comprehension-ecrite-du-tef/",
+    "category": "Self-study",
+    "skills": [
+      "reading",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Se préparer à l’épreuve de compréhension orale du TEF",
+    "url": "https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-de-comprehension-orale-du-tef/",
+    "category": "Self-study",
+    "skills": [
+      "listening",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Le fait divers — préparer la section A de l’expression écrite du TEF",
+    "url": "https://www.lefrancaisdesaffaires.fr/le-fait-divers-preparer-la-section-a-de-lexpression-ecrite-du-tef/",
+    "category": "Self-study",
+    "skills": [
+      "writing",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "L’argumentation — préparer la section B de l’expression écrite du TEF",
+    "url": "https://www.lefrancaisdesaffaires.fr/largumentation-preparer-la-section-b-de-lexpression-ecrite-du-tef/",
+    "category": "Self-study",
+    "skills": [
+      "writing",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "Se préparer à l’épreuve d’expression orale du TEF",
+    "url": "https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-dexpression-orale-du-tef/",
+    "category": "Self-study",
+    "skills": [
+      "speaking",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "CCI Paris Île-de-France / Le français des affaires",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TEF_CANADA",
+    "title": "IRCC — Express Entry language test results (CLB/NCLC equivalence, including TEF Canada)",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Government of Canada official page (free public access)",
+    "source_org": "Immigration, Refugees and Citizenship Canada (IRCC)",
+    "verified_at": "2026-11-20T18:19:51+02:00"
+  },
+  {
+    "exam": "TCF",
+    "title": "TV5Monde — official TCF practice simulator and training series",
+    "url": "https://apprendre.tv5monde.com/fr/tcf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "grammar"
+    ],
+    "levels": [],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "TV5Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TCF",
+    "title": "TV5Monde — official TCF training booklets and audio (free PDF + MP3)",
+    "url": "https://apprendre.tv5monde.com/fr/article/les-livrets-dentrainement-au-tcf-r-avec-tv5monde",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "grammar"
+    ],
+    "levels": [],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "TV5Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TCF",
+    "title": "TV5Monde — French exercises at A1 (beginner)",
+    "url": "https://apprendre.tv5monde.com/fr/exercices/a1-debutant",
+    "category": "Self-study",
+    "skills": [
+      "listening",
+      "reading",
+      "grammar",
+      "vocabulary"
+    ],
+    "levels": [
+      "A1"
+    ],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "TV5Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TCF",
+    "title": "TV5Monde — French exercises at A2 (elementary)",
+    "url": "https://apprendre.tv5monde.com/fr/exercices/a2-elementaire",
+    "category": "Self-study",
+    "skills": [
+      "listening",
+      "reading",
+      "grammar",
+      "vocabulary"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "TV5Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TCF",
+    "title": "TV5Monde — French exercises at B1 (intermediate)",
+    "url": "https://apprendre.tv5monde.com/fr/exercices/b1-intermediaire",
+    "category": "Self-study",
+    "skills": [
+      "listening",
+      "reading",
+      "grammar",
+      "vocabulary"
+    ],
+    "levels": [
+      "B1"
+    ],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "TV5Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TCF",
+    "title": "TV5Monde — French exercises at B2 (advanced)",
+    "url": "https://apprendre.tv5monde.com/fr/exercices/b2-avance",
+    "category": "Self-study",
+    "skills": [
+      "listening",
+      "reading",
+      "grammar",
+      "vocabulary"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "TV5Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TCF",
+    "title": "RFI — Journal en français facile (daily news listening)",
+    "url": "https://francaisfacile.rfi.fr/fr/podcasts/journal-en-français-facile/",
+    "category": "Oral comprehension",
+    "skills": [
+      "listening",
+      "vocabulary"
+    ],
+    "levels": [],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "RFI Savoirs / France Médias Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TCF",
+    "title": "RFI — Réviser les points de langue essentiels du français",
+    "url": "https://francaisfacile.rfi.fr/fr/réviser/",
+    "category": "Self-study",
+    "skills": [
+      "grammar",
+      "vocabulary"
+    ],
+    "levels": [],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "RFI Savoirs / France Médias Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELF",
+    "title": "RFI — official DELF, TCF and DFP listening practice collection",
+    "url": "https://francaisfacile.rfi.fr/fr/diplômes-tests/",
+    "category": "Practice tests",
+    "skills": [
+      "listening",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "RFI Savoirs / France Médias Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELF",
+    "title": "RFI — DELF B2 oral comprehension training (Session 7), with France Éducation international",
+    "url": "https://francaisfacile.rfi.fr/fr/r%C3%A9viser/20260824-delf-b2-entrainement-%C3%A0-l-%C3%A9preuve-de-compr%C3%A9hension-orale-session-7",
+    "category": "Practice tests",
+    "skills": [
+      "listening",
+      "mock_exam",
+      "vocabulary"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "RFI Savoirs / France Médias Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELF",
+    "title": "RFI — DELF practice tag (all oral-comprehension training sessions)",
+    "url": "https://francaisfacile.rfi.fr/fr/tag/delf/",
+    "category": "Practice tests",
+    "skills": [
+      "listening",
+      "mock_exam"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "RFI Savoirs / France Médias Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELF",
+    "title": "TV5Monde — official guide to TCF, DELF and DALF practice resources",
+    "url": "https://enseigner.tv5monde.com/articles-dossiers/articles/tests-diplomes-et-examens",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading"
+    ],
+    "levels": [],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "TV5Monde",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELF",
+    "title": "French Embassy in Canada — official DELF/DALF sample papers index",
+    "url": "https://delf-dalf.ambafrance-ca.org/fr/exemples-de-sujets",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official government exam page (free public access)",
+    "source_org": "French Embassy in Canada (DELF-DALF) / France Éducation international",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DALF",
+    "title": "French Embassy in Canada — DELF/DALF tout public exam format",
+    "url": "https://delf-dalf.ambafrance-ca.org/fr/delf-dalf-tout-public",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "A1",
+      "A2",
+      "B1",
+      "B2",
+      "C1",
+      "C2"
+    ],
+    "license": "Official government exam page (free public access)",
+    "source_org": "French Embassy in Canada (DELF-DALF) / France Éducation international",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DALF",
+    "title": "French Embassy in Canada — official spoken and written production samples",
+    "url": "https://delf-dalf.ambafrance-ca.org/fr/exemples-de-productions-oralesecrites",
+    "category": "Sample tests",
+    "skills": [
+      "writing",
+      "speaking",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official government exam page (free public access)",
+    "source_org": "French Embassy in Canada (DELF-DALF) / France Éducation international",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DALF",
+    "title": "French Embassy in Canada — official online DELF/DALF preparation links",
+    "url": "https://delf-dalf.ambafrance-ca.org/fr/se-preparer-en-ligne",
+    "category": "Practice tests",
+    "skills": [
+      "exam_format",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official government exam page (free public access)",
+    "source_org": "French Embassy in Canada (DELF-DALF) / France Éducation international",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "British Council — free official IELTS practice and mock tests (all four skills)",
+    "url": "https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "British Council",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "IELTS.org — official sample test questions and practice papers",
+    "url": "https://ielts.org/take-a-test/preparation-resources/sample-test-questions",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "IELTS.org (British Council, IDP and Cambridge)",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "IELTS.org — official Academic sample test questions",
+    "url": "https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "IELTS.org (British Council, IDP and Cambridge)",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "IELTS.org — official General Training sample test questions",
+    "url": "https://ielts.org/take-a-test/preparation-resources/sample-test-questions/general-training-test",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "IELTS.org (British Council, IDP and Cambridge)",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "Cambridge English — official IELTS preparation and sample materials",
+    "url": "https://www.cambridgeenglish.org/exams-and-tests/ielts/preparation/",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "exam_format",
+      "listening",
+      "reading",
+      "writing"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "British Council LearnEnglish — free listening practice",
+    "url": "https://learnenglish.britishcouncil.org/free-resources/listening",
+    "category": "Self-study",
+    "skills": [
+      "listening"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "British Council",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "British Council LearnEnglish — free reading practice",
+    "url": "https://learnenglish.britishcouncil.org/free-resources/reading",
+    "category": "Self-study",
+    "skills": [
+      "reading"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "British Council",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "British Council LearnEnglish — free writing practice",
+    "url": "https://learnenglish.britishcouncil.org/free-resources/writing",
+    "category": "Self-study",
+    "skills": [
+      "writing"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "British Council",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "IELTS",
+    "title": "IELTS.org — official Writing band descriptors (PDF)",
+    "url": "https://ielts.org/cdn/ielts-downloadable-assets/ielts-guidance-and-support/ielts-guides/ielts-writing-band-descriptors.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "writing",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "IELTS.org (British Council, IDP and Cambridge)",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT test preparation hub",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/prepare.html",
+    "category": "Practice tests",
+    "skills": [
+      "exam_format",
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — TOEFL iBT test content and section format",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/about/content.html",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — about the TOEFL iBT test (overview and FAQs)",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/about.html",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT sample test (January 2026 edition)",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/prepare/sample-test-jan-2026-2.html",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official 40-minute TOEFL iBT sample test (all four sections)",
+    "url": "https://www.eu.ets.org/toefl/test-takers/ibt/prepare/sample-test.html",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT full-length practice test 1 (PDF)",
+    "url": "https://www.ets.org/pdfs/toefl/toefl-ibt-full-length-practice-test-1.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT full-length practice test 2 (PDF)",
+    "url": "https://www.ets.org/pdfs/toefl/toefl-ibt-full-length-practice-test-2.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT Speaking rubrics (PDF)",
+    "url": "https://www.ets.org/pdfs/toefl/toefl-ibt-speaking-rubrics.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "speaking",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT Writing rubrics (PDF)",
+    "url": "https://www.ets.org/pdfs/toefl/toefl-ibt-writing-rubrics.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "writing",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Prüfungstrainings hub (A1–C2)",
+    "url": "https://www.goethe.de/de/spr/prf/ueb.html",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — accessible (barrierefreie) official practice tests",
+    "url": "https://www.goethe.de/de/spr/prf/ueb/bpf.html",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat A1 practice training",
+    "url": "https://www.goethe.de/de/spr/prf/ueb/pa1.html",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat A2 practice training",
+    "url": "https://www.goethe.de/de/spr/prf/ueb/pa2.html",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat B1 practice training",
+    "url": "https://www.goethe.de/de/spr/prf/ueb/pb1.html",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat B2 practice training",
+    "url": "https://www.goethe.de/de/spr/prf/ueb/pb2.html",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat C1 practice training",
+    "url": "https://www.goethe.de/de/spr/prf/ueb/pc1.html",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat C2 practice training",
+    "url": "https://www.goethe.de/de/spr/prf/ueb/pc2.html",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TESTDAF",
+    "title": "TestDaF — official overview of the digital TestDaF",
+    "url": "https://www.testdaf.de/de/teilnehmende/der-digitale-testdaf-ueberblick/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "g.a.s.t. / TestDaF-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TESTDAF",
+    "title": "TestDaF — official structure of the digital test (all four sections)",
+    "url": "https://www.testdaf.de/de/teilnehmende/der-digitale-testdaf/aufbau-des-digitalen-testdaf/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "g.a.s.t. / TestDaF-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TESTDAF",
+    "title": "TestDaF — official preparation page for the digital test",
+    "url": "https://www.testdaf.de/de/teilnehmende/der-digitale-testdaf/vorbereitung-auf-den-digitalen-testdaf",
+    "category": "Practice tests",
+    "skills": [
+      "exam_format",
+      "mock_exam"
+    ],
+    "levels": [
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "g.a.s.t. / TestDaF-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TESTDAF",
+    "title": "TestDaF — official sample tasks for the digital test",
+    "url": "https://www.testdaf.de/de/teilnehmende/der-digitale-testdaf/vorbereitung-auf-den-digitalen-testdaf/beispielaufgaben-zum-digitalen-testdaf",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "g.a.s.t. / TestDaF-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TESTDAF",
+    "title": "TestDaF — official digital sample tasks, solutions and transcripts (PDF)",
+    "url": "https://www.testdaf.de/fileadmin/testdaf/downloads/Demo_Version_digitaler_TestDaF/Beispielaufgaben_Demo-Version_digitaler_TestDaF.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "g.a.s.t. / TestDaF-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TESTDAF",
+    "title": "TestDaF — official digital TestDaF information brochure (PDF)",
+    "url": "https://www.testdaf.de/fileadmin/testdaf/downloads/Broschueren/Digitaler-TestDaF-Broschuere-2022.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "g.a.s.t. / TestDaF-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TESTDAF",
+    "title": "TestDaF — official preparation page for the paper-based test",
+    "url": "https://www.testdaf.de/de/teilnehmende/der-papierbasierte-testdaf/vorbereitung-auf-den-papierbasierten-testdaf/",
+    "category": "Practice tests",
+    "skills": [
+      "exam_format",
+      "mock_exam"
+    ],
+    "levels": [
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "g.a.s.t. / TestDaF-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "TESTDAF",
+    "title": "TestDaF — official model tests for the paper-based exam",
+    "url": "https://www.testdaf.de/de/teilnehmende/der-papierbasierte-testdaf/vorbereitung-auf-den-papierbasierten-testdaf/modelltests/",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "g.a.s.t. / TestDaF-Institut",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE exam information and session dates",
+    "url": "https://cervantes.org/es/examenes/dele",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Los Ángeles — official DELE levels and exam information",
+    "url": "https://cervantes.org/us/los-angeles/es/aprender-ensenar/certificacion/dele",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Atenas — official DELE information (what the diploma certifies)",
+    "url": "https://atenas.cervantes.es/es/examenes_espanol/diplomas_espanol/informacion.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Atenas — official general DELE diplomas (A1–C2 format)",
+    "url": "https://atenas.cervantes.es/es/examenes_espanol/diplomas_espanol/diplomas_generales.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "A1",
+      "A2",
+      "B1",
+      "B2",
+      "C1",
+      "C2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Atenas — official DELE candidate guide",
+    "url": "https://atenas.cervantes.es/es/examenes_espanol/diplomas_espanol/guia_candidato.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Atenas — official DELE frequently asked questions",
+    "url": "https://atenas.cervantes.es/es/examenes_espanol/diplomas_espanol/dele_preguntas_frecuentes.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Atenas — official DELE school-level structure and levels",
+    "url": "https://atenas.cervantes.es/es/examenes_espanol/diplomas_espanol/estructura_contenido.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Zagreb — official DELE diplomas information",
+    "url": "https://zagreb.cervantes.es/es/dele_diplomas_espanol/dele_diplomas_espanol.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "CAMBRIDGE",
+    "title": "Cambridge English — B2 First exam overview",
+    "url": "https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "CAMBRIDGE",
+    "title": "Cambridge English — B2 First official exam format",
+    "url": "https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/format/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "CAMBRIDGE",
+    "title": "Cambridge English — B2 First official preparation and free sample tests",
+    "url": "https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking",
+      "grammar"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "CAMBRIDGE",
+    "title": "Cambridge English — official B2 First Handbook for Teachers (PDF, with sample papers)",
+    "url": "https://www.cambridgeenglish.org/images/167791-b2-first-handbook.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "CAMBRIDGE",
+    "title": "Cambridge English — C1 Advanced exam overview",
+    "url": "https://www.cambridgeenglish.org/exams-and-tests/qualifications/advanced/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "CAMBRIDGE",
+    "title": "Cambridge English — C1 Advanced official exam format",
+    "url": "https://www.cambridgeenglish.org/exams-and-tests/qualifications/advanced/format/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "CAMBRIDGE",
+    "title": "Cambridge English — C1 Advanced official preparation and free sample tests",
+    "url": "https://www.cambridgeenglish.org/exams-and-tests/qualifications/advanced/preparation/",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking",
+      "grammar"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "CAMBRIDGE",
+    "title": "Cambridge English — official C1 Advanced Handbook for Teachers (PDF, with sample papers)",
+    "url": "https://www.cambridgeenglish.org/Images/167804-c1-advanced-handbook.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Cambridge English",
+    "verified_at": "2026-11-20T18:24:52+02:00"
+  }
+]

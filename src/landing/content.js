@@ -34,6 +34,28 @@ export const SOURCES = [
       { name: 'DW', note: 'Learn German', url: 'https://learngerman.dw.com' },
       { name: 'VHS Lernportal', note: 'free self-study courses', url: 'https://www.vhs-lernportal.de' }
     ]
+  },
+  {
+    exam: 'TEF Canada',
+    language: 'French',
+    orgs: [
+      { name: 'CCI Paris / Le français des affaires', note: 'the body that runs TEF Canada', url: 'https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/presentation/' },
+      { name: 'IRCC', note: 'Express Entry language-test rules', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html' }
+    ]
+  },
+  {
+    exam: 'TOEFL',
+    language: 'English',
+    orgs: [
+      { name: 'ETS', note: 'the body that runs the TOEFL iBT', url: 'https://www.ets.org/toefl/test-takers/ibt/about/content.html' }
+    ]
+  },
+  {
+    exam: 'DELE',
+    language: 'Spanish',
+    orgs: [
+      { name: 'Instituto Cervantes', note: 'the body that awards the DELE diplomas', url: 'https://cervantes.org/es/examenes/dele' }
+    ]
   }
 ];
 
@@ -48,14 +70,14 @@ export const FAQ = [
   },
   {
     q: 'Which exams are covered?',
-    a: 'Right now: TCF (French), IELTS (English) and the Goethe-Zertifikat exams (German), for levels A2 to C1. More exams will come once we have good official material to point to.'
+    a: 'Right now: TEF Canada and TCF (French), IELTS and TOEFL (English), the Goethe-Zertifikat exams (German), and DELE (Spanish), for levels A1 to C2. TCF is offered as TCF tout public or TCF Canada. More exams will come once we have good official material to point to.'
   },
   {
     q: 'Do you host or copy exam papers?',
     a: 'No. We link to pages that the exam bodies and public broadcasters already publish for free, and we check those links regularly. We never re-upload their material.'
   },
   {
-    q: 'Are you affiliated with France Éducation international, IELTS or the Goethe-Institut?',
+    q: 'Are you affiliated with CCI Paris, France Éducation international, ETS, Instituto Cervantes, IELTS or the Goethe-Institut?',
     a: 'No. OpenExam Hub is an independent project. We are not affiliated with, endorsed by or sponsored by any exam body or publisher we link to.'
   },
   {

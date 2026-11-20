@@ -8,7 +8,7 @@ OpenExam Hub turns the free material that exam boards and public broadcasters al
 
 No account is required. Sign in only if you want your plans to sync across devices.
 
-The planner currently covers **TCF**, **IELTS** and **Goethe-Zertifikat** (levels A2–C1). More official-source exams are planned.
+The planner currently covers **TEF Canada**, **TCF** (tout public and TCF Canada), **IELTS**, **TOEFL** iBT, **Goethe-Zertifikat** and **DELE** (levels A1–C2). More official-source exams are planned.
 
 ## Screenshots
 
@@ -25,10 +25,10 @@ The planner currently covers **TCF**, **IELTS** and **Goethe-Zertifikat** (level
 - **Placement self-check** (unofficial) and extra practice when you want a short diagnostic before you plan.
 - **Progress coach** that can adjust the remaining days of a plan.
 - **Guest by default.** Anonymous use is enough to build and download a plan as Markdown or JSON.
-- **Funding transparency.** Donations and the ad-sunset threshold are shown on the site. A small number of ads may appear on the planner (never on the public landing page) until that goal is met; then ads switch off for everyone.
+- **Funding transparency.** Free forever, funded openly by donations and a few dashboard ads (ads are not live yet). All income is published on the Transparency page. Ads come off once the next 5 years of running costs are covered.
 - **Open source (MIT).**
 
-This is a study aid. It is not affiliated with France Éducation international, IELTS or the Goethe-Institut, and it is not an official placement test.
+This is a study aid. It is not affiliated with CCI Paris / Le français des affaires, IRCC, France Éducation international, IELTS, ETS, the Goethe-Institut or Instituto Cervantes, and it is not an official placement test.
 
 ## Tech stack
 

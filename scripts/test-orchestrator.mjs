@@ -153,7 +153,7 @@ await test('rejects bad inputs with InputError', () => {
 });
 await test('normalises good input', () => {
   const v = validateInput({ exam: ' tcf ', level: 'b2', days: '30', diagnostic: { skillScores: { speaking: 0.2 } } });
-  assert.deepEqual(v, { exam: 'TCF', knownExam: true, level: 'B2', days: 30, forceRefresh: false, skillScores: { speaking: 0.2 } });
+  assert.deepEqual(v, { exam: 'TCF', knownExam: true, level: 'B2', days: 30, forceRefresh: false, skillScores: { speaking: 0.2 }, variant: 'tout_public' });
 });
 
 console.log('planner repair');

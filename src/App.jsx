@@ -23,7 +23,6 @@ import {
   Zap,
   Globe,
   Award,
-  Sliders,
   RefreshCw,
   Layers,
   EyeOff,
@@ -71,6 +70,8 @@ import {
 } from 'firebase/firestore';
 import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { DONATION_LINKS } from './donations.js';
+import { FIVE_YEAR_GOAL_EUR, FUNDING_PROMISE } from './funding.js';
+import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant } from '../lib/exams.js';
 import StudyToday from './StudyToday.jsx';
 import ReviewDeck, { SaveToDeckButton, cardFromPractice, cardIdFor } from './ReviewDeck.jsx';
 import { dueQueue, retention as srsRetention } from '../lib/algo/srs.js';
@@ -111,7 +112,14 @@ const OFFICIAL_DOMAIN_ALLOWLIST = [
   'goethe.de',
   'dw.com',
   'vhs-lernportal.de',
-  'europa.eu'
+  'europa.eu',
+  'lefrancaisdesaffaires.fr',
+  'canada.ca',
+  'ets.org',
+  'cervantes.es',
+  'cervantes.org',
+  'testdaf.de',
+  'ambafrance-ca.org'
 ];
 
 /**
@@ -313,8 +321,8 @@ const FALLBACK_ROADMAPS = {
       }
     ]
   },
-  Goethe: {
-    exam: 'Goethe',
+  GOETHE: {
+    exam: 'GOETHE',
     level: 'B1',
     days: 30,
     summary:
@@ -368,66 +376,185 @@ const FALLBACK_ROADMAPS = {
         ]
       }
     ]
+  },
+  TEF_CANADA: {
+    exam: 'TEF_CANADA',
+    level: 'B2',
+    days: 30,
+    summary:
+      'A 30-day TEF Canada plan built from official CCI Paris / Le français des affaires presentation, preparation and sample papers, plus IRCC’s page on approved language tests. The four compulsory immigration papers are Compréhension écrite, Compréhension orale, Expression écrite and Expression orale.',
+    verifiedResources: [
+      {
+        title: 'TEF Canada — official exam overview and format (CCI Paris / Le français des affaires)',
+        url: 'https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/presentation/',
+        license: 'Official exam-board page (free public access)',
+        category: 'Official exam info'
+      },
+      {
+        title: 'Préparer le TEF Canada — official preparation hub (all four sections)',
+        url: 'https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/preparation/',
+        license: 'Official exam-board page (free public access)',
+        category: 'Practice tests'
+      },
+      {
+        title: 'IRCC — language tests for Express Entry',
+        url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html',
+        license: 'Government of Canada page (free public access)',
+        category: 'Official exam info'
+      }
+    ],
+    phases: [
+      {
+        phaseTitle: 'Days 1–10: Format and official samples',
+        focus: 'Learn the four compulsory papers and work through the official sample tasks',
+        tasks: [
+          'Read the official TEF Canada presentation so you know the timing and task types for each paper.',
+          'Work through the official sample papers for Compréhension écrite and Compréhension orale (PDF and audio on the exam-board site).',
+          'Read IRCC’s language-test page and the official TEF–NCLC correspondence table so you know how scores are reported.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 11–20: Writing and speaking tasks',
+        focus: 'Official Expression écrite (fait divers + argumentation) and Expression orale',
+        tasks: [
+          'Practise official Expression écrite section A (continue a short article, 80 words minimum, 25 minutes) and section B (justify a point of view, 200 words minimum, 35 minutes) using the exam-board sample and prep articles.',
+          'Practise official Expression orale section A (obtain information, 5 minutes) and section B (argue to convince, 10 minutes) with the official sample tasks.',
+          'Revisit any paper whose official sample felt hardest, still using only the exam-board materials.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 21–30: Timed run-through and rest',
+        focus: 'Sit the official samples under the published timings',
+        tasks: [
+          'Sit the official listening and reading samples under the published timings (40 and 60 minutes).',
+          'Repeat one timed writing paper and one timed speaking practice from the official tasks.',
+          'Light review of the official format page, then rest the day before the exam.'
+        ]
+      }
+    ]
+  },
+  TOEFL: {
+    exam: 'TOEFL',
+    level: 'B2',
+    days: 30,
+    summary:
+      'A 30-day TOEFL iBT plan built from official ETS pages for the test updated on 21 January 2026: the section overview, the official preparation page and ETS sample tests. The four sections are Reading, Listening, Writing and Speaking.',
+    verifiedResources: [
+      {
+        title: 'ETS — TOEFL iBT test content (official overview)',
+        url: 'https://www.ets.org/toefl/test-takers/ibt/about/content.html',
+        license: 'Official exam-board page (free public access)',
+        category: 'Official exam info'
+      },
+      {
+        title: 'ETS — prepare for the TOEFL iBT test',
+        url: 'https://www.ets.org/toefl/test-takers/ibt/prepare.html',
+        license: 'Official exam-board page (free public access)',
+        category: 'Practice tests'
+      },
+      {
+        title: 'ETS — TOEFL iBT full-length official practice test 1 (PDF)',
+        url: 'https://www.ets.org/pdfs/toefl/toefl-ibt-full-length-practice-test-1.pdf',
+        license: 'Official exam-board sample (free public access)',
+        category: 'Full Practice Tests'
+      }
+    ],
+    phases: [
+      {
+        phaseTitle: 'Days 1–10: Know the 2026 format',
+        focus: 'Official section order, task types and timings',
+        tasks: [
+          'Read the official ETS content and 2026 overview pages (Reading and Listening are adaptive; Writing and Speaking are linear).',
+          'Skim the official speaking and writing rubrics published by ETS.',
+          'Start the official preparation page activities for Reading and Listening.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 11–20: Official samples by section',
+        focus: 'ETS sample items for each section',
+        tasks: [
+          'Work through official ETS sample tasks for Writing (Build a Sentence, Write an Email, Write for an Academic Discussion).',
+          'Work through official ETS sample tasks for Speaking (Listen and Repeat, Take an Interview).',
+          'Continue official Reading and Listening practice on the ETS prepare and sample-test pages.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 21–30: Official practice tests',
+        focus: 'Sit ETS full-length official practice tests',
+        tasks: [
+          'Sit official ETS practice test 1 under exam conditions.',
+          'Review missed items, then sit official ETS practice test 2 if you have time.',
+          'Light review of the official format page, then rest the day before the exam.'
+        ]
+      }
+    ]
+  },
+  DELE: {
+    exam: 'DELE',
+    level: 'B2',
+    days: 30,
+    summary:
+      'A 30-day DELE plan built from official Instituto Cervantes pages: the diploma overview, the exam structure, and the candidate guide. Each CEFR level from A1 to C2 is a separate exam.',
+    verifiedResources: [
+      {
+        title: 'Instituto Cervantes — Diplomas DELE (official overview)',
+        url: 'https://cervantes.org/es/examenes/dele',
+        license: 'Official exam-board page (free public access)',
+        category: 'Official exam info'
+      },
+      {
+        title: 'Instituto Cervantes — DELE exam structure and content',
+        url: 'https://atenas.cervantes.es/es/examenes_espanol/diplomas_espanol/estructura_contenido.htm',
+        license: 'Official exam-board page (free public access)',
+        category: 'Official exam info'
+      },
+      {
+        title: 'Instituto Cervantes — DELE candidate guide',
+        url: 'https://atenas.cervantes.es/es/examenes_espanol/diplomas_espanol/guia_candidato.htm',
+        license: 'Official exam-board page (free public access)',
+        category: 'Official exam info'
+      }
+    ],
+    phases: [
+      {
+        phaseTitle: 'Days 1–10: Format for your level',
+        focus: 'Official papers, timings and candidate guide',
+        tasks: [
+          'Read the official Cervantes overview and the structure page for your diploma level (A1–C1 have four papers; C2 has three tests).',
+          'Read the official candidate guide for registration and exam-day rules.',
+          'List the official papers you must sit and their published timings.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 11–20: Official practice by paper',
+        focus: 'Reading, listening, writing and speaking as described by Cervantes',
+        tasks: [
+          'Practise reading and listening with official Cervantes materials or sample papers for your level, when they are available on an official page.',
+          'Practise official writing task types described in the structure page for your level.',
+          'Practise official speaking task types, including the published preparation time before the interview.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 21–30: Timed papers and rest',
+        focus: 'Sit official tasks under the published timings',
+        tasks: [
+          'Sit one official reading paper and one official listening paper under the published timings for your level.',
+          'Repeat one timed official writing paper and one speaking practice.',
+          'Light review of the official structure page, then rest the day before the exam.'
+        ]
+      }
+    ]
   }
 };
 
 // Shown only while the visitor has no plan of their own. Read-only: ticks are not recorded.
 const SAMPLE_ROADMAP = {
-  ...FALLBACK_ROADMAPS.TCF,
-  id: 'sample-TCF-B2-30',
+  ...FALLBACK_ROADMAPS.TEF_CANADA,
+  id: 'sample-TEF_CANADA-B2-30',
   sample: true,
   createdAt: new Date().toISOString().slice(0, 10),
   completedTasks: {}
 };
-
-// ============================================================================
-// TREASURY & 3-YEAR ROADMAP CONSTANTS
-// ============================================================================
-const MONTHLY_TARGET = 350.83;
-const ESTIMATED_QUERY_COST_EUR = 0.15;
-
-const THREE_YEAR_TREASURY = [
-  {
-    category: '1. Scaled AI API Compute',
-    annual: '€18,000',
-    threeYear: '€54,000',
-    percent: 27,
-    details:
-      'Frontier reasoning models handling millions of multi-agent exam queries, copyright audits, and PDF extractions as user volume scales.'
-  },
-  {
-    category: '2. Full-Time Maintainer Runway',
-    annual: '€36,000',
-    threeYear: '€108,000',
-    percent: 54,
-    details:
-      'Dedicated maintainer salary (€3,000/mo) eliminating delivery burnout so the creator can code, audit links, and maintain infrastructure full-time.'
-  },
-  {
-    category: '3. Infrastructure & Edge Scaling',
-    annual: '€2,400',
-    threeYear: '€7,200',
-    percent: 3.6,
-    details:
-      'Database tiers, edge bandwidth, global CDN, automated link-checker cron workers, and multi-domain SSL security.'
-  },
-  {
-    category: '4. Open-Source Bounties',
-    annual: '€5,000',
-    threeYear: '€15,000',
-    percent: 7.5,
-    details:
-      'Direct bounties paid to community developers who contribute verified scrapers for additional certifications (DELE, JLPT, TestDaF, CELPIP).'
-  },
-  {
-    category: '5. Treasury Safety Buffer',
-    annual: '—',
-    threeYear: '€15,800',
-    percent: 7.9,
-    details:
-      'Emergency reserve protecting free public access against sudden API token rate spikes or traffic surges.'
-  }
-];
 
 // ============================================================================
 // DESIGN SYSTEM: neutral surfaces + warm orange accent (defined once, reused)
@@ -483,10 +610,12 @@ const OE_GLOBAL_CSS = `
 `;
 
 const LEVEL_OPTIONS = [
+  { value: 'A1', hint: 'Beginner' },
   { value: 'A2', hint: 'Elementary' },
-  { value: 'B1', hint: 'Intermediate · residency & citizenship' },
-  { value: 'B2', hint: 'Upper intermediate · university & work' },
-  { value: 'C1', hint: 'Advanced proficiency' }
+  { value: 'B1', hint: 'Intermediate' },
+  { value: 'B2', hint: 'Upper intermediate' },
+  { value: 'C1', hint: 'Advanced' },
+  { value: 'C2', hint: 'Mastery' }
 ];
 const DAY_OPTIONS = [
   { value: 14, hint: 'Sprint' },
@@ -608,9 +737,11 @@ export default function App() {
   const [authFeedback, setAuthFeedback] = useState(null);
 
   // Multi-Agent Generator Inputs
-  const [selectedExam, setSelectedExam] = useState('TCF');
+  const [selectedExam, setSelectedExam] = useState(DEFAULT_PICKER_EXAM);
+  const [selectedTcfVariant, setSelectedTcfVariant] = useState('tout_public');
   const [selectedLevel, setSelectedLevel] = useState('B2');
   const [daysUntilExam, setDaysUntilExam] = useState(30);
+  const [publicStats, setPublicStats] = useState(null);
 
   // Agent Pipeline & 2-Layer Cache Metrics State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -641,11 +772,9 @@ export default function App() {
   });
   const [ledgerLoaded, setLedgerLoaded] = useState(false);
   const [ledgerEvents, setLedgerEvents] = useState([]);
-  // Local-only what-if value for the simulator. Never written anywhere.
-  const [simulatedTotal, setSimulatedTotal] = useState(150);
 
-  // Computed Patronage Totals & Ad-Sunset Kill-Switch
-  const totalPatronage = useMemo(() => {
+  // Real donation + ad totals from the server-written ledger only.
+  const totalDonations = useMemo(() => {
     if (fundingSources.communityTotalEur != null) {
       return Number(Number(fundingSources.communityTotalEur).toFixed(2));
     }
@@ -658,18 +787,20 @@ export default function App() {
       ).toFixed(2)
     );
   }, [fundingSources]);
-
+  const totalAdIncome = useMemo(
+    () => Number((Number(fundingSources.adsenseBridge) || 0).toFixed(2)),
+    [fundingSources]
+  );
+  const totalFunding = useMemo(
+    () => Number((totalDonations + totalAdIncome).toFixed(2)),
+    [totalDonations, totalAdIncome]
+  );
+  const hasFundingData = ledgerLoaded && (totalFunding > 0 || ledgerEvents.length > 0);
   const fundingPercentage = useMemo(() => {
-    return Math.min(100, Math.round((totalPatronage / MONTHLY_TARGET) * 100));
-  }, [totalPatronage]);
-
-  // PROGRAMMATIC AD-SUNSET KILL-SWITCH: Turns ads off site-wide when patronage >= €350.83
-  const adsDisabledForever = ledgerLoaded && totalPatronage >= MONTHLY_TARGET;
-  const simulatedAdsOff = simulatedTotal >= MONTHLY_TARGET;
-
-  const estimatedTotalSavedEur = useMemo(() => {
-    return (cacheHitsCount * ESTIMATED_QUERY_COST_EUR).toFixed(2);
-  }, [cacheHitsCount]);
+    if (!ledgerLoaded || FIVE_YEAR_GOAL_EUR == null || !(FIVE_YEAR_GOAL_EUR > 0)) return null;
+    return Math.min(100, Math.round((totalFunding / FIVE_YEAR_GOAL_EUR) * 100));
+  }, [ledgerLoaded, totalFunding]);
+  const adsOffAtGoal = ledgerLoaded && FIVE_YEAR_GOAL_EUR != null && FIVE_YEAR_GOAL_EUR > 0 && totalFunding >= FIVE_YEAR_GOAL_EUR;
 
   const activeRoadmap = useMemo(() => {
     return (
@@ -860,11 +991,27 @@ export default function App() {
     setCacheHitsCount((c) => c + 1);
   };
 
+  useEffect(() => {
+    if (!SERVER_ENABLED) return;
+    let cancelled = false;
+    apiGet('/api/stats')
+      .then((out) => {
+        if (!cancelled) setPublicStats(out.stats || null);
+      })
+      .catch(() => {
+        if (!cancelled) setPublicStats(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // ==========================================================================
   // 3. 2-LAYER TOKEN-COST DEFENSE + 4-STAGE MULTI-AGENT GENERATOR
   // ==========================================================================
+  const examVariant = selectedExam === 'TCF' ? normalizeVariant('TCF', selectedTcfVariant) : null;
   const handleGenerateStudyPath = async (forceRefresh = false) => {
-    const cacheKey = `${selectedExam}-${selectedLevel}-${daysUntilExam}`;
+    const cacheKey = `${selectedExam}${examVariant && examVariant !== defaultVariant(selectedExam) ? `-${examVariant.toUpperCase()}` : ''}-${selectedLevel}-${daysUntilExam}`;
     setStatusNotice(null);
 
     // LAYER 1 DEFENSE: Check user's personal saved roadmaps first (€0.00 cost)
@@ -890,7 +1037,8 @@ export default function App() {
           exam: selectedExam.toUpperCase(),
           level: selectedLevel,
           days: String(Number(daysUntilExam)),
-          ...(profile ? { profile } : {})
+          ...(profile ? { profile } : {}),
+          ...(examVariant ? { variant: examVariant } : {})
         });
         const { roadmap } = await apiGet(`/api/plan?${qs}`);
         if (roadmap && Array.isArray(roadmap.phases)) {
@@ -970,6 +1118,7 @@ export default function App() {
           level: selectedLevel,
           days: Number(daysUntilExam),
           forceRefresh,
+          ...(examVariant ? { variant: examVariant } : {}),
           diagnostic: diagnosticResult
             ? { skillScores: diagnosticResult.skillScores }
             : undefined
@@ -1133,7 +1282,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
   };
 
   const loadFallbackRoadmap = async (cacheKey, notice) => {
-    const baseFallback = FALLBACK_ROADMAPS[selectedExam] || FALLBACK_ROADMAPS.TCF;
+    const baseFallback = FALLBACK_ROADMAPS[selectedExam.toUpperCase()] || FALLBACK_ROADMAPS.TEF_CANADA;
     const fallbackRoadmap = {
       ...baseFallback,
       id: cacheKey,
@@ -1404,7 +1553,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
     else toggleTaskCompletion(nextTask.pIdx, nextTask.tIdx);
   };
 
-  const isSupportTab = activeTab === 'treasury' || activeTab === 'roadmap3yr';
+  const isSupportTab = activeTab === 'treasury';
   const showAside = activeTab === 'generator' || isSupportTab;
   const greetingName =
     firebaseUser && !firebaseUser.isAnonymous && firebaseUser.displayName
@@ -1436,13 +1585,24 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
           <span className="inline-flex items-center gap-2 min-w-0">
             <StatusDot tone="green" />
             <span className="truncate">
-              Free for everyone · Community pool{' '}
-              <strong className="text-white font-semibold">€{totalPatronage.toFixed(2)}</strong> / €
-              {MONTHLY_TARGET.toFixed(2)} ({fundingPercentage}%)
+              Free forever · funded openly
+              {ledgerLoaded && hasFundingData ? (
+                <>
+                  {' '}·{' '}
+                  <strong className="text-white font-semibold">€{totalFunding.toFixed(2)}</strong>
+                  {FIVE_YEAR_GOAL_EUR != null ? (
+                    <> toward the 5-year goal{fundingPercentage != null ? ` (${fundingPercentage}%)` : ''}</>
+                  ) : (
+                    <> recorded</>
+                  )}
+                </>
+              ) : (
+                <> · 5-year goal amount coming soon</>
+              )}
             </span>
           </span>
           <span className="inline-flex items-center gap-3 whitespace-nowrap">
-            <span className="text-neutral-400">Free forever · earnings shown publicly</span>
+            <span className="text-neutral-400">Donations and ads published here</span>
             <a href="/" className="text-white font-semibold hover:text-orange-200 transition">About this project →</a>
           </span>
         </div>
@@ -1590,7 +1750,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                 {[
                   { label: 'Saved plans', value: savedRoadmaps.length, sub: 'in your profile' },
                   { label: 'Cache hits', value: cacheHitsCount, sub: 'this session' },
-                  { label: 'Ad-free goal', value: ledgerLoaded ? `${fundingPercentage}%` : '—', sub: ledgerLoaded ? 'funded' : 'loading' }
+                  { label: 'Funding', value: !ledgerLoaded ? '—' : hasFundingData ? `€${totalFunding.toFixed(2)}` : '€0', sub: !ledgerLoaded ? 'loading' : FIVE_YEAR_GOAL_EUR != null && fundingPercentage != null ? `${fundingPercentage}% of 5-year goal` : 'goal coming soon' }
                 ].map((st) => (
                   <div key={st.label} className="rounded-2xl bg-white/95 text-neutral-950 p-3 sm:p-4 shadow-[0_8px_24px_-14px_rgba(0,0,0,0.35)]">
                     <dt className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500 leading-tight">{st.label}</dt>
@@ -1606,41 +1766,25 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
           {/* PRIMARY COLUMN */}
           <div className={`${showAside ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-5 sm:space-y-6 min-w-0`}>
-            {/* SUPPORT AREA SWITCHER (ledger, 3-year plan, donate) */}
+            {/* SUPPORT AREA: transparency heading */}
             {isSupportTab && (
               <section className={`${THEME.card} p-5 sm:p-6`}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <p className={THEME.label}>Support</p>
-                    <h1 className="text-xl sm:text-2xl font-bold mt-1">Keep OpenExam Hub free</h1>
-                    <p className="text-sm text-neutral-500 mt-1">See where every euro goes, and chip in if you can.</p>
+                    <p className={THEME.label}>Transparency</p>
+                    <h1 className="text-xl sm:text-2xl font-bold mt-1">How OpenExam Hub is funded</h1>
+                    <p className="text-sm text-neutral-500 mt-1">{FUNDING_PROMISE}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowContributeModal(true)}
-                    className={`${THEME.primaryBtn} w-full md:w-auto min-h-[48px] px-5 text-sm`}
+                    className={`${THEME.primaryBtn} w-full md:w-auto shrink-0 whitespace-nowrap min-h-[48px] px-5 text-sm`}
                   >
                     <Heart className="w-4 h-4" aria-hidden="true" />
                     Back the pool
                   </button>
                 </div>
-                <div className={`${THEME.segWrap} mt-4`} role="tablist" aria-label="Support sections">
-                  {[
-                    { id: 'treasury', label: 'Open ledger' },
-                    { id: 'roadmap3yr', label: '3-year plan' }
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={activeTab === t.id}
-                      onClick={() => setActiveTab(t.id)}
-                      className={THEME.seg(activeTab === t.id)}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
+
               </section>
             )}
 
@@ -1671,33 +1815,72 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       <legend className="text-sm font-semibold text-neutral-900 mb-2">
                         <span className="text-[#C2410C] mr-1.5">1</span>Which exam?
                       </legend>
-                      <div className={THEME.segWrap}>
-                        {['TCF', 'IELTS', 'Goethe'].map((exam) => (
+                      <div className="flex flex-wrap gap-2">
+                        {PICKER_EXAMS.map((exam) => (
                           <button
-                            key={exam}
+                            key={exam.id}
                             type="button"
-                            aria-pressed={selectedExam === exam}
-                            onClick={() => setSelectedExam(exam)}
-                            className={THEME.seg(selectedExam === exam)}
+                            aria-pressed={selectedExam === exam.id}
+                            onClick={() => setSelectedExam(exam.id)}
+                            className={`min-h-[44px] px-3 sm:px-4 rounded-full text-sm font-semibold border transition ${
+                              selectedExam === exam.id
+                                ? 'bg-[#111111] text-white border-[#111111]'
+                                : 'bg-white border-black/10 text-neutral-700 hover:bg-neutral-50'
+                            }`}
                           >
-                            {exam}
+                            {exam.label}
                           </button>
                         ))}
                       </div>
+                      {pickerExam(selectedExam)?.variants && (
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold text-neutral-700 mb-2">Which TCF will you sit?</p>
+                          <div className="flex flex-wrap gap-2">
+                            {pickerExam(selectedExam).variants.map((v) => (
+                              <button
+                                key={v.id}
+                                type="button"
+                                aria-pressed={selectedTcfVariant === v.id}
+                                onClick={() => setSelectedTcfVariant(v.id)}
+                                className={`min-h-[44px] px-3 sm:px-4 rounded-full text-sm font-semibold border transition ${
+                                  selectedTcfVariant === v.id
+                                    ? 'bg-[#111111] text-white border-[#111111]'
+                                    : 'bg-white border-black/10 text-neutral-700 hover:bg-neutral-50'
+                                }`}
+                              >
+                                {v.label}
+                                <span className={`ml-1.5 text-[11px] font-medium ${selectedTcfVariant === v.id ? 'text-neutral-300' : 'text-neutral-500'}`}>
+                                  {v.short}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                          <p className="mt-2 text-xs text-neutral-500 leading-relaxed">
+                            {pickerExam(selectedExam).variants.find((v) => v.id === selectedTcfVariant)?.note || pickerExam(selectedExam).note}
+                          </p>
+                        </div>
+                      )}
+                      {pickerExam(selectedExam)?.note && !pickerExam(selectedExam)?.variants && (
+                        <p className="mt-2 text-xs text-neutral-500 leading-relaxed">{pickerExam(selectedExam).note}</p>
+                      )}
                     </fieldset>
 
                     <fieldset>
                       <legend className="text-sm font-semibold text-neutral-900 mb-2">
                         <span className="text-[#C2410C] mr-1.5">2</span>Target level
                       </legend>
-                      <div className={THEME.segWrap}>
+                      <div className="flex flex-wrap gap-2">
                         {LEVEL_OPTIONS.map((lv) => (
                           <button
                             key={lv.value}
                             type="button"
                             aria-pressed={selectedLevel === lv.value}
                             onClick={() => setSelectedLevel(lv.value)}
-                            className={THEME.seg(selectedLevel === lv.value)}
+                            className={`min-h-[44px] min-w-[44px] px-3 rounded-full text-sm font-semibold border transition ${
+                              selectedLevel === lv.value
+                                ? 'bg-[#111111] text-white border-[#111111]'
+                                : 'bg-white border-black/10 text-neutral-700 hover:bg-neutral-50'
+                            }`}
                           >
                             {lv.value}
                           </button>
@@ -1911,7 +2094,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                             </span>
                           )}
                           <span className="px-3 py-1 rounded-full bg-[#111111] text-white font-bold text-xs">
-                            {activeRoadmap.exam} · {activeRoadmap.level}
+                            {examLabel(activeRoadmap.exam)} · {activeRoadmap.level}
                           </span>
                           <span className={THEME.chip}>
                             <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1944,7 +2127,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                         <ProgressRing pct={roadmapProgress.pct} size={76} />
                         <div className="min-w-0">
                           <h2 id="oe-plan-title" className="text-xl sm:text-2xl font-bold leading-tight">
-                            {activeRoadmap.sample ? `Sample ${activeRoadmap.exam} plan` : `Your ${activeRoadmap.exam} plan`}
+                            {activeRoadmap.sample
+                              ? `Sample ${examLabel(activeRoadmap.exam)} plan`
+                              : `Your ${examLabel(activeRoadmap.exam)} plan`}
                           </h2>
                           <p className="text-sm text-neutral-500 mt-1">
                             {roadmapProgress.done} of {roadmapProgress.total} tasks done
@@ -2193,11 +2378,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   </div>
                   <div className="min-h-[44px] px-3.5 py-2 rounded-xl bg-orange-50 border border-orange-200 text-right">
                     <div className="text-xs font-bold text-neutral-900">
-                      €{estimatedTotalSavedEur} Saved
+                      {cacheHitsCount} cache hit{cacheHitsCount === 1 ? '' : 's'}
                     </div>
-                    <div className="text-[11px] text-orange-700">
-                      {cacheHitsCount} cache hits this session
-                    </div>
+                    <div className="text-[11px] text-orange-700">this session</div>
                   </div>
                 </div>
 
@@ -2293,172 +2476,131 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             )}
 
             {/* ==============================================================
-                TAB 3: PUBLIC FINANCIAL LEDGER & AD-SUNSET SIMULATOR
+                TAB 3: TRANSPARENCY — real ledger only, no invented totals
             ============================================================== */}
             {activeTab === 'treasury' && (
               <div className="space-y-6">
                 <section className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-7 space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-black/5">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 border-b border-black/5">
                     <div>
-                      <h2 className="text-xl font-bold text-neutral-900">
-                        Radical Transparency Ledger & Ad-Sunset Engine
-                      </h2>
-                      <p className="text-sm text-neutral-600 mt-0.5">
-                        100% open-book accounting. When community patronage reaches{' '}
-                        <strong>€350.83/month</strong>, Google AdSense disables automatically site-wide.
-                      </p>
+                      <h2 className="text-xl font-bold text-neutral-900">Transparency</h2>
+                      <p className="text-sm text-neutral-600 mt-1 max-w-2xl">{FUNDING_PROMISE}</p>
                     </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                        adsDisabledForever
-                          ? 'bg-orange-50 text-orange-700 border-orange-200'
-                          : 'bg-amber-50 text-amber-800 border-amber-300'
-                      }`}
-                    >
-                      {adsDisabledForever
-                        ? '100% Funded — Ads Killed'
-                        : `${fundingPercentage}% to Ad-Sunset`}
+                    <span className="px-3 py-1 rounded-full text-xs font-bold border bg-amber-50 text-amber-800 border-amber-300 shrink-0">
+                      Ads not live yet
                     </span>
                   </div>
 
-                  {/* Ad-Sunset What-If Simulator (local only, never touches the real ledger) */}
-                  <div className="p-5 sm:p-6 rounded-3xl bg-[#111111] text-white">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
-                        <Sliders className="w-4 h-4" />
-                        What-If Simulator
-                      </span>
-                      <span className="text-xs font-mono text-neutral-300">
-                        Threshold: €{MONTHLY_TARGET.toFixed(2)}/mo
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-300 mb-4">
-                      Drag to see how the kill-switch behaves. This is a local simulation only and does not change the real ledger or the ads anyone sees.
-                    </p>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-xs">
-                        <span>Simulated monthly backing:</span>
-                        <span className="font-bold text-orange-300 text-sm">
-                          €{simulatedTotal.toFixed(2)} / €{MONTHLY_TARGET.toFixed(2)}
-                        </span>
+                  <div>
+                    <div className="flex items-end justify-between gap-3 mb-2">
+                      <div>
+                        <p className={THEME.label}>Progress toward 5 years of running costs</p>
+                        {ledgerLoaded && hasFundingData ? (
+                          <p className="mt-2 text-2xl font-bold">
+                            €{totalFunding.toFixed(2)}
+                            {FIVE_YEAR_GOAL_EUR != null ? (
+                              <span className="text-sm font-medium text-neutral-500"> / €{Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB')} goal</span>
+                            ) : (
+                              <span className="text-sm font-medium text-neutral-500"> recorded so far</span>
+                            )}
+                          </p>
+                        ) : (
+                          <p className="mt-2 text-2xl font-bold text-neutral-900">No income recorded yet</p>
+                        )}
                       </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="400"
-                        step="5"
-                        value={simulatedTotal}
-                        onChange={(e) => setSimulatedTotal(Number(e.target.value))}
-                        className="w-full accent-orange-500 cursor-pointer"
-                      />
-                      <p className="text-xs font-semibold">
-                        {simulatedAdsOff
-                          ? 'At this level, ads would switch off site-wide.'
-                          : `Ads would stay on: €${(MONTHLY_TARGET - simulatedTotal).toFixed(2)} short of the threshold.`}
+                      <p className="text-sm font-semibold text-neutral-600">
+                        {FIVE_YEAR_GOAL_EUR == null
+                          ? 'Goal amount coming soon'
+                          : fundingPercentage != null
+                            ? `${fundingPercentage}%`
+                            : '—'}
                       </p>
-                      <div className="text-[11px] text-neutral-400">
-                        Real backing right now: €{totalPatronage.toFixed(2)}
-                      </div>
+                    </div>
+                    <div
+                      className="h-2.5 rounded-full bg-[#F4F4F2] overflow-hidden"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={fundingPercentage ?? 0}
+                      aria-label="Progress toward the 5-year funding goal"
+                    >
+                      <div
+                        className="h-full rounded-full bg-[#FF6B1A] transition-all duration-500"
+                        style={{ width: `${FIVE_YEAR_GOAL_EUR != null && fundingPercentage != null ? fundingPercentage : 0}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-neutral-500">
+                      {adsOffAtGoal
+                        ? 'The 5-year goal is covered, so ads stay off.'
+                        : FIVE_YEAR_GOAL_EUR == null
+                          ? 'The euro amount for that 5-year goal has not been set yet, so this bar stays empty rather than showing a made-up target.'
+                          : 'Ads come off once this goal is reached. Figures here come only from the public donation ledger (and ad income, when any is recorded).'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="rounded-xl border border-black/[0.08] p-4">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-3">Donations</h3>
+                      {!ledgerLoaded ? (
+                        <p className="text-sm text-neutral-500">Loading the ledger…</p>
+                      ) : !hasFundingData && totalDonations === 0 ? (
+                        <p className="text-sm text-neutral-500">No donations recorded yet.</p>
+                      ) : (
+                        <div className="space-y-2.5 text-sm">
+                          <div className="flex justify-between py-1.5 border-b border-black/5">
+                            <span className="text-neutral-700">GitHub Sponsors</span>
+                            <span className="font-bold">€{(fundingSources.githubSponsors + fundingSources.githubOneTime).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between py-1.5 border-b border-black/5">
+                            <span className="text-neutral-700">Open Collective</span>
+                            <span className="font-bold">€{fundingSources.openCollective.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between py-1.5">
+                            <span className="text-neutral-700">Ko-fi</span>
+                            <span className="font-bold">€{fundingSources.koFiTips.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="rounded-xl border border-black/[0.08] p-4">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-3">Dashboard ads</h3>
+                      {!ledgerLoaded ? (
+                        <p className="text-sm text-neutral-500">Loading the ledger…</p>
+                      ) : (
+                        <>
+                          <p className="text-sm text-neutral-600">Ads are not live yet. When they are, income will appear here.</p>
+                          <p className="mt-3 text-lg font-bold">€{totalAdIncome.toFixed(2)}</p>
+                          {publicStats?.approvedResources != null && (
+                            <p className="mt-3 text-xs text-neutral-500">
+                              Library (from /api/stats): {publicStats.approvedResources} approved resource{publicStats.approvedResources === 1 ? '' : 's'}
+                              {publicStats.plansBuilt != null ? ` · ${publicStats.plansBuilt} plans built` : ''}.
+                            </p>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {/* Cost & Incoming Channels Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="rounded-xl border border-black/[0.08] p-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-3">
-                        Monthly Cost Baseline (€350.83/mo)
-                      </h3>
-                      <div className="space-y-2.5 text-sm">
-                        <div className="flex justify-between py-1.5 border-b border-black/5">
-                          <span className="text-neutral-600">
-                            Custom Domain (€10/yr amortized)
-                          </span>
-                          <span className="font-semibold">€0.83</span>
-                        </div>
-                        <div className="flex justify-between py-1.5 border-b border-black/5">
-                          <span className="text-neutral-600">
-                            Hosting & Database Free Tier
-                          </span>
-                          <span className="font-semibold text-orange-700">
-                            €0.00
-                          </span>
-                        </div>
-                        <div className="flex justify-between py-1.5 border-b border-black/5">
-                          <span className="text-neutral-600">
-                            Frontier AI API Token Pool
-                          </span>
-                          <span className="font-semibold">€100.00</span>
-                        </div>
-                        <div className="flex justify-between py-1.5">
-                          <span className="text-neutral-600">
-                            Maintainer Survival Runway
-                          </span>
-                          <span className="font-semibold">€250.00</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl border border-black/[0.08] p-4">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-3">
-                        Incoming Funding Channels
-                      </h3>
-                      <div className="space-y-2.5 text-sm">
-                        <div className="flex justify-between py-1.5 border-b border-black/5">
-                          <span className="text-neutral-700 font-medium">
-                            GitHub Sponsors (0% fee)
-                          </span>
-                          <span className="font-bold text-orange-700">
-                            €{(fundingSources.githubSponsors + fundingSources.githubOneTime).toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between py-1.5 border-b border-black/5">
-                          <span className="text-neutral-700 font-medium">
-                            Open Collective (Public Fiscal Host)
-                          </span>
-                          <span className="font-bold text-orange-700">
-                            €{fundingSources.openCollective.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between py-1.5 border-b border-black/5">
-                          <span className="text-neutral-700 font-medium">
-                            Ko-fi One-Off Token Tips
-                          </span>
-                          <span className="font-bold text-orange-700">
-                            €{fundingSources.koFiTips.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between py-1.5">
-                          <span className="text-neutral-500">
-                            Google AdSense Bridge (Logged Separately)
-                          </span>
-                          <span className="font-semibold text-amber-700">
-                            {adsDisabledForever
-                              ? '€0.00 (Sunsetted)'
-                              : `€${fundingSources.adsenseBridge.toFixed(2)}`}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Live Community Audit Log */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
                         <Activity className="w-4 h-4 text-orange-700" />
-                        Live Public Patronage Audit Trail
+                        Public donation ledger
                       </h3>
-                      <button
-                        type="button"
-                        onClick={() => setShowContributeModal(true)}
-                        className="min-h-[44px] px-2 -mr-2 rounded-full text-xs font-semibold text-orange-700 hover:underline"
-                      >
-                        Back the project →
-                      </button>
+                      {DONATION_LINKS.kofi && (
+                        <a
+                          href={DONATION_LINKS.kofi}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="min-h-[44px] px-2 -mr-2 rounded-full text-xs font-semibold text-orange-700 hover:underline inline-flex items-center"
+                        >
+                          Support on Ko-fi →
+                        </a>
+                      )}
                     </div>
                     <div className="divide-y divide-black/5 border border-black/[0.08] rounded-xl overflow-hidden">
                       {ledgerEvents.length === 0 && (
-                        <div className="p-6 bg-white text-center text-xs text-neutral-500">
+                        <div className="p-6 bg-white text-center text-sm text-neutral-500">
                           {db
                             ? 'No contributions yet. Confirmed donations appear here automatically.'
                             : 'Ledger not connected in this preview.'}
@@ -2471,12 +2613,8 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                         >
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-neutral-900">
-                                {ev.contributor}
-                              </span>
-                              <span className="px-2 py-0.5 rounded bg-[#F4F4F2] text-neutral-600 font-medium">
-                                {ev.source}
-                              </span>
+                              <span className="font-bold text-neutral-900">{ev.contributor}</span>
+                              <span className="px-2 py-0.5 rounded bg-[#F4F4F2] text-neutral-600 font-medium">{ev.source}</span>
                               <span className="text-neutral-400">{ev.date}</span>
                             </div>
                             <p className="text-neutral-600 mt-0.5">{ev.note}</p>
@@ -2492,67 +2630,6 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               </div>
             )}
 
-            {/* ==============================================================
-                TAB 4: 3-YEAR €200,000 PUBLIC TREASURY ROADMAP
-            ============================================================== */}
-            {activeTab === 'roadmap3yr' && (
-              <section className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-7 space-y-6">
-                <div className="border-b border-black/5 pb-4">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200 mb-2">
-                    <Globe className="w-3.5 h-3.5" />
-                    Civic-Tech Grants & Enterprise Sponsorship Blueprint
-                  </span>
-                  <h2 className="text-xl font-bold text-neutral-900">
-                    3-Year Public Treasury Roadmap (€200,000 Scale Allocation)
-                  </h2>
-                  <p className="text-sm text-neutral-600 mt-1">
-                    AI inference incurs real compute cost on every uncached search. If OpenExam Hub secures open-source grants or corporate sponsorships up to €200,000, every euro is locked into this transparent 3-year operational ledger so individual learners never pay a cent:
-                  </p>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-black/[0.08] text-xs uppercase text-neutral-500 bg-[#FAFAF8]">
-                        <th className="py-3 px-4 font-bold">Allocation Category</th>
-                        <th className="py-3 px-4 font-bold">Annual</th>
-                        <th className="py-3 px-4 font-bold">3-Year Total</th>
-                        <th className="py-3 px-4 font-bold">Share</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-black/5">
-                      {THREE_YEAR_TREASURY.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-neutral-50/70">
-                          <td className="py-3.5 px-4">
-                            <div className="font-bold text-neutral-900">
-                              {row.category}
-                            </div>
-                            <div className="text-xs text-neutral-500 mt-0.5">
-                              {row.details}
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-4 font-medium text-neutral-700 whitespace-nowrap">
-                            {row.annual}
-                          </td>
-                          <td className="py-3.5 px-4 font-bold text-orange-700 whitespace-nowrap">
-                            {row.threeYear}
-                          </td>
-                          <td className="py-3.5 px-4 text-xs font-mono text-neutral-600">
-                            {row.percent}%
-                          </td>
-                        </tr>
-                      ))}
-                      <tr className="bg-[#111111] text-white font-bold">
-                        <td className="py-3.5 px-4">Total 3-Year Public Pool</td>
-                        <td className="py-3.5 px-4">—</td>
-                        <td className="py-3.5 px-4 text-orange-300">€200,000</td>
-                        <td className="py-3.5 px-4 font-mono">100%</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            )}
           </div>
 
           {/* ==================================================================
@@ -2573,7 +2650,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       <ProgressRing pct={roadmapProgress.pct} size={64} />
                       <div className="min-w-0">
                         <h2 id="oe-continue" className="font-bold text-lg leading-tight">
-                          {activeRoadmap.exam} · {activeRoadmap.level}
+                          {examLabel(activeRoadmap.exam)} · {activeRoadmap.level}
                         </h2>
                         <p className="text-sm text-neutral-500">
                           {activeRoadmap.days}-day plan · {roadmapProgress.done}/{roadmapProgress.total} done
@@ -2631,18 +2708,24 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   <div className="flex items-center justify-between gap-2">
                     <p className={THEME.label}>Keep it free</p>
                     <span className={THEME.chip}>
-                      <StatusDot tone={adsDisabledForever ? 'green' : 'orange'} />
-                      {adsDisabledForever ? 'Ads off' : `${fundingPercentage}% funded`}
+                      <StatusDot tone={adsOffAtGoal ? 'green' : 'orange'} />
+                      {adsOffAtGoal ? 'Ads off' : 'Ads not live yet'}
                     </span>
                   </div>
                   <p className="mt-3 text-2xl font-bold">
-                    €{totalPatronage.toFixed(2)}
-                    <span className="text-sm font-medium text-neutral-500"> / €{MONTHLY_TARGET.toFixed(2)} a month</span>
+                    {ledgerLoaded && hasFundingData ? `€${totalFunding.toFixed(2)}` : '€0'}
+                    <span className="text-sm font-medium text-neutral-500">
+                      {FIVE_YEAR_GOAL_EUR != null ? (
+                        <> / €{Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB')} 5-year goal</>
+                      ) : (
+                        <> · goal amount coming soon</>
+                      )}
+                    </span>
                   </p>
                   <div className="mt-3 h-2 rounded-full bg-[#F4F4F2] overflow-hidden" aria-hidden="true">
-                    <div className="h-full rounded-full bg-[#FF6B1A] transition-all duration-500" style={{ width: `${fundingPercentage}%` }} />
+                    <div className="h-full rounded-full bg-[#FF6B1A] transition-all duration-500" style={{ width: `${fundingPercentage ?? 0}%` }} />
                   </div>
-                  <p className="mt-2 text-xs text-neutral-500">At 100%, ads switch off for everyone.</p>
+                  <p className="mt-2 text-xs text-neutral-500">Donations and dashboard ads (not live yet) are published on the transparency page. Ads come off once 5 years of running costs are covered.</p>
                   <button
                     type="button"
                     onClick={() => setActiveTab('treasury')}
@@ -2655,44 +2738,41 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               </>
             ) : (
               <>
-            {/* 1. Community Patronage & Token Pool Widget */}
+            {/* Transparency summary when the Support tab is open */}
             <div className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-orange-700">
-                  Community Compute Pool
+                  Transparency
                 </span>
                 <span className="text-xs font-semibold text-neutral-500">
-                  Open Fiscal Host
+                  Ads not live yet
                 </span>
               </div>
 
               <h3 className="text-lg font-bold text-neutral-900">
-                Keep OpenExam Hub Free for Everyone
+                Keep OpenExam Hub free for everyone
               </h3>
               <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
-                Every €10 covers about {Math.floor(10 / ESTIMATED_QUERY_COST_EUR)} new AI-generated roadmaps at our estimated €{ESTIMATED_QUERY_COST_EUR.toFixed(2)} per query, plus maintainer time to keep links checked.
+                {FUNDING_PROMISE}
               </p>
 
               <div className="mt-4 p-3.5 rounded-xl bg-[#FAFAF8] border border-black/[0.08]">
                 <div className="flex justify-between text-xs font-semibold mb-1.5">
-                  <span className="text-neutral-700">Monthly Break-Even Goal</span>
+                  <span className="text-neutral-700">5-year running costs</span>
                   <span className="text-orange-700">
-                    €{totalPatronage.toFixed(2)} / €350.83
+                    {ledgerLoaded && hasFundingData ? `€${totalFunding.toFixed(2)}` : '€0'}
+                    {FIVE_YEAR_GOAL_EUR != null ? ` / €${Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB')}` : ''}
                   </span>
                 </div>
                 <div className="w-full h-2.5 bg-neutral-200 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-[#111111] transition-all duration-500"
-                    style={{ width: `${fundingPercentage}%` }}
+                    style={{ width: `${fundingPercentage ?? 0}%` }}
                   />
                 </div>
                 <div className="mt-2 text-[11px] text-neutral-500 flex justify-between">
-                  <span>{fundingPercentage}% Funded</span>
-                  <span>
-                    {adsDisabledForever
-                      ? 'Ad-Sunset Reached!'
-                      : `€${(MONTHLY_TARGET - totalPatronage).toFixed(2)} to kill ads`}
-                  </span>
+                  <span>{FIVE_YEAR_GOAL_EUR == null ? 'Goal amount coming soon' : fundingPercentage != null ? `${fundingPercentage}% funded` : 'No income yet'}</span>
+                  <span>Ads come off at the goal</span>
                 </div>
               </div>
 
@@ -2815,7 +2895,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                 <strong>OpenExam Hub</strong> started at our kitchen table when my wife was preparing for her language certification exams. We saw firsthand how stressful it is to hunt for reliable study materials without getting trapped in expensive coaching agencies or broken links.
               </p>
               <p>
-                Official bodies like <em>France Éducation international</em>, the <em>Goethe-Institut</em>, and the <em>British Council</em> already publish high-quality free sample exams—they are simply scattered across dozens of pages.
+                Official bodies like <em>CCI Paris / Le français des affaires</em>, <em>France Éducation international</em>, ETS, the Instituto Cervantes, the <em>Goethe-Institut</em> and the <em>British Council</em> already publish high-quality free sample exams—they are simply scattered across dozens of pages.
               </p>
               <p>
                 So we built a multi-agent AI engine that gathers only verified, non-copyrighted official resources and organizes them into a chronological study roadmap.{' '}
@@ -2998,7 +3078,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               <div className="flex items-center gap-2">
                 <span className="w-10 h-10 rounded-full bg-[#111111] text-white flex items-center justify-center shrink-0"><Coins className="w-5 h-5" aria-hidden="true" /></span>
                 <h3 className="font-bold text-neutral-900 text-lg">
-                  Back the Community Token Pool
+                  Support OpenExam Hub
                 </h3>
               </div>
               <button
@@ -3011,8 +3091,8 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             </div>
 
             <p className="text-xs text-neutral-600 mt-3 leading-relaxed">
-              Donations are made on the platforms below. Once a payment is confirmed, the platform notifies our server and the public ledger updates automatically, moving the bar toward the{' '}
-              <strong>€{MONTHLY_TARGET.toFixed(2)}/mo ad-sunset</strong> threshold.
+              Donations are made on the platforms below. Once a payment is confirmed, the platform notifies our server and the public ledger updates automatically. All ad and donation income is published on the transparency page. Ads come off once the next 5 years of running costs are covered
+              {FIVE_YEAR_GOAL_EUR != null ? ` (€${Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB')} goal).` : ' (goal amount coming soon).'}
             </p>
             <div className="mt-4 space-y-2">
               {[
@@ -3121,17 +3201,17 @@ function LibraryTab({ defaultExam }) {
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
-        {['TCF', 'IELTS', 'Goethe'].map((e) => (
+        {PICKER_EXAMS.map((e) => (
           <button
-            key={e}
+            key={e.id}
             type="button"
-            onClick={() => setExam(e)}
-            aria-pressed={exam === e}
+            onClick={() => setExam(e.id)}
+            aria-pressed={exam === e.id}
             className={`min-h-[44px] px-4 rounded-full text-sm font-semibold border transition ${
-              exam === e ? 'bg-[#111111] text-white border-[#111111]' : 'bg-white border-black/10 text-neutral-700 hover:bg-neutral-50'
+              exam === e.id ? 'bg-[#111111] text-white border-[#111111]' : 'bg-white border-black/10 text-neutral-700 hover:bg-neutral-50'
             }`}
           >
-            {e}
+            {e.label}
           </button>
         ))}
         <select

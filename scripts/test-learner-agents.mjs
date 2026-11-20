@@ -163,7 +163,7 @@ await test('diagnostic: LLM failure with empty cache -> status failed', async ()
 });
 
 await test('diagnostic: bad input throws BadInput', async () => {
-  await assert.rejects(createDiagnostic({ exam: 'TOEFL', level: 'B1' }), BadInput);
+  await assert.rejects(createDiagnostic({ exam: 'NOTANEXAM', level: 'B1' }), BadInput);
   await assert.rejects(createDiagnostic({ exam: 'TCF', level: 'B3' }), BadInput);
   assert.throws(() => scoreDiagnostic({ exam: 'TCF', level: 'B1', answers: [] }), BadInput);
   assert.throws(() => scoreDiagnostic({ exam: 'TCF', level: 'B1', answers: [{ skill: 'reading', correct: 'yes' }] }), BadInput);

@@ -79,6 +79,9 @@ test('quantiseProfile + planKey: coarse, stable, deterministic', () => {
   assert.equal(K.quantiseProfile({ listening: 0.39 }), K.quantiseProfile({ listening: 0.0 }));
   assert.equal(K.planKey({ exam: 'tcf', level: 'b2', days: 28 }), 'TCF_B2_30');
   assert.equal(K.planKey({ exam: 'TCF', level: 'B2', days: 31, skillScores: { listening: 0.2, speaking: 0.95 } }), 'TCF_B2_30_w--s--');
+  assert.equal(K.planKey({ exam: 'TCF', level: 'B2', days: 30, variant: 'canada' }), 'TCF_B2_30_CANADA');
+  assert.equal(K.planKey({ exam: 'TCF', level: 'B2', days: 30, variant: 'tout_public' }), 'TCF_B2_30');
+  assert.equal(K.planKey({ exam: 'TEF_CANADA', level: 'B2', days: 30 }), 'TEF_CANADA_B2_30');
   assert.throws(() => K.planKey({ exam: 'x', level: 'B2', days: 3 }));
   assert.throws(() => K.planKey({ exam: 'TCF', level: 'Z9', days: 3 }));
   assert.deepEqual(K.profileToScores('w--s--'), { listening: 0.25, speaking: 0.85 });
@@ -283,6 +286,35 @@ test('schedule: weak skills get more days; all-weak/all-strong are balanced; exa
   assert.ok(Math.abs(Object.values(sw).reduce((a, b) => a + b, 0) - 1) < 1e-3);
   assert.deepEqual(SC.sectionWeightsFromProfile(null), SC.DEFAULT_SECTION_WEIGHTS);
   assert.deepEqual(SC.sectionWeightsFromProfile({ sections: [{ name: 'Hören', durationMinutes: 40 }] }).listening, 0.76);
+});
+test('official TEF Canada / TCF Canada / TOEFL / DELE blueprints and Spanish section map', async () => {
+  const { officialProfile, mapExamIds, KNOWN_EXAMS, profileForPlan } = await import('../lib/exams.js');
+  assert.ok(KNOWN_EXAMS.includes('TEF_CANADA') && KNOWN_EXAMS.includes('TOEFL') && KNOWN_EXAMS.includes('DELE'));
+  assert.deepEqual(mapExamIds('DELF/DALF'), ['DELF', 'DALF']);
+  assert.deepEqual(mapExamIds('tef-canada'), ['TEF_CANADA']);
+  const tef = officialProfile('TEF_CANADA');
+  assert.equal(tef.sections.length, 4);
+  assert.equal(tef.sections.find((s) => s.skills.includes('reading')).questionCount, 40);
+  assert.equal(tef.sections.find((s) => s.skills.includes('listening')).durationMinutes, 40);
+  const sw = SC.sectionWeightsFromProfile(tef);
+  assert.ok(sw.reading > sw.listening, 'reading (60 min) outweighs listening (40 min)');
+  assert.ok(sw.writing > sw.speaking);
+  assert.ok(Math.abs(sw.grammar - 0.03) < 1e-9, `grammar blend ${sw.grammar}`);
+  const tcfCa = officialProfile('TCF', { variant: 'canada' });
+  assert.ok(!tcfCa.sections.some((s) => /structure/i.test(s.name)));
+  assert.equal(tcfCa.sections.length, 4);
+  const tcfTp = officialProfile('TCF', { variant: 'tout_public' });
+  assert.ok(tcfTp.sections.some((s) => /structure/i.test(s.name)));
+  assert.equal(profileForPlan('TCF', { variant: 'canada', extracted: tcfTp }).notes.includes('TCF Canada'), true);
+  const toefl = officialProfile('TOEFL');
+  assert.equal(toefl.sections.length, 4);
+  assert.ok(toefl.notes.includes('21 January 2026'));
+  const deleC2 = officialProfile('DELE', { level: 'C2' });
+  assert.equal(deleC2.sections.length, 3);
+  const swC2 = SC.sectionWeightsFromProfile(deleC2);
+  assert.ok(swC2.writing > 0 && swC2.speaking > 0 && swC2.reading > 0 && swC2.listening > 0);
+  const swEs = SC.sectionWeightsFromProfile({ sections: [{ name: 'Comprensión auditiva', durationMinutes: 40 }] });
+  assert.ok(swEs.listening > 0.5);
 });
 test('schedule: single-skill weight still obeys the run rule via mixed days; empty library works', () => {
   const s = SC.buildSchedule({ exam: 'TCF', level: 'B2', days: 40, sectionWeights: { listening: 1, reading: 0, writing: 0, speaking: 0, grammar: 0, vocabulary: 0 }, resources: RES });

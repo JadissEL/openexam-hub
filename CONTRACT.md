@@ -37,10 +37,10 @@ Roadmap object (what the client renders):
   source:'global_cache'|'library'|'live_discovery' }
 
 HTTP API (JSON, CORS via lib/http.js cors()):
-- POST /api/generate-roadmap  {exam, level, days, forceRefresh?, diagnostic?:{skillScores:{listening:0..1,...}}} -> {roadmap}
+- POST /api/generate-roadmap  {exam, level, days, forceRefresh?, variant?, diagnostic?:{skillScores:{listening:0..1,...}}} -> {roadmap}
 - GET  /api/check-link?url=   -> {url, status, httpCode, finalUrl}  (Cache-Control s-maxage=86400)
 - GET  /api/library?exam=&level=&skill= -> {resources:[...rank, relevance], shelfVersion?}  (with level: served from the shelf; s-maxage=600 + ETag)
-- GET  /api/plan?exam=&level=&days=[&profile=wms---] -> {roadmap, polished} | 404 {planKey}   shared plan cache, rescheduled for exactly `days`
+- GET  /api/plan?exam=&level=&days=[&profile=wms---][&variant=canada] -> {roadmap, polished} | 404 {planKey}   shared plan cache, rescheduled for exactly `days`
                               (s-maxage=3600). The App calls this BEFORE POST /api/generate-roadmap. profile = quantiseProfile(skillScores).
 - GET  /api/stats             -> {stats|null}  (stats/public, s-maxage=300)
 - POST /api/events            {type:'task_done', planKey, resourceId} -> 202  (resourceId must be cited by plans/{planKey}; rate-limited; no user id)
@@ -65,4 +65,4 @@ Hard rules for every agent:
 4. Validate all inputs (exam in a known set or allowlisted pattern, level in A1..C2, days 1..180, counts bounded). Return 400 on bad input, never 500 with a stack.
 5. All LLM calls go through lib/llm.js (OpenAI-compatible, routed via a self-hosted OmniRoute gateway). It records usage itself. Never call a provider directly, never hardcode a model.
 6. Keep each agent a pure module in lib/agents/<name>.js (export async functions, no req/res) and a thin route in api/. Every agent must degrade gracefully: on LLM failure return a clear error status the orchestrator can handle.
-Known exams: TCF, TEF, DELF, DALF, IELTS, CAMBRIDGE, GOETHE, TELC, TESTDAF (expansion may add more).
+Known exams: TCF, TEF, TEF_CANADA, DELF, DALF, IELTS, CAMBRIDGE, TOEFL, GOETHE, TELC, TESTDAF, DELE (single source: lib/exams.js; expansion may add more). TCF accepts an optional `variant` of `tout_public` (default) or `canada`.

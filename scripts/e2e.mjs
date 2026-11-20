@@ -763,7 +763,7 @@ async function main() {
       assert.ok(d.exams.includes('TEF'));
     }
     for (const id of pendingIds) assert.equal((await docData('resources', id)).addedBy, 'expansion');
-    assert.ok(x.suggestedDomains.some((d) => d.domain === 'lefrancaisdesaffaires.fr' && d.alreadyAllowed === false));
+    assert.ok(x.suggestedDomains.some((d) => d.domain === 'lefrancaisdesaffaires.fr' && d.alreadyAllowed === true), 'CCI Paris / Le français des affaires is already on the official allowlist');
     const lib = await get('/api/library?exam=TEF');
     assert.ok(!lib.json.resources.some((y) => pendingIds.includes(y.id)), 'unapproved candidates are invisible');
   });
