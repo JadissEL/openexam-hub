@@ -6,7 +6,7 @@
 import { cors, safeBody } from '../lib/http.js';
 import { generateRoadmap } from '../lib/orchestrator.js';
 
-export const config = { maxDuration: 60 };
+export const config = { maxDuration: 120 };
 
 export default async function handler(req, res) {
   try {
