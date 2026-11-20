@@ -46,13 +46,16 @@ HTTP API (JSON, CORS via lib/http.js cors()):
 - GET  /api/stats             -> {stats|null}  (stats/public, s-maxage=300)
 - POST /api/events            {type:'task_done', planKey, resourceId} -> 202  (resourceId must be cited by plans/{planKey}; rate-limited; no user id)
 - POST /api/diagnostic        {action:'create', exam, level} -> {quizId, questions:[{id, skill, prompt, options[], answerIndex, explanation}]}
+                              Authorization: Bearer <Firebase ID token of a non-anonymous user>. 401 if missing, invalid, or anonymous.
                               questions also carry itemKey + b (IRT difficulty)
                               {action:'score', exam, level, answers:[{id, skill, cefr?, itemKey?, b?, correct:bool}]} -> {skillScores, estimatedLevel, advice, method:'irt_eap'|'cefr_bands'|'overall_ratio', confidence?, theta?, se?, rawSkillScores?}
 - POST /api/coach             {roadmap, daysElapsed?} -> {onTrack:bool, summary, rebalancedPhases:[...same shape...], tips:[string]}
+                              Authorization: Bearer <Firebase ID token of a non-anonymous user>. 401 if missing, invalid, or anonymous.
                               v3 roadmaps (calendar + progress.done): daysElapsed derives from createdAt; onTrack/pace are DETERMINISTIC
                               (lib/algo/progress.js, EWMA + hysteresis) and the response adds method:'progress_v1', pace, plannedPace, requiredPace,
                               projectedFinishDay/Date, lateByDays, readiness. The LLM only words the rebalance; tasks are validated 1:1.
 - POST /api/practice          {exam, level, skill, count<=10} -> {items:[{id, skill, prompt, options?, answer, explanation}], disclaimer}
+                              Authorization: Bearer <Firebase ID token of a non-anonymous user>. 401 if missing, invalid, or anonymous.
 - POST /api/webhooks/github-sponsors | /api/webhooks/kofi | /api/webhooks/open-collective   (signature-verified, idempotent)
 - GET  /api/cron/recheck-links (Vercel cron; Authorization: Bearer CRON_SECRET) — due links only (nextCheckAt), rebuilds affected shelves
 - GET  /api/cron/rollup        (nightly; CRON_SECRET) folds usage/calibration buckets, sums counters -> stats/public, rebuilds shelves

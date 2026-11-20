@@ -752,6 +752,7 @@ export default function App() {
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
+  const [authPrompt, setAuthPrompt] = useState('Free. Create a free account to generate your plan.');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
@@ -1038,13 +1039,21 @@ export default function App() {
   // 3. 2-LAYER TOKEN-COST DEFENSE + 4-STAGE MULTI-AGENT GENERATOR
   // ==========================================================================
   const examVariant = selectedExam === 'TCF' ? normalizeVariant('TCF', selectedTcfVariant) : null;
+  const needsAccount = !!auth && !isRegisteredUser(firebaseUser);
+  const getAccessToken = async () => (isRegisteredUser(firebaseUser) ? firebaseUser.getIdToken() : null);
+  const openSignUp = (line) => {
+    const message = line || 'Free. Create a free account to generate your plan.';
+    setAuthMode('signup');
+    setAuthPrompt(message);
+    setShowAuthModal(true);
+    setStatusNotice(message);
+  };
+
   const handleGenerateStudyPath = async (forceRefresh = false) => {
     // Firebase is configured: a real (non-anonymous) account is required before
     // we spend AI tokens or hit the shared plan cache on behalf of a learner.
-    if (auth && !isRegisteredUser(firebaseUser)) {
-      setAuthMode('signup');
-      setShowAuthModal(true);
-      setStatusNotice('Create a free account to generate your plan.');
+    if (needsAccount) {
+      openSignUp('Create a free account to generate your plan.');
       return;
     }
 
@@ -1728,7 +1737,10 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             ) : (
               <button
                 type="button"
-                onClick={() => setShowAuthModal(true)}
+                onClick={() => {
+                  setAuthPrompt('Free. Create a free account to generate your plan. An account also keeps your plans and ticks in sync across devices.');
+                  setShowAuthModal(true);
+                }}
                 className={`${THEME.primaryBtn} h-11 px-4 text-sm`}
               >
                 <LogIn className="w-4 h-4" aria-hidden="true" />
@@ -2260,6 +2272,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
 {!activeRoadmap.sample && (
                       <CoachPanel
                         roadmap={activeRoadmap}
+                        needsAccount={needsAccount}
+                        getAccessToken={getAccessToken}
+                        onNeedAccount={() => openSignUp('Create a free account to use the progress coach.')}
                         onApply={async (phases) => {
                           // A rebalanced plan is a phase checklist again (the day calendar no longer applies).
                           const { calendar, progress, allocation, scheduleMethod, ...rest } = activeRoadmap; // eslint-disable-line no-unused-vars
@@ -2499,6 +2514,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   level={selectedLevel}
                   result={diagnosticResult}
                   onResult={setDiagnosticResult}
+                  needsAccount={needsAccount}
+                  getAccessToken={getAccessToken}
+                  onNeedAccount={() => openSignUp('Create a free account to start the placement self-check.')}
                   onBuild={() => {
                     setActiveTab('generator');
                     handleGenerateStudyPath(true);
@@ -2511,6 +2529,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   exam={selectedExam}
                   level={selectedLevel}
                   deckIds={new Set(srsCards.map((c) => c.id))}
+                  needsAccount={needsAccount}
+                  getAccessToken={getAccessToken}
+                  onNeedAccount={() => openSignUp('Create a free account to generate practice questions.')}
                   onSaveToDeck={firebaseUser ? (item, sk) => saveSrsCard(cardFromPractice(item, selectedExam, sk)) : null}
                 />
               </div>
@@ -2978,7 +2999,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             </div>
 
             <p className="text-xs text-neutral-600 mt-3 leading-relaxed">
-              Free. Create a free account to generate your plan. An account also keeps your plans and ticks in sync across devices.
+              {authPrompt}
             </p>
 
             {firebaseUser && !firebaseUser.isAnonymous ? (
@@ -3349,18 +3370,23 @@ function LibraryTab({ defaultExam }) {
 // ============================================================================
 // DIAGNOSTIC AGENT: short self-check that weights the roadmap toward weak skills
 // ============================================================================
-function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
+function DiagnosticPanel({ exam, level, result, onResult, onBuild, needsAccount, getAccessToken, onNeedAccount }) {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [state, setState] = useState('idle');
   const [error, setError] = useState(null);
 
   const start = async () => {
+    if (needsAccount) {
+      onNeedAccount?.();
+      return;
+    }
     setState('loading');
     setError(null);
     setAnswers({});
     try {
-      const out = await apiPost('/api/diagnostic', { action: 'create', exam: exam.toUpperCase(), level });
+      const token = getAccessToken ? await getAccessToken() : null;
+      const out = await apiPost('/api/diagnostic', { action: 'create', exam: exam.toUpperCase(), level }, { token });
       setQuestions(out.questions || []);
       setState('quiz');
     } catch (e) {
@@ -3371,6 +3397,10 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
   };
 
   const submit = async () => {
+    if (needsAccount) {
+      onNeedAccount?.();
+      return;
+    }
     setState('loading');
     try {
       const payload = questions.map((q) => ({
@@ -3382,7 +3412,8 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
         ...(typeof q.b === 'number' ? { b: q.b } : {}),
         correct: answers[q.id] === q.answerIndex
       }));
-      const out = await apiPost('/api/diagnostic', { action: 'score', exam: exam.toUpperCase(), level, answers: payload });
+      const token = getAccessToken ? await getAccessToken() : null;
+      const out = await apiPost('/api/diagnostic', { action: 'score', exam: exam.toUpperCase(), level, answers: payload }, { token });
       onResult(out);
       setState('done');
     } catch (e) {
@@ -3495,7 +3526,7 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
 // ============================================================================
 // PRACTICE GENERATOR: original, clearly-labelled unofficial practice items
 // ============================================================================
-function PracticePanel({ exam, level, deckIds, onSaveToDeck }) {
+function PracticePanel({ exam, level, deckIds, onSaveToDeck, needsAccount, getAccessToken, onNeedAccount }) {
   const [skill, setSkill] = useState('reading');
   const [data, setData] = useState(null);
   const [revealed, setRevealed] = useState({});
@@ -3503,11 +3534,16 @@ function PracticePanel({ exam, level, deckIds, onSaveToDeck }) {
   const [error, setError] = useState(null);
 
   const generate = async () => {
+    if (needsAccount) {
+      onNeedAccount?.();
+      return;
+    }
     setState('loading');
     setError(null);
     setRevealed({});
     try {
-      const out = await apiPost('/api/practice', { exam: exam.toUpperCase(), level, skill, count: 5 });
+      const token = getAccessToken ? await getAccessToken() : null;
+      const out = await apiPost('/api/practice', { exam: exam.toUpperCase(), level, skill, count: 5 }, { token });
       setData(out);
       setState('done');
     } catch (e) {
@@ -3612,7 +3648,7 @@ function PracticePanel({ exam, level, deckIds, onSaveToDeck }) {
 // ============================================================================
 // PROGRESS COACH: checks pace and offers to rebalance the remaining tasks
 // ============================================================================
-function CoachPanel({ roadmap, onApply }) {
+function CoachPanel({ roadmap, onApply, needsAccount, getAccessToken, onNeedAccount }) {
   const scheduled = hasSchedule(roadmap);
   const [daysElapsed, setDaysElapsed] = useState(() => (scheduled ? Math.min(Math.max(currentDay(roadmap), 1), roadmap.days) : 1));
   const [advice, setAdvice] = useState(null);
@@ -3621,13 +3657,18 @@ function CoachPanel({ roadmap, onApply }) {
   if (!SERVER_ENABLED || !roadmap?.phases) return null;
 
   const ask = async () => {
+    if (needsAccount) {
+      onNeedAccount?.();
+      return;
+    }
     setState('loading');
     try {
       // Scheduled plans: the server derives the day from createdAt and scores pace from progress.done.
       const body = scheduled
         ? { roadmap: { ...roadmap, calendar: roadmap.calendar, progress: roadmap.progress || { done: {} } }, daysElapsed: Number(daysElapsed) }
         : { roadmap, daysElapsed: Number(daysElapsed) };
-      const out = await apiPost('/api/coach', body);
+      const token = getAccessToken ? await getAccessToken() : null;
+      const out = await apiPost('/api/coach', body, { token });
       setAdvice(out);
       setState('done');
     } catch (e) {

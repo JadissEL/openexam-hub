@@ -127,10 +127,11 @@ async function http(method, p, { body, headers = {}, raw } = {}) {
   try { json = JSON.parse(text); } catch { /* not JSON */ }
   return { status: res.status, json, text, headers: res.headers };
 }
+const LEARNER_API = ['/api/generate-roadmap', '/api/diagnostic', '/api/practice', '/api/coach'];
 const post = (p, body, opts = {}) => {
   const headers = { ...(opts.headers || {}) };
   const hasAuth = Object.keys(headers).some((k) => k.toLowerCase() === 'authorization');
-  if (p === '/api/generate-roadmap' && !hasAuth && !opts.noAuth) {
+  if (LEARNER_API.includes(p) && !hasAuth && !opts.noAuth) {
     headers.authorization = `Bearer ${ENV.E2E_GENERATE_TOKEN}`;
   }
   return http('POST', p, { ...opts, body, headers });
@@ -271,13 +272,16 @@ async function main() {
       ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30, forceRefresh: 'yes' }, 400, learner],
       ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30, diagnostic: { skillScores: { cooking: 0.5 } } }, 400, learner],
       ['POST', '/api/generate-roadmap', { exam: 'ZZTOP', level: 'B2', days: 30 }, 400, learner],
-      ['POST', '/api/diagnostic', { action: 'explode', exam: 'TCF', level: 'B2' }, 400],
-      ['POST', '/api/diagnostic', { action: 'create', exam: 'XYZ', level: 'B2' }, 400],
-      ['POST', '/api/diagnostic', { action: 'score', exam: 'TCF', level: 'B2', answers: [] }, 400],
-      ['POST', '/api/practice', { exam: 'TCF', level: 'B2', skill: 'juggling' }, 400],
-      ['POST', '/api/practice', { exam: 'TCF', level: 'B2', skill: 'reading', count: 11 }, 400],
-      ['POST', '/api/coach', { daysElapsed: 3 }, 400],
-      ['POST', '/api/coach', { roadmap: { days: 10, phases: [{ tasks: ['a'] }] }, daysElapsed: 99 }, 400],
+      ['POST', '/api/diagnostic', { action: 'create', exam: 'TCF', level: 'B2' }, 401],
+      ['POST', '/api/practice', { exam: 'TCF', level: 'B2', skill: 'reading', count: 5 }, 401],
+      ['POST', '/api/coach', { roadmap: { days: 10, phases: [{ tasks: ['a'] }] }, daysElapsed: 3 }, 401],
+      ['POST', '/api/diagnostic', { action: 'explode', exam: 'TCF', level: 'B2' }, 400, learner],
+      ['POST', '/api/diagnostic', { action: 'create', exam: 'XYZ', level: 'B2' }, 400, learner],
+      ['POST', '/api/diagnostic', { action: 'score', exam: 'TCF', level: 'B2', answers: [] }, 400, learner],
+      ['POST', '/api/practice', { exam: 'TCF', level: 'B2', skill: 'juggling' }, 400, learner],
+      ['POST', '/api/practice', { exam: 'TCF', level: 'B2', skill: 'reading', count: 11 }, 400, learner],
+      ['POST', '/api/coach', { daysElapsed: 3 }, 400, learner],
+      ['POST', '/api/coach', { roadmap: { days: 10, phases: [{ tasks: ['a'] }] }, daysElapsed: 99 }, 400, learner],
       ['GET', '/api/library', undefined, 400],
       ['GET', '/api/library?exam=TCF&level=Z1', undefined, 400],
       ['GET', '/api/library?exam=TCF&skill=juggling', undefined, 400],
@@ -311,7 +315,7 @@ async function main() {
   });
   await test('malformed JSON bodies are 400, not 500, on every JSON route', async () => {
     for (const p of ['/api/generate-roadmap', '/api/diagnostic', '/api/coach', '/api/practice', '/api/admin/expand', '/api/admin/approve', '/api/admin/review-profile']) {
-      const auth = p === '/api/generate-roadmap' ? learner : admin;
+      const auth = LEARNER_API.includes(p) ? learner : admin;
       const r = await http('POST', p, { raw: '{"exam": "TCF",', headers: { 'content-type': 'application/json', ...auth } });
       assert.equal(r.status, 400, `${p} -> ${r.status} ${r.text.slice(0, 120)}`);
     }

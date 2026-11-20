@@ -2,6 +2,7 @@
 //   {action:'create', exam, level}           -> 12-question self-check (LLM, cached, 3 rotating variants)
 //   {action:'score', exam, level, answers[]}  -> deterministic IRT (EAP) scores + estimatedLevel; records item calibration
 import { cors } from '../lib/http.js';
+import { requireAccount } from '../lib/auth.js';
 import { BadInput, readBody } from '../lib/agents/learnerShared.js';
 import { createDiagnostic, scoreDiagnostic, calibrationDelta } from '../lib/agents/diagnostic.js';
 import { recordCalibration } from '../lib/calibration.js';
@@ -9,6 +10,7 @@ import { recordCalibration } from '../lib/calibration.js';
 export default async function handler(req, res) {
   if (cors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
+  if (!(await requireAccount(req, res))) return;
   try {
     const body = readBody(req);
     if (body.action === 'create') {

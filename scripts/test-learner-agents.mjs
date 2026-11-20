@@ -415,26 +415,47 @@ await test('routes: 400 JSON on bad input, 405 on GET, CORS header set', async (
     r.setHeader = (k, v) => { r.headers[k] = v; };
     r.status = (c) => { r.code = c; return r; };
     r.json = (b) => { r.body = b; return r; };
-    r.end = () => r;
+    r.end = (t) => {
+      if (t != null && r.body == null) {
+        try { r.body = JSON.parse(t); } catch { r.body = t; }
+      }
+      return r;
+    };
     return r;
   };
   setLearnerDeps({ generateJson: fakeLlm([]), pub: fakeFirestore().pub });
-  for (const name of ['diagnostic', 'coach', 'practice']) {
-    const { default: h } = await import(`../api/${name}.js`);
-    const bad = mkRes();
-    await h({ method: 'POST', body: { action: 'create', exam: 'NOPE', level: 'Z9', roadmap: null } }, bad);
-    assert.equal(bad.code, 400, name);
-    assert.equal(typeof bad.body.error, 'string');
-    assert.equal(bad.headers['Access-Control-Allow-Origin'], '*');
-    const get = mkRes();
-    await h({ method: 'GET' }, get);
-    assert.equal(get.code, 405);
+  const prevEmu = process.env.FIRESTORE_EMULATOR_HOST;
+  const prevTok = process.env.E2E_GENERATE_TOKEN;
+  process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:0';
+  process.env.E2E_GENERATE_TOKEN = 'e2e-generate-token';
+  const learner = { authorization: 'Bearer e2e-generate-token' };
+  try {
+    for (const name of ['diagnostic', 'coach', 'practice']) {
+      const { default: h } = await import(`../api/${name}.js`);
+      const unauth = mkRes();
+      await h({ method: 'POST', body: { action: 'create', exam: 'TCF', level: 'B2' }, headers: {} }, unauth);
+      assert.equal(unauth.code, 401, `${name} without a token`);
+      assert.equal(typeof unauth.body.error, 'string');
+      const bad = mkRes();
+      await h({ method: 'POST', body: { action: 'create', exam: 'NOPE', level: 'Z9', roadmap: null }, headers: learner }, bad);
+      assert.equal(bad.code, 400, name);
+      assert.equal(typeof bad.body.error, 'string');
+      assert.equal(bad.headers['Access-Control-Allow-Origin'], '*');
+      const get = mkRes();
+      await h({ method: 'GET' }, get);
+      assert.equal(get.code, 405);
+    }
+    const { default: d } = await import('../api/diagnostic.js');
+    const s = mkRes();
+    await d({ method: 'POST', body: JSON.stringify({ action: 'score', exam: 'IELTS', level: 'B2', answers: [{ id: 'q1', skill: 'reading', correct: true, cefr: 'B2' }] }), headers: learner }, s);
+    assert.equal(s.code, 200);
+    assert.equal(s.body.estimatedLevel, 'B2');
+  } finally {
+    if (prevEmu === undefined) delete process.env.FIRESTORE_EMULATOR_HOST;
+    else process.env.FIRESTORE_EMULATOR_HOST = prevEmu;
+    if (prevTok === undefined) delete process.env.E2E_GENERATE_TOKEN;
+    else process.env.E2E_GENERATE_TOKEN = prevTok;
   }
-  const { default: d } = await import('../api/diagnostic.js');
-  const s = mkRes();
-  await d({ method: 'POST', body: JSON.stringify({ action: 'score', exam: 'IELTS', level: 'B2', answers: [{ id: 'q1', skill: 'reading', correct: true, cefr: 'B2' }] }) }, s);
-  assert.equal(s.code, 200);
-  assert.equal(s.body.estimatedLevel, 'B2');
 });
 
 console.log(results.join('\n'));
