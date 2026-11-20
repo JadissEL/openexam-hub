@@ -10,6 +10,7 @@ import plan from '../lib/routes/plan.js';
 import stats from '../lib/routes/stats.js';
 import events from '../lib/routes/events.js';
 import adsTxt from '../lib/routes/ads-txt.js';
+import account from '../lib/routes/account.js';
 
 export const ROUTES = {
   'check-link': checkLink, // GET /api/check-link?url=
@@ -17,7 +18,8 @@ export const ROUTES = {
   plan, // GET /api/plan?exam=&level=&days=&profile=  (CDN-cached shared plan, 404 on miss)
   stats, // GET /api/stats  (stats/public)
   events, // POST /api/events {type:'task_done', planKey, resourceId}
-  'ads-txt': adsTxt // GET /ads.txt -> /api/ads-txt (404 until ADSENSE_PUBLISHER_ID is set)
+  'ads-txt': adsTxt, // GET /ads.txt -> /api/ads-txt (404 until ADSENSE_PUBLISHER_ID is set)
+  account // POST /api/account {action:'delete', confirm:'DELETE'} with a Firebase ID token: delete own data + account
 };
 
 export default createDispatcher(ROUTES, 'route');

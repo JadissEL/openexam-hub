@@ -73,6 +73,20 @@ function SamplePlan({ roadmap, onBack }) {
 }
 
 export default function AuthGate({ auth, sampleRoadmap }) {
+  const [accountDeleted] = useState(() => {
+    try {
+      return sessionStorage.getItem('oe-account-deleted') === '1';
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem('oe-account-deleted');
+    } catch {
+      /* ignore */
+    }
+  }, []);
   const [mode, setMode] = useState('signup'); // signup | login | reset
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -158,6 +172,12 @@ export default function AuthGate({ auth, sampleRoadmap }) {
           <img src="/favicon.svg" alt="" width="32" height="32" className="w-8 h-8 rounded-lg" />
           <span className="text-[18px]">OpenExam Hub</span>
         </a>
+
+        {accountDeleted && (
+          <p role="status" data-testid="account-deleted" className="mt-6 rounded-2xl border border-green-200 bg-green-50 p-3.5 text-sm text-[#14532D]">
+            Your account and all its data have been deleted.
+          </p>
+        )}
 
         {showSample ? (
           <SamplePlan roadmap={sampleRoadmap} onBack={() => { setShowSample(false); switchMode('signup'); }} />

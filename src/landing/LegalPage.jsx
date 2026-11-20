@@ -127,9 +127,12 @@ const PAGES = {
         h: 'How long we keep it, and your rights',
         body: (
           <p>
-            We keep your account and plans until you ask us to delete them. You can ask to see, correct or delete your data at any time
-            by emailing {mail}; I’ll reply within 30 days. If you’re in the EU, you also have the right to complain to your data
-            protection authority.
+            We keep your account and plans until you delete them. In the dashboard you can delete a single plan from <strong>My
+            plans</strong>, or delete your whole account from <strong>Your account → Delete my account</strong> (you type DELETE to
+            confirm). Deleting your account immediately and permanently removes your sign-in and everything stored under it: your
+            profile, saved plans and progress, review cards and level checks. You can also ask to see, correct or delete your data
+            at any time by emailing {mail}; I’ll reply within 30 days. If you’re in the EU, you also have the right to complain to
+            your data protection authority.
           </p>
         )
       },

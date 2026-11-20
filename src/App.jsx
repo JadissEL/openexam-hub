@@ -40,7 +40,8 @@ import {
   Activity,
   Home,
   Heart,
-  ChevronDown
+  ChevronDown,
+  Trash2
 } from 'lucide-react';
 import { initializeApp, getApps } from 'firebase/app';
 import {
@@ -66,6 +67,7 @@ import {
   orderBy,
   limit,
   updateDoc,
+  deleteDoc,
   deleteField,
   connectFirestoreEmulator
 } from 'firebase/firestore';
@@ -99,8 +101,10 @@ try {
     // Local testing only: VITE_FIREBASE_EMULATORS=true points the app at the Auth (9099) and
     // Firestore (8085) emulators. Never set in production builds.
     if (import.meta.env.VITE_FIREBASE_EMULATORS === 'true') {
-      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-      connectFirestoreEmulator(db, '127.0.0.1', 8085);
+      const authPort = import.meta.env.VITE_AUTH_EMULATOR_PORT || '9099';
+      const fsPort = Number(import.meta.env.VITE_FIRESTORE_EMULATOR_PORT || 8085);
+      connectAuthEmulator(auth, `http://127.0.0.1:${authPort}`, { disableWarnings: true });
+      connectFirestoreEmulator(db, '127.0.0.1', fsPort);
     }
   }
   if (typeof __app_id !== 'undefined' && __app_id) appId = __app_id;
@@ -640,6 +644,26 @@ const OE_GLOBAL_CSS = `
 }
 `;
 
+// Build-log ("How we built it") step names: friendly labels instead of internal agent ids.
+const AGENT_LABELS = {
+  orchestrator: 'Request',
+  global_cache: 'Shared plans',
+  exam_format: 'Exam format',
+  resource_library: 'Library',
+  link_verifier: 'Link check',
+  discovery: 'Find sources',
+  copyright_auditor: 'Copyright check',
+  scheduler: 'Schedule',
+  planner: 'Wording',
+  diagnostic: 'Level check',
+  coach: 'Coach',
+  practice: 'Practice'
+};
+function agentLabel(id) {
+  const k = String(id || '');
+  return AGENT_LABELS[k] || k.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+}
+
 const LEVEL_OPTIONS = [
   { value: 'A1', hint: 'Beginner' },
   { value: 'A2', hint: 'Elementary' },
@@ -830,6 +854,12 @@ function Dashboard({ initialUser }) {
   // A fresh visitor starts with no saved plans. Until they build one, the plan view shows a
   // clearly labelled read-only sample with no progress (never someone else's ticks).
   const [savedRoadmaps, setSavedRoadmaps] = useState([]);
+  // Account self-service (account dialog + My plans)
+  const [pendingDeletePlanId, setPendingDeletePlanId] = useState(null);
+  const [deletingPlanId, setDeletingPlanId] = useState(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [accountDeleting, setAccountDeleting] = useState(false);
+  const [accountDeleteError, setAccountDeleteError] = useState(null);
   const [activeRoadmapId, setActiveRoadmapId] = useState(null);
 
   // Public Financial Ledger & Ad-Sunset Engine (Backed by Firestore)
@@ -1556,6 +1586,49 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
     }
   };
 
+  const handleDeletePlan = async (planId) => {
+    if (!planId) return;
+    setDeletingPlanId(planId);
+    try {
+      if (db && isRegisteredUser(firebaseUser)) {
+        await deleteDoc(doc(db, 'artifacts', appId, 'users', firebaseUser.uid, 'roadmaps', planId));
+      }
+      setSavedRoadmaps((prev) => prev.filter((r) => r.id !== planId));
+      if (activeRoadmapId === planId) setActiveRoadmapId(null);
+      setStatusNotice('Plan deleted.');
+    } catch (err) {
+      console.warn('Plan delete failed:', err);
+      setStatusNotice('Could not delete that plan. Please try again.');
+    } finally {
+      setDeletingPlanId(null);
+      setPendingDeletePlanId(null);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!auth || !isRegisteredUser(firebaseUser) || deleteConfirmText !== 'DELETE') return;
+    setAccountDeleting(true);
+    setAccountDeleteError(null);
+    try {
+      const token = await firebaseUser.getIdToken(true);
+      await apiPost('/api/account', { action: 'delete', confirm: 'DELETE' }, { token });
+      setSavedRoadmaps([]);
+      setActiveRoadmapId(null);
+      setShowAuthModal(false);
+      try {
+        sessionStorage.setItem('oe-account-deleted', '1');
+      } catch {
+        /* storage blocked: the gate just won't show the confirmation */
+      }
+      await signOut(auth).catch(() => {});
+    } catch (err) {
+      console.warn('Account delete failed:', err);
+      setAccountDeleteError(friendlyError(err, 'Could not delete your account. Please try again, or email privacy@openexamhub.org.'));
+    } finally {
+      setAccountDeleting(false);
+    }
+  };
+
   const handleSignOut = async () => {
     if (!auth) return;
     try {
@@ -2177,7 +2250,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                               className="mt-1"
                               tone={step.status === 'ok' ? 'green' : step.status === 'skipped' ? 'slate' : 'amber'}
                             />
-                            <strong className="text-neutral-900 font-semibold">{step.agent}</strong>
+                            <strong className="text-neutral-900 font-semibold whitespace-nowrap">{agentLabel(step.agent)}</strong>
                             <span className="min-w-0">{step.detail}</span>
                           </li>
                         ))}
@@ -2549,6 +2622,35 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                           Open plan
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
+                        {pendingDeletePlanId === rm.id ? (
+                          <div className="mt-2 flex gap-2" role="group" aria-label={`Confirm deleting the ${rm.days}-day ${examLabel(rm.exam)} plan`}>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePlan(rm.id)}
+                              disabled={deletingPlanId === rm.id}
+                              className="flex-1 min-h-[44px] px-3 rounded-full bg-rose-700 hover:bg-rose-800 text-white text-sm font-semibold disabled:opacity-60"
+                            >
+                              {deletingPlanId === rm.id ? 'Deleting…' : 'Yes, delete'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPendingDeletePlanId(null)}
+                              className="flex-1 min-h-[44px] px-3 rounded-full border border-neutral-300 text-sm font-semibold text-neutral-800 hover:bg-neutral-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setPendingDeletePlanId(rm.id)}
+                            aria-label={`Delete plan: ${rm.days}-day ${examLabel(rm.exam)} plan`}
+                            className="mt-2 w-full min-h-[44px] px-4 rounded-full text-sm font-semibold text-rose-700 hover:bg-rose-50 inline-flex items-center justify-center gap-1.5"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                            Delete plan
+                          </button>
+                        )}
                       </div>
                     );
                   })}
@@ -3040,7 +3142,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
             <div className="flex items-center justify-between pb-3 border-b border-black/5">
               <h3 id="oe-auth-title" className="font-bold text-neutral-900 text-lg">
-                {authMode === 'signup' ? 'Create your free account' : 'Sign in'}
+                {firebaseUser && !firebaseUser.isAnonymous ? 'Your account' : authMode === 'signup' ? 'Create your free account' : 'Sign in'}
               </h3>
               <button
                 type="button"
@@ -3051,10 +3153,12 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               </button>
             </div>
 
+            {!(firebaseUser && !firebaseUser.isAnonymous) && (
             <p className="text-xs text-neutral-600 mt-3 leading-relaxed">
               {authPrompt}
             </p>
-            {authMode === 'signup' && (
+            )}
+            {authMode === 'signup' && !(firebaseUser && !firebaseUser.isAnonymous) && (
               <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
                 A free account saves your plan and progress across devices and keeps the AI free for everyone by preventing repeated requests.
               </p>
@@ -3073,6 +3177,41 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   <LogOut className="w-3.5 h-3.5" />
                   Sign out
                 </button>
+                <details className="pt-3 border-t border-orange-200" data-testid="delete-account">
+                  <summary className="min-h-[44px] flex items-center text-xs font-semibold text-rose-700 cursor-pointer">
+                    Delete my account
+                  </summary>
+                  <div className="space-y-2 pb-1">
+                    <p className="text-xs text-neutral-700 leading-relaxed">
+                      This permanently deletes your account, all your saved plans, progress, review cards and level checks. It cannot be undone.
+                    </p>
+                    <label htmlFor="oe-delete-confirm" className="block text-xs font-semibold text-neutral-900">
+                      Type DELETE to confirm
+                    </label>
+                    <input
+                      id="oe-delete-confirm"
+                      type="text"
+                      autoComplete="off"
+                      autoCapitalize="characters"
+                      spellCheck={false}
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      className="w-full min-h-[44px] px-3 rounded-lg border border-neutral-300 bg-white text-sm"
+                    />
+                    {accountDeleteError && (
+                      <p role="alert" className="text-xs text-rose-700">{accountDeleteError}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleDeleteAccount}
+                      disabled={deleteConfirmText !== 'DELETE' || accountDeleting}
+                      className="w-full min-h-[44px] rounded-lg bg-rose-700 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition hover:bg-rose-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      {accountDeleting ? 'Deleting…' : 'Permanently delete my account'}
+                    </button>
+                  </div>
+                </details>
               </div>
             ) : (
               <div className="mt-4 space-y-4">
