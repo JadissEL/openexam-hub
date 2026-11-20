@@ -10,14 +10,15 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "node scripts/local-server.mjs",
-    "build": "vite build",
+    "build": "vite build && node scripts/test-blog.mjs --built",
     "preview": "vite preview",
-    "test": "node scripts/test-http.mjs && node scripts/test-orchestrator.mjs && node scripts/test-learner-agents.mjs && node scripts/test-ledger.mjs && node scripts/test-algo.mjs && node scripts/test-v3.mjs",
+    "test": "node scripts/test-http.mjs && node scripts/test-orchestrator.mjs && node scripts/test-learner-agents.mjs && node scripts/test-ledger.mjs && node scripts/test-algo.mjs && node scripts/test-v3.mjs && node scripts/test-blog.mjs",
     "test:algo": "node scripts/test-algo.mjs && node scripts/test-v3.mjs",
     "e2e": "node scripts/e2e.mjs",
     "mock-llm": "node scripts/mock-llm.mjs",
     "seed": "node scripts/seed-library.js",
-    "emulator": "firebase emulators:start --only firestore --project demo-openexam --config firebase.json"
+    "emulator": "firebase emulators:start --only firestore --project demo-openexam --config firebase.json",
+    "test:blog": "node scripts/test-blog.mjs"
   },
   "dependencies": {
     "firebase": "^13.4.0",
@@ -30,7 +31,11 @@
     "@firebase/rules-unit-testing": "^6.0.0",
     "@vitejs/plugin-react": "^6.3.0",
     "autoprefixer": "^10.4.20",
+    "esbuild": "^0.28.2",
     "firebase-tools": "^15.37.0",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^15.0.3",
+    "markdown-it-anchor": "^10.1.0",
     "postcss": "^8.5.0",
     "tailwindcss": "^3.4.19",
     "vite": "^8.3.0"

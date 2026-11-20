@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { GithubMark } from './icons.jsx';
 import {
@@ -24,12 +24,12 @@ export function Wordmark({ className = '' }) {
 const NAV = [
   { href: '/#how', label: 'How it works' },
   { href: '/#exams', label: 'Exams' },
+  { href: '/blog', label: 'Blog' },
   { href: '/about', label: 'About' },
   { href: '/faq', label: 'FAQ' }
 ];
 
 export function SiteHeader() {
-  const [open, setOpen] = useState(false);
   return (
     <header className="relative z-20">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:rounded-full focus:bg-[#1A1714] focus:px-4 focus:py-2 focus:text-white">
@@ -49,39 +49,34 @@ export function SiteHeader() {
           <a href={APP_PATH} className="hidden sm:inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-[#1A1714] text-white text-[15px] font-medium hover:bg-black transition-colors">
             Open the planner
           </a>
-          <button
-            type="button"
-            className="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-full text-[#1A1714] hover:bg-black/5"
-            aria-expanded={open}
-            aria-controls="mobile-nav"
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <X className="w-5 h-5" aria-hidden="true" /> : <Menu className="w-5 h-5" aria-hidden="true" />}
-          </button>
+          <details className="lg:hidden group">
+            <summary className="list-none inline-flex items-center justify-center w-11 h-11 rounded-full text-[#1A1714] hover:bg-black/5 cursor-pointer [&::-webkit-details-marker]:hidden">
+              <span className="sr-only">Menu</span>
+              <Menu className="w-5 h-5 group-open:hidden" aria-hidden="true" />
+              <X className="w-5 h-5 hidden group-open:inline" aria-hidden="true" />
+            </summary>
+            <nav id="mobile-nav" aria-label="Primary" className="absolute inset-x-0 top-full bg-[#F7F5F0] border-y border-[#E7E1D7] shadow-[0_20px_40px_-24px_rgba(26,23,20,0.25)]">
+              <ul className="mx-auto max-w-6xl px-5 py-3">
+                {NAV.map((n) => (
+                  <li key={n.href}>
+                    <a href={n.href} className="block py-3 text-lg text-[#1A1714] border-b border-[#EDE7DD]">{n.label}</a>
+                  </li>
+                ))}
+                <li>
+                  <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 py-3 text-lg text-[#1A1714] border-b border-[#EDE7DD]">
+                    <GithubMark /> Source code on GitHub
+                  </a>
+                </li>
+                <li className="py-4">
+                  <a href={APP_PATH} className="flex items-center justify-center gap-2 h-12 rounded-full bg-[#EA580C] text-white font-semibold">
+                    Build my free plan <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </details>
         </div>
       </div>
-      {open && (
-        <nav id="mobile-nav" aria-label="Primary" className="lg:hidden absolute inset-x-0 top-full bg-[#F7F5F0] border-y border-[#E7E1D7] shadow-[0_20px_40px_-24px_rgba(26,23,20,0.25)]">
-          <ul className="mx-auto max-w-6xl px-5 py-3">
-            {NAV.map((n) => (
-              <li key={n.href}>
-                <a href={n.href} onClick={() => setOpen(false)} className="block py-3 text-lg text-[#1A1714] border-b border-[#EDE7DD]">{n.label}</a>
-              </li>
-            ))}
-            <li>
-              <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 py-3 text-lg text-[#1A1714] border-b border-[#EDE7DD]">
-                <GithubMark /> Source code on GitHub
-              </a>
-            </li>
-            <li className="py-4">
-              <a href={APP_PATH} className="flex items-center justify-center gap-2 h-12 rounded-full bg-[#EA580C] text-white font-semibold">
-                Build my free plan <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </a>
-            </li>
-          </ul>
-        </nav>
-      )}
     </header>
   );
 }
@@ -99,6 +94,7 @@ const FOOTER_COLS = [
     title: 'Project',
     links: [
       { href: '/about', label: 'About' },
+      { href: '/blog', label: 'Blog' },
       { href: TRANSPARENCY_PATH, label: 'Transparency' },
       { href: '/funding', label: 'Funding & donate' },
       { href: REPO_URL, label: 'Open source on GitHub', external: true },

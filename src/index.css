@@ -4,3 +4,67 @@
 
 html, body, #root { min-height: 100%; }
 body { -webkit-font-smoothing: antialiased; }
+
+
+/* Blog article typography — matches the marketing pages (Fraunces headings, Inter body). */
+.blog-prose {
+  max-width: 42rem;
+  font-size: 1.125rem;
+  line-height: 1.75;
+  color: #3B352F;
+}
+.blog-prose > * + * { margin-top: 1.15em; }
+.blog-prose h2, .blog-prose h3 {
+  font-family: Fraunces, Georgia, Cambria, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #1A1714;
+  line-height: 1.2;
+  scroll-margin-top: 1.25rem;
+}
+.blog-prose h2 { font-size: 1.75rem; margin-top: 2.25em; }
+.blog-prose h3 { font-size: 1.35rem; margin-top: 1.75em; }
+.blog-prose a { color: #C2410C; text-decoration: underline; text-underline-offset: 4px; }
+.blog-prose a:hover { color: #9A3412; }
+.blog-prose strong { color: #1A1714; font-weight: 600; }
+.blog-prose ul, .blog-prose ol { padding-left: 1.25em; }
+.blog-prose ul { list-style: disc; }
+.blog-prose ol { list-style: decimal; }
+.blog-prose li + li { margin-top: 0.4em; }
+.blog-prose li > ul, .blog-prose li > ol { margin-top: 0.4em; }
+.blog-prose blockquote {
+  border-left: 3px solid #E7C9B4;
+  padding-left: 1rem;
+  color: #5C554C;
+  font-style: italic;
+}
+.blog-prose code {
+  font-size: 0.9em;
+  background: #EDE7DD;
+  border-radius: 0.3rem;
+  padding: 0.1em 0.35em;
+}
+.blog-prose pre {
+  background: #1A1714;
+  color: #F7F5F0;
+  border-radius: 1rem;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.blog-prose pre code { background: transparent; padding: 0; color: inherit; }
+.blog-prose .blog-anchor {
+  margin-left: 0.4rem;
+  color: #C4B8A8;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.85em;
+}
+.blog-prose .blog-anchor:hover { color: #C2410C; }
+.blog-prose hr { border: 0; border-top: 1px solid #E7E1D7; margin: 2em 0; }
+
+@media (max-width: 639px) {
+  .blog-prose { font-size: 1.0625rem; }
+  .blog-prose h2 { font-size: 1.5rem; }
+}

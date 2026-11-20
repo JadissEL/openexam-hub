@@ -27,6 +27,7 @@ The planner currently covers **TEF Canada**, **TCF** (tout public and TCF Canada
 - **Free account to generate a plan.** An account (email or Google) is required so the AI token budget cannot be reused for repeat requests. A sample TEF Canada plan is available to preview first. You can export your plan as Markdown or JSON.
 - **Funding transparency.** Free forever, funded openly by donations and a few dashboard ads (ads are not live yet). All income is published on the Transparency page. Ads come off once the next 5 years of running costs are covered.
 - **Open source (MIT).**
+- **Blog.** Guides at `/blog` for students, professionals and immigration applicants, built from Markdown in [`content/blog`](content/blog/README.md).
 
 This is a study aid. It is not affiliated with CCI Paris / Le français des affaires, IRCC, France Éducation international, IELTS, ETS, the Goethe-Institut or Instituto Cervantes, and it is not an official placement test.
 
@@ -66,6 +67,12 @@ npm run build        # production frontend build into dist/
 ## Deploy
 
 See [DEPLOY.md](DEPLOY.md) for the full checklist. In short: import this repo on Vercel, set the environment variables from `.env.example`, deploy Firestore rules and indexes, and add the production domain to Firebase Auth authorized domains.
+
+## Blog
+
+Articles live in [`content/blog`](content/blog/README.md) as Markdown files with a standard frontmatter block. The site lists them at `/blog`, prerenders each post for search engines, and adds them to `sitemap.xml` and `/blog/rss.xml` at build time. Drafts are visible on preview deploys and hidden in production.
+
+To publish a post: add the file, open a pull request, set `draft: false` when it is ready, and merge. Vercel then deploys it automatically.
 
 ## Contributing
 
