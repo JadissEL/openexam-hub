@@ -63,6 +63,7 @@ import {
   collection
 } from 'firebase/firestore';
 import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
+import { DONATION_LINKS } from './donations.js';
 
 // ============================================================================
 // FIREBASE INITIALIZATION (MANDATORY CONFIG + SAFE FALLBACK)
@@ -171,11 +172,7 @@ async function apiGet(path) {
 
 // Real donation pages. Amounts reach the public ledger only through
 // signature-verified server webhooks, never from this browser.
-const DONATION_LINKS = {
-  githubSponsors: '', // TODO: 'https://github.com/sponsors/JadissEL'
-  openCollective: '', // TODO: 'https://opencollective.com/<your-collective>'
-  kofi: '' // TODO: 'https://ko-fi.com/<your-page>'
-};
+// Donation links live in src/donations.js (empty link = hidden).
 
 // ============================================================================
 // CURATED OFFICIAL FALLBACK REPOSITORIES
@@ -1272,23 +1269,10 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               {MONTHLY_TARGET.toFixed(2)} ({fundingPercentage}%)
             </span>
           </span>
-          {adsDisabledForever ? (
-            <span className="inline-flex items-center gap-1.5 text-white font-semibold whitespace-nowrap">
-              <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
-              Ads are off for everyone
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setActiveTab('treasury')}
-              className="inline-flex items-center gap-2 text-white font-semibold hover:text-orange-200 whitespace-nowrap transition"
-            >
-              <span className="w-24 h-1.5 rounded-full bg-white/15 overflow-hidden" aria-hidden="true">
-                <span className="block h-full bg-[#FF6B1A] rounded-full" style={{ width: `${fundingPercentage}%` }} />
-              </span>
-              Ads switch off at 100% →
-            </button>
-          )}
+          <span className="inline-flex items-center gap-3 whitespace-nowrap">
+            <span className="text-neutral-400">No ads · no paywall</span>
+            <a href="/" className="text-white font-semibold hover:text-orange-200 transition">About this project →</a>
+          </span>
         </div>
       </div>
 
@@ -2475,6 +2459,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               </div>
 
               <div className="mt-4 space-y-2">
+                {DONATION_LINKS.githubSponsors && (
                 <button
                   type="button"
                   onClick={() => {
@@ -2488,7 +2473,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   </span>
                   <span className="text-orange-300">Back Pool →</span>
                 </button>
+                )}
 
+                {DONATION_LINKS.openCollective && (
                 <button
                   type="button"
                   onClick={() => {
@@ -2502,6 +2489,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   </span>
                   <span className="text-orange-100">Back Pool →</span>
                 </button>
+                )}
 
                 <button
                   type="button"
@@ -2514,69 +2502,12 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     <Coins className="w-4 h-4 text-amber-600" />
                     Ko-fi One-Off Token Tip
                   </span>
-                  <span className="text-neutral-600">Tip €5 →</span>
+                  <span className="text-neutral-600">Tip →</span>
                 </button>
               </div>
             </div>
 
-            {/* 2. TEMPORARY ADSENSE BRIDGE (Controlled by Ad-Sunset Kill-Switch) */}
-            {!adsDisabledForever ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
-                <div className="flex items-center justify-between text-[11px] font-bold text-amber-900 mb-2">
-                  <span>TEMPORARY AD-BRIDGE</span>
-                  <span>{fundingPercentage}% to Sunset</span>
-                </div>
-                <p className="text-[11px] text-amber-900/90 leading-relaxed mb-3">
-                  Ads temporarily offset our API token bill. Once community backing hits{' '}
-                  <strong>€350.83/mo</strong>, this unit disappears automatically for everyone.
-                </p>
-                <div className="rounded-xl bg-white border border-dashed border-amber-300 p-4 text-center">
-                  <span className="text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">
-                    Sponsor Display Slot (AdSense Bridge)
-                  </span>
-                  <div className="text-xs font-semibold text-neutral-700">
-                    Accredited Language Examination Centers & Dictionaries
-                  </div>
-                  <div className="text-[11px] text-neutral-500 mt-0.5">
-                    Policy-compliant static placement • Zero pop-ups
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5 text-center">
-                <div className="w-10 h-10 rounded-full bg-[#111111] text-white flex items-center justify-center mx-auto mb-2.5">
-                  <EyeOff className="w-5 h-5" />
-                </div>
-                <h4 className="text-sm font-bold text-neutral-900">
-                  100% Community Funded — Ads Killed Site-Wide!
-                </h4>
-                <p className="text-xs text-orange-700 mt-1">
-                  Monthly patronage reached €{totalPatronage.toFixed(2)}. The AdSense script is automatically disabled for all learners.
-                </p>
-              </div>
-            )}
-
-            {/* 3. Companion Paid AI Language Studio Bridge */}
-            <div className="rounded-2xl bg-[#111111] text-white p-5 border border-neutral-800">
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 uppercase tracking-wider mb-1.5">
-                <Award className="w-3.5 h-3.5" />
-                Companion AI Language Studio
-              </span>
-              <h3 className="text-base font-bold">
-                Want Live AI Speaking & Essay Grading?
-              </h3>
-              <p className="text-xs text-neutral-300 mt-1.5 leading-relaxed">
-                OpenExam Hub will always stay 100% free for official resource discovery. If you want interactive AI voice examiners and instant CEFR writing feedback, explore our dedicated AI Language Studio.
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowOriginModal(true)}
-                className="min-h-[44px] mt-4 w-full py-2.5 px-4 rounded-full bg-white text-neutral-900 hover:bg-[#F4F4F2] text-xs font-bold inline-flex items-center justify-center gap-1.5 transition"
-              >
-                Explore Companion AI Studio
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {/* Removed: placeholder ad slot and an upsell for a paid product that doesn't exist. */}
               </>
             )}
           </aside>
@@ -2850,7 +2781,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                 { label: 'GitHub Sponsors (0% fee, monthly)', url: DONATION_LINKS.githubSponsors, icon: Code2 },
                 { label: 'Open Collective (public fiscal host)', url: DONATION_LINKS.openCollective, icon: ShieldCheck },
                 { label: 'Ko-fi (one-off tip)', url: DONATION_LINKS.kofi, icon: Coins }
-              ].map(({ label, url, icon: Icon }) =>
+              ].filter(({ url }) => !!url).map(({ label, url, icon: Icon }) =>
                 url ? (
                   <a
                     key={label}
