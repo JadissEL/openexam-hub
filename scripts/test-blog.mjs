@@ -17,6 +17,7 @@ import {
   SITE_ORIGIN,
   CONTENT_DIR
 } from './blog-data.mjs';
+import { SITEMAP_PATHS, TAG_INDEX_MIN_POSTS, allExamTags } from './blog-data.mjs';
 import { parsePlannerQuery, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
 import * as siteModule from '../src/seo/site.js';
 import { PLAN_PAGES, planPath } from '../src/seo/planPages.js';
@@ -128,8 +129,8 @@ test('sitemap includes static pages, skips drafts in production, includes posts 
 
   const previewXml = buildSitemapXml([example]);
   assert.match(previewXml, /https:\/\/openexamhub\.org\/blog\/example-when-to-start-preparing/);
-  assert.match(previewXml, /https:\/\/openexamhub\.org\/blog\/tag\/TEF_CANADA/);
-  assert.match(previewXml, /https:\/\/openexamhub\.org\/blog\/tag\/IELTS/);
+  assert.doesNotMatch(previewXml, /\/blog\/tag\//, 'tag pages stay out of the sitemap');
+  assert.doesNotMatch(previewXml, /<loc>https:\/\/openexamhub\.org\/app<\/loc>/, '/app is a sign-in wall');
   assert.match(previewXml, /<lastmod>2026-11-20<\/lastmod>/);
 });
 
@@ -327,7 +328,7 @@ if (process.argv.includes('--built')) {
       assert.equal(fs.existsSync(path.join(dist, 'blog/example-when-to-start-preparing/index.html')), false);
       const sitemap = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
       assert.doesNotMatch(sitemap, /example-when-to-start-preparing/);
-      for (const pathUrl of ['/', '/app', '/about', '/faq', '/funding', '/privacy', '/terms', '/blog']) {
+      for (const pathUrl of ['/', '/about', '/faq', '/funding', '/privacy', '/terms', '/blog']) {
         const loc = pathUrl === '/' ? 'https://openexamhub.org/' : `https://openexamhub.org${pathUrl}`;
         assert.match(sitemap, new RegExp(loc.replace(/[/.]/g, r => '\\' + r)));
       }
@@ -441,6 +442,43 @@ if (process.argv.includes('--built')) {
     const app = read('app/index.html');
     assert.match(app, /<link rel="canonical" href="https:\/\/openexamhub\.org\/app"/);
     assert.match(app, /<title>Study planner · OpenExam Hub<\/title>/);
+  });
+
+  test('built sitemap lists every indexable page and post, and nothing else (never the 7-URL stub)', () => {
+    assert.equal(fs.existsSync(path.join(root, 'public', 'sitemap.xml')), false, 'public/sitemap.xml would shadow nothing but drift; the build writes dist/sitemap.xml');
+    const sitemap = read('sitemap.xml');
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    const posts = loadBlogPosts({ includeDrafts: includeDraftsFromEnv() });
+    const expected = [...SITEMAP_PATHS.map((p) => `https://openexamhub.org${p === '/' ? '/' : p}`), ...posts.map((p) => p.canonical)];
+    assert.deepEqual([...locs].sort(), [...expected].sort());
+    assert.equal(new Set(locs).size, locs.length, 'no duplicate URLs');
+    assert.ok(locs.length >= 20, `sitemap has only ${locs.length} URLs`);
+    assert.ok(!locs.includes('https://openexamhub.org/app'), '/app is a sign-in wall');
+    assert.ok(!locs.some((u) => u.includes('/blog/tag/')), 'tag pages stay out of the sitemap');
+  });
+
+  test('blog tag pages with fewer than 3 posts are noindex,follow', () => {
+    const posts = loadBlogPosts({ includeDrafts: includeDraftsFromEnv() });
+    for (const tag of allExamTags(posts)) {
+      const html = read(`blog/tag/${tag}/index.html`);
+      const count = posts.filter((p) => p.exams.includes(tag)).length;
+      const noindex = /<meta name="robots" content="noindex,follow" \/>/.test(html);
+      assert.equal(noindex, count < TAG_INDEX_MIN_POSTS, `${tag}: ${count} post(s), noindex=${noindex}`);
+    }
+  });
+
+  test('homepage is prerendered with hero, exam guide links and FAQ, and keeps its head', () => {
+    const html = read('index.html');
+    assert.match(html, /<div id="root" data-prerendered="landing">/);
+    assert.match(html, /<h1[^>]*>Prepare for your language exam/);
+    for (const page of siteModule.EXAM_PAGES) assert.ok(html.includes(`href="/exams/${page.slug}"`), `homepage links /exams/${page.slug}`);
+    assert.match(html, /id="common-questions"/);
+    assert.match(html, /<link rel="canonical" href="https:\/\/openexamhub\.org\/"/);
+    assert.match(html, /<meta property="og:url" content="https:\/\/openexamhub\.org\/"/);
+    assert.match(html, /<script type="module"/);
+    assert.doesNotMatch(html, /pagead2\.googlesyndication|adsbygoogle/);
+    assert.ok(types(jsonLdBlocks(html)).includes('WebSite'));
+    assert.match(read('app/index.html'), /<div id="root"><\/div>/, '/app shell stays empty');
   });
 
   test('every prerendered JSON-LD block parses', () => {

@@ -20,6 +20,7 @@ import {
   REPO_ROOT
 } from './blog-data.mjs';
 import { prerenderPages } from './prerender-pages.mjs';
+import { TAG_INDEX_MIN_POSTS } from './blog-data.mjs';
 import { organizationJsonLd, websiteJsonLd } from '../src/seo/site.js';
 
 const VIRTUAL_ID = 'virtual:blog-posts';
@@ -166,7 +167,10 @@ async function prerender(distDir) {
         renderBlog(`/blog/tag/${exam}`, posts)
       )
     );
-    writePage(distDir, `/blog/tag/${exam}`, html);
+    // Thin tag pages stay crawlable (follow) but out of the index until they list enough posts.
+    const count = posts.filter((p) => p.exams.includes(exam)).length;
+    const robots = count < TAG_INDEX_MIN_POSTS ? html.replace('</head>', '    <meta name="robots" content="noindex,follow" />\n  </head>') : html;
+    writePage(distDir, `/blog/tag/${exam}`, robots);
   }
 
   for (const post of posts) {

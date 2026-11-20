@@ -436,7 +436,12 @@ export function faqJsonLd(post) {
 }
 
 // Marketing pages and /exams guides come from src/seo/site.js so the sitemap and the prerender agree.
-const STATIC_PAGES = [...indexablePaths(), '/blog'];
+// Left out: /app (a sign-in wall, nothing to index) and /blog/tag/* (thin listing pages; the ones
+// with fewer than TAG_INDEX_MIN_POSTS posts also carry noindex,follow).
+export const SITEMAP_EXCLUDED = ['/app'];
+export const TAG_INDEX_MIN_POSTS = 3;
+export const SITEMAP_PATHS = [...indexablePaths().filter((p) => !SITEMAP_EXCLUDED.includes(p)), '/blog'];
+const STATIC_PAGES = SITEMAP_PATHS;
 
 export function buildSitemapXml(posts) {
   const urls = [];
@@ -449,9 +454,6 @@ export function buildSitemapXml(posts) {
     urls.push(
       `  <url>\n    <loc>${post.canonical}</loc>\n    <lastmod>${post.updated || post.date}</lastmod>\n  </url>`
     );
-  }
-  for (const exam of allExamTags(posts)) {
-    urls.push(`  <url>\n    <loc>${SITE_ORIGIN}/blog/tag/${exam}</loc>\n  </url>`);
   }
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
 }
