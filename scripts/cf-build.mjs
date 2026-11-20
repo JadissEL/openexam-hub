@@ -26,6 +26,9 @@ writeFileSync(
 /robots.txt
   Content-Type: text/plain; charset=utf-8
 
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+
 /site.webmanifest
   Content-Type: application/manifest+json; charset=utf-8
 `
