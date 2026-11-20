@@ -138,6 +138,8 @@ export function normalizePath(pathname) {
 }
 
 /** Head tags for a non-blog route, or null when the route is unknown. */
+import { PLAN_PAGES, planPage, planPath } from './planPages.js';
+
 export function routeMeta(pathname) {
   const p = normalizePath(pathname);
   if (PAGE_META[p]) {
@@ -148,12 +150,20 @@ export function routeMeta(pathname) {
   if (page) {
     return { title: `${page.title} · OpenExam Hub`, description: page.description, canonical: `${SITE_ORIGIN}${p}` };
   }
+  const pm = p.match(/^\/exams\/([a-z0-9-]+)\/([a-z0-9-]+)$/);
+  const plan = pm && planPage(pm[1], pm[2]);
+  if (plan) {
+    return { title: `${plan.title} · OpenExam Hub`, description: plan.description, canonical: `${SITE_ORIGIN}${p}` };
+  }
   return null;
 }
 
 /** Every indexable non-blog path, in sitemap order. */
 export function indexablePaths() {
-  return [...Object.keys(PAGE_META), ...EXAM_PAGES.map((p) => `/exams/${p.slug}`)];
+  return [
+    ...Object.keys(PAGE_META),
+    ...EXAM_PAGES.flatMap((g) => [`/exams/${g.slug}`, ...PLAN_PAGES.filter((p) => p.guide === g.slug).map(planPath)])
+  ];
 }
 
 // ---------------------------------------------------------------- JSON-LD

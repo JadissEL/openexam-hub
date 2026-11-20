@@ -3,7 +3,7 @@
  *
  * - /about, /faq, /funding, /privacy, /terms: full HTML in #root, module script kept, so the React
  *   page takes over on load (src/main.jsx waits for the page chunk before rendering, no flash).
- * - /exams and /exams/<slug>: full static HTML, no module script (like the blog).
+ * - /exams, /exams/<slug> and /exams/<slug>/<plan>: full static HTML, no module script (like the blog).
  * - /app: correct head only (the study app is client-only).
  * - / is left alone: dist/index.html is also the SPA fallback for /app and unknown paths.
  */
@@ -92,6 +92,51 @@ export async function prerenderPages(distDir, template, { applyHead, injectRoot,
       }
     ];
     const faq = faqPageJsonLd(c.faq);
+    if (faq) jsonLd.push(faq);
+    writePage(distDir, p, stripModuleScripts(injectRoot(headFor(p, jsonLd), ssr.renderPage(p, posts))));
+    written.push(p);
+  }
+
+  for (const plan of ssr.PLAN_PAGES) {
+    const p = ssr.planPath(plan);
+    const guide = EXAM_PAGES.find((g) => g.slug === plan.guide);
+    if (!guide) throw new Error(`prerender: plan ${p} has no parent guide`);
+    const url = `${SITE_ORIGIN}${p}`;
+    const jsonLd = [
+      breadcrumbJsonLd([
+        { name: 'Home', path: '/' },
+        { name: 'Exams', path: '/exams' },
+        { name: guide.label, path: `/exams/${guide.slug}` },
+        { name: plan.breadcrumb, path: p }
+      ]),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        '@id': `${url}#webpage`,
+        url,
+        name: plan.title,
+        description: plan.description,
+        inLanguage: 'en',
+        isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+        about: { '@type': 'Thing', name: guide.label },
+        lastReviewed: plan.lastChecked
+      },
+      {
+        // Free self-paced study plan published by OpenExam Hub. No dates, workload or outcome claims.
+        '@context': 'https://schema.org',
+        '@type': 'Course',
+        '@id': `${url}#course`,
+        name: plan.label,
+        description: plan.description,
+        url,
+        inLanguage: 'en',
+        isAccessibleForFree: true,
+        educationalLevel: plan.level,
+        provider: { '@id': `${SITE_ORIGIN}/#organization` },
+        offers: { '@type': 'Offer', price: 0, priceCurrency: 'EUR', category: 'Free' }
+      }
+    ];
+    const faq = faqPageJsonLd(plan.faq);
     if (faq) jsonLd.push(faq);
     writePage(distDir, p, stripModuleScripts(injectRoot(headFor(p, jsonLd), ssr.renderPage(p, posts))));
     written.push(p);

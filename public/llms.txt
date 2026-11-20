@@ -12,6 +12,13 @@
 - [Goethe-Zertifikat](https://openexamhub.org/exams/goethe): free official practice tests A1–C2
 - [DELE](https://openexamhub.org/exams/dele): exam format by level and official resources
 
+## Study plans
+- [TCF Canada official practice and 30-day study path](https://openexamhub.org/exams/tcf-canada/official-practice-study-path)
+- [TEF Canada 30-day study plan](https://openexamhub.org/exams/tef-canada/30-day-study-plan)
+- [IELTS 8-week study plan toward band 6.5](https://openexamhub.org/exams/ielts/8-week-study-plan): a practice schedule, not a band prediction
+- [TCF B2 30-day study plan](https://openexamhub.org/exams/tcf/b2-30-day-study-plan)
+- [Goethe-Zertifikat B1 30-day study plan](https://openexamhub.org/exams/goethe/b1-30-day-study-plan)
+
 ## Site
 - [Study planner](https://openexamhub.org/app): free account required to generate a plan
 - [Blog](https://openexamhub.org/blog): guides on exam fees, dates, score conversions and requirements ([RSS](https://openexamhub.org/blog/rss.xml))

@@ -2,7 +2,8 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import InfoPage from '../landing/InfoPage.jsx';
 import LegalPage from '../landing/LegalPage.jsx';
-import { ExamPage, ExamsIndex } from './ExamPages.jsx';
+import { ExamPage, ExamsIndex, PlanPage } from './ExamPages.jsx';
+import { PLAN_PAGES, planPath } from './planPages.js';
 import { examContent } from './examContent.js';
 import { FAQ } from '../landing/content.js';
 
@@ -17,7 +18,9 @@ export function renderPage(pathname, posts = []) {
   if (p === '/exams') return renderToString(<ExamsIndex posts={posts} />);
   const m = p.match(/^\/exams\/([a-z0-9-]+)$/);
   if (m) return renderToString(<ExamPage slug={m[1]} posts={posts} />);
+  const pm = p.match(/^\/exams\/([a-z0-9-]+)\/([a-z0-9-]+)$/);
+  if (pm) return renderToString(<PlanPage guide={pm[1]} slug={pm[2]} posts={posts} />);
   return null;
 }
 
-export { examContent, FAQ };
+export { examContent, FAQ, PLAN_PAGES, planPath };
