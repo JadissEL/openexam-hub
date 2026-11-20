@@ -6,7 +6,7 @@ Please also read the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## If you are new here
 
-1. Try the live site: [https://openexam-hub.vercel.app](https://openexam-hub.vercel.app).
+1. Try the live site: [https://openexamhub.org](https://openexamhub.org).
 2. Browse [open issues](https://github.com/JadissEL/openexam-hub/issues), especially those labelled [`good first issue`](https://github.com/JadissEL/openexam-hub/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 3. Comment on the issue you want to take so two people do not do the same work.
 

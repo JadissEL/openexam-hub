@@ -27,7 +27,10 @@ use it), or with `vercel env add NAME production`. Never commit them.
 |---|---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | yes | The full service-account JSON as **one line**. Firebase console → Project settings → Service accounts → Generate new private key. Minify it first, for example with `jq -c . key.json`. Missing or invalid JSON makes routes return 503 `ConfigError`. |
 | `APP_ID` | yes | Must equal the client's `VITE_APP_ID`, because every document lives under `artifacts/{APP_ID}/`. Default `openexam-hub` on both sides. |
-| `ALLOWED_ORIGIN` | yes in prod | The site origin allowed by CORS, for example `https://openexamhub.org`. Default `*`. |
+| `ALLOWED_ORIGIN` | yes in prod | Origins allowed by CORS, comma-separated, for example `https://openexamhub.org,https://www.openexamhub.org`. Default `*`. |
+| `ADSENSE_PUBLISHER_ID` | no | AdSense publisher id (`pub-…`). `/ads.txt` is served only when this is set, otherwise 404. |
+| `VITE_ADSENSE_CLIENT` | no | AdSense client (`ca-pub-…`), build-time. Ads load only on `/app` for signed-in users, after Google's consent message. |
+| `VITE_ADSENSE_SLOT` | no | Numeric id of the dashboard display ad unit, build-time. Both VITE_ADSENSE_* must be set for ads to show. |
 | `CRON_SECRET` | yes | A random string (`openssl rand -hex 32`). Vercel sends `Authorization: Bearer $CRON_SECRET` to cron routes automatically once this variable exists. |
 | `ADMIN_SECRET` | yes | A random string (`openssl rand -hex 32`) for `/api/admin/*`. Send it as `Authorization: Bearer …`. Keep it out of the browser. |
 

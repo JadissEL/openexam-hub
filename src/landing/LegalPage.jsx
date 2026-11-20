@@ -67,10 +67,44 @@ const PAGES = {
         h: 'What we don’t do',
         body: (
           <ul>
-            <li>No analytics tools. There are no ads yet; before dashboard ads go live, this notice will be updated to name the ad provider and what it collects, and ads will never appear on the landing page.</li>
+            <li>No analytics tools, and no ads on the home page or on any information page.</li>
             <li>We don’t sell, rent or share your personal data for marketing.</li>
             <li>We don’t ask for your real name, phone number or payment details.</li>
           </ul>
+        )
+      },
+      {
+        h: 'Ads and cookies',
+        body: (
+          <>
+            <p>
+              To keep the site free, we plan to show a small number of Google AdSense ads, and only inside the study dashboard
+              (<code>/app</code>) for signed-in users. There are never ads on the home page, the information pages or these legal
+              pages. Adult, gambling, dating and other sensitive ad categories are blocked. All ad income is published on the
+              transparency page, and ads come off once five years of running costs (€200,000) are covered.
+            </p>
+            <ul className="mt-4">
+              <li>
+                <strong>Your choice first.</strong> Before any ad loads, Google’s consent message (a Google-certified consent
+                tool) asks whether Google may use cookies or similar storage for ads. Until you decide, Google Consent Mode is
+                set to “denied”, so no ad cookies are set and no personalised ads are shown.
+              </li>
+              <li>
+                <strong>What Google may collect.</strong> If ads load, Google receives technical data such as your IP address, browser
+                and device details and the page you are on, and, only if you agree, uses cookies to personalise or measure ads. See{' '}
+                <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">how Google uses data from sites that use its services</a>.
+              </li>
+              <li>
+                <strong>Changing your mind.</strong> You can change or withdraw your choice at any time from the “Privacy and cookie
+                settings” link Google shows on the dashboard, or by clearing this site’s cookies. You can also turn off personalised
+                ads at <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer">Google’s ad settings</a>.
+              </li>
+              <li>
+                <strong>Our own storage.</strong> The site itself uses your browser’s local storage and Firebase’s sign-in storage only to
+                keep you signed in and remember your plans and settings. These are strictly necessary and are not used for ads.
+              </li>
+            </ul>
+          </>
         )
       },
       {
@@ -79,6 +113,7 @@ const PAGES = {
           <ul>
             <li><strong>Vercel</strong> hosts the website and the server (Frankfurt region). Like any web host, it keeps short-lived technical logs such as IP addresses.</li>
             <li><strong>Google Firebase</strong> provides sign-in and the database.</li>
+            <li><strong>Google AdSense</strong> (only on the signed-in dashboard, once ads are switched on) shows ads and runs the consent message described above.</li>
             <li><strong>Google Fonts</strong> serves the typefaces, so your browser contacts Google’s font servers.</li>
             <li>
               <strong>AI model providers</strong>, reached through our own gateway, may help write plan tasks, practice items and coaching

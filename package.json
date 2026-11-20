@@ -12,7 +12,7 @@
     "dev:api": "node scripts/local-server.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node scripts/test-orchestrator.mjs && node scripts/test-learner-agents.mjs && node scripts/test-ledger.mjs && node scripts/test-algo.mjs && node scripts/test-v3.mjs",
+    "test": "node scripts/test-http.mjs && node scripts/test-orchestrator.mjs && node scripts/test-learner-agents.mjs && node scripts/test-ledger.mjs && node scripts/test-algo.mjs && node scripts/test-v3.mjs",
     "test:algo": "node scripts/test-algo.mjs && node scripts/test-v3.mjs",
     "e2e": "node scripts/e2e.mjs",
     "mock-llm": "node scripts/mock-llm.mjs",

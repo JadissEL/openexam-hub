@@ -2,7 +2,7 @@
 
 **Free study roadmaps for language exams, built from official free materials.**
 
-[Live site](https://openexam-hub.vercel.app) · [Ko-fi](https://ko-fi.com/openexamhub) · [Open Collective](https://opencollective.com/openexam-hub) · License: [MIT](LICENSE)
+[Live site](https://openexamhub.org) · [Ko-fi](https://ko-fi.com/openexamhub) · [Open Collective](https://opencollective.com/openexam-hub) · License: [MIT](LICENSE)
 
 OpenExam Hub turns the free material that exam boards and public broadcasters already publish into a calm, day-by-day study plan. Choose an exam, a target level and how many days you have. Every resource link is checked before you see it.
 

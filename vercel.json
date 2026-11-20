@@ -22,7 +22,35 @@
       "schedule": "30 3 * * *"
     }
   ],
+  "redirects": [
+    {
+      "source": "/((?!api/).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "openexam-hub.vercel.app"
+        }
+      ],
+      "destination": "https://openexamhub.org/$1",
+      "permanent": true
+    },
+    {
+      "source": "/((?!api/).*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.openexamhub.org"
+        }
+      ],
+      "destination": "https://openexamhub.org/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/ads.txt",
+      "destination": "/api/ads-txt"
+    },
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"

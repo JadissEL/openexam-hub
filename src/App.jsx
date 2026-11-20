@@ -72,6 +72,7 @@ import { DONATION_LINKS } from './donations.js';
 import { FIVE_YEAR_GOAL_EUR, FUNDING_PROMISE } from './funding.js';
 import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant } from '../lib/exams.js';
 import StudyToday from './StudyToday.jsx';
+import DashboardAd from './DashboardAd.jsx';
 import ReviewDeck, { SaveToDeckButton, cardFromPractice, cardIdFor } from './ReviewDeck.jsx';
 import { dueQueue, retention as srsRetention } from '../lib/algo/srs.js';
 import { quantiseProfile, localDate, hasSchedule, planDays, currentDay } from './lib/plan.js';
@@ -2890,6 +2891,8 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             {/* Removed: placeholder ad slot and an upsell for a paid product that doesn't exist. */}
               </>
             )}
+            {/* AdSense: signed-in dashboard only; renders nothing until configured and consented. */}
+            <DashboardAd enabled={isRegisteredUser(firebaseUser)} />
           </aside>
           )}
         </div>
