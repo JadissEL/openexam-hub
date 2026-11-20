@@ -51,7 +51,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  connectAuthEmulator
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -65,7 +66,8 @@ import {
   orderBy,
   limit,
   updateDoc,
-  deleteField
+  deleteField,
+  connectFirestoreEmulator
 } from 'firebase/firestore';
 import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { DONATION_LINKS } from './donations.js';
@@ -73,6 +75,7 @@ import { FIVE_YEAR_GOAL_EUR, FUNDING_PROMISE } from './funding.js';
 import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant, parsePlannerQuery } from '../lib/exams.js';
 import StudyToday from './StudyToday.jsx';
 import DashboardAd from './DashboardAd.jsx';
+import AuthGate from './AuthGate.jsx';
 import ReviewDeck, { SaveToDeckButton, cardFromPractice, cardIdFor } from './ReviewDeck.jsx';
 import { dueQueue, retention as srsRetention } from '../lib/algo/srs.js';
 import { quantiseProfile, localDate, hasSchedule, planDays, currentDay } from './lib/plan.js';
@@ -93,6 +96,12 @@ try {
     const app = getApps().length === 0 ? initializeApp(config) : getApps()[0];
     auth = getAuth(app);
     db = getFirestore(app);
+    // Local testing only: VITE_FIREBASE_EMULATORS=true points the app at the Auth (9099) and
+    // Firestore (8085) emulators. Never set in production builds.
+    if (import.meta.env.VITE_FIREBASE_EMULATORS === 'true') {
+      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+      connectFirestoreEmulator(db, '127.0.0.1', 8085);
+    }
   }
   if (typeof __app_id !== 'undefined' && __app_id) appId = __app_id;
 } catch (err) {
@@ -742,7 +751,47 @@ function toClientPhases(serverPhases) {
 // ============================================================================
 // MAIN APPLICATION COMPONENT
 // ============================================================================
+// ============================================================================
+// AUTH GATE: /app shows the dashboard only to signed-in, non-anonymous users.
+// Nothing of the dashboard (shell, tabs, ad slot, Firestore listeners, API calls) is rendered or
+// started before Firebase Auth has resolved and confirmed a real account.
+// ============================================================================
+const PUBLIC_HASH_REDIRECTS = { transparency: '/funding', support: '/funding', funding: '/funding' };
+
+function GateLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#F7F5F0] text-neutral-500 text-sm" role="status" data-testid="auth-loading">
+      Loading…
+    </div>
+  );
+}
+
 export default function App() {
+  const [state, setState] = useState(() => ({ ready: !auth, user: null }));
+
+  useEffect(() => {
+    if (!auth) return undefined;
+    return onAuthStateChanged(auth, (user) => setState({ ready: true, user }));
+  }, []);
+
+  const signedIn = isRegisteredUser(state.user);
+
+  // Signed-out deep links to public info (e.g. /app#transparency) go to the public page instead.
+  const publicTarget =
+    state.ready && !signedIn && typeof window !== 'undefined'
+      ? PUBLIC_HASH_REDIRECTS[(window.location.hash || '').replace(/^#/, '').toLowerCase()]
+      : null;
+  useEffect(() => {
+    if (publicTarget) window.location.replace(publicTarget);
+  }, [publicTarget]);
+
+  if (!state.ready || publicTarget) return <GateLoading />;
+  if (!auth) return <Dashboard initialUser={null} />; // no Firebase config (local UI preview only)
+  if (!signedIn) return <AuthGate auth={auth} sampleRoadmap={SAMPLE_ROADMAP} />;
+  return <Dashboard key={state.user.uid} initialUser={state.user} />;
+}
+
+function Dashboard({ initialUser }) {
   // Navigation & Modal State
   const [activeTab, setActiveTab] = useState(() => tabFromLocation() || 'generator');
   const [showOriginModal, setShowOriginModal] = useState(false);
@@ -750,8 +799,8 @@ export default function App() {
   const [showContributeModal, setShowContributeModal] = useState(false);
 
   // Firebase Auth State
-  const [firebaseUser, setFirebaseUser] = useState(null);
-  const [authReady, setAuthReady] = useState(false);
+  const [firebaseUser, setFirebaseUser] = useState(initialUser || null);
+  const [authReady, setAuthReady] = useState(!!initialUser);
   const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
   const [authPrompt, setAuthPrompt] = useState('Free. Create a free account to generate your plan.');
   const [authEmail, setAuthEmail] = useState('');

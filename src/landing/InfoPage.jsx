@@ -221,8 +221,8 @@ export function FundingPage() {
           Support on Ko-fi <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
         </a>
         <p className={`pb-24 text-[17px] leading-[1.7] ${muted}`}>
-          The live totals are on the{' '}
-          <a className="text-[#C2410C] underline underline-offset-4" href="/app#transparency">Transparency page</a> in the planner.
+          The live totals are also on the Transparency tab inside the{' '}
+          <a className="text-[#C2410C] underline underline-offset-4" href="/app">planner</a> (free account).
         </p>
       </section>
     </PageShell>

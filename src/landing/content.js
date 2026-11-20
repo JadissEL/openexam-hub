@@ -7,7 +7,7 @@ export const LEGAL_EMAIL = 'legal@openexamhub.org';
 export const REPO_URL = 'https://github.com/JadissEL/openexam-hub';
 export const APP_PATH = '/app';
 export const LIBRARY_PATH = '/app#library';
-export const TRANSPARENCY_PATH = '/app#transparency';
+export const TRANSPARENCY_PATH = '/funding';
 
 // Only organisations whose pages are actually in the seeded library (scripts/seed-library.js).
 // Names only: we link to them, we are not affiliated with them.
