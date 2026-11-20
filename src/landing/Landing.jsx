@@ -1,9 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { SiteHeader, SiteFooter } from './SiteChrome.jsx';
 import { BrowserFrame, PhoneFrame } from './frames.jsx';
 import { ink, muted, eyebrow, h2, lead, pageFont } from './theme.js';
 import { APP_PATH, LEGACY_HASH_REDIRECTS, SOURCES } from './content.js';
+import { API_BASE, SERVER_ENABLED } from '../firebaseConfig.js';
+import { learnersProof } from './learners.js';
 
 // Marketing page: editorial, story-led, deliberately unlike the app UI (no cards, tiles or widgets).
 // Every claim on this page must be true in the code today. No invented numbers or quotes.
@@ -17,6 +19,31 @@ function PrimaryCTA({ children = 'Build my free plan', className = '' }) {
       {children}
       <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
     </a>
+  );
+}
+
+
+function LearnersProof() {
+  const [copy, setCopy] = useState(null);
+  useEffect(() => {
+    if (!SERVER_ENABLED) return undefined;
+    let cancelled = false;
+    fetch(`${API_BASE}/api/stats`, { headers: { Accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('stats'))))
+      .then((out) => {
+        if (!cancelled) setCopy(learnersProof(out?.registeredUsers));
+      })
+      .catch(() => {
+        if (!cancelled) setCopy(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return (
+    <p className={`mt-4 text-[15px] leading-6 ${muted} min-h-6`} aria-live="polite" aria-hidden={copy ? undefined : true}>
+      {copy || '\u00a0'}
+    </p>
   );
 }
 
@@ -39,7 +66,8 @@ function Hero() {
               See how it works
             </a>
           </div>
-          <p className={`mt-6 text-[15px] ${muted}`}>
+          <LearnersProof />
+          <p className={`mt-4 text-[15px] ${muted}`}>
             Free. Create a free account to generate your plan. Open source (MIT).
           </p>
         </div>

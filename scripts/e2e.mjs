@@ -835,6 +835,7 @@ async function main() {
     assert.equal(typeof st.json.usage?.calls, 'number');
     assert.equal(typeof st.json.usageTotal?.costEur, 'number');
     assert.ok(st.json.treasury);
+    assert.ok(st.json.registeredUsers == null || (Number.isInteger(st.json.registeredUsers) && st.json.registeredUsers >= 0));
     const noAuth = await get('/api/cron/rollup');
     assert.equal(noAuth.status, 401);
   });

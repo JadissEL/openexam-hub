@@ -20,7 +20,10 @@
     "emulator": "firebase emulators:start --only firestore --project demo-openexam --config firebase.json",
     "test:blog": "node scripts/test-blog.mjs",
     "e2e:gate": "node scripts/e2e-gate.mjs",
-    "test:account": "firebase emulators:exec --only auth,firestore --project demo-openexam --config firebase.json \"node scripts/test-account-emulator.mjs\""
+    "test:account": "firebase emulators:exec --only auth,firestore --project demo-openexam --config firebase.json \"node scripts/test-account-emulator.mjs\"",
+    "cf:build": "node scripts/cf-build.mjs",
+    "cf:deploy": "npx --yes wrangler@4.166.0 deploy",
+    "cf:dev": "npx --yes wrangler@4.166.0 dev"
   },
   "dependencies": {
     "firebase": "^13.4.0",

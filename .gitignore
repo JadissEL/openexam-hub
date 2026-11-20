@@ -27,3 +27,4 @@ npm-debug.log*
 coverage/
 e2e-shots/
 dist-e2e/
+.wrangler/
