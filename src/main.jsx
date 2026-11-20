@@ -6,6 +6,7 @@ import './index.css';
 // Firebase SDK) is code-split and only downloaded on /app.
 const Landing = lazy(() => import('./landing/Landing.jsx'));
 const LegalPage = lazy(() => import('./landing/LegalPage.jsx'));
+const InfoPage = lazy(() => import('./landing/InfoPage.jsx'));
 const App = lazy(() => import('./App.jsx'));
 
 function pickRoute(pathname) {
@@ -13,6 +14,9 @@ function pickRoute(pathname) {
   if (p === '/') return <Landing />;
   if (p === '/privacy') return <LegalPage kind="privacy" />;
   if (p === '/terms') return <LegalPage kind="terms" />;
+  if (p === '/about') return <InfoPage kind="about" />;
+  if (p === '/faq') return <InfoPage kind="faq" />;
+  if (p === '/funding') return <InfoPage kind="funding" />;
   return <App />; // /app and any other path open the study app
 }
 

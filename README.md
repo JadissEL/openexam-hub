@@ -6,7 +6,7 @@
 
 OpenExam Hub turns the free material that exam boards and public broadcasters already publish into a calm, day-by-day study plan. Choose an exam, a target level and how many days you have. Every resource link is checked before you see it.
 
-No account is required. Sign in only if you want your plans to sync across devices.
+Free. Create a free account to generate your plan. A sample TEF Canada plan is available to preview first.
 
 The planner currently covers **TEF Canada**, **TCF** (tout public and TCF Canada), **IELTS**, **TOEFL** iBT, **Goethe-Zertifikat** and **DELE** (levels A1–C2). More official-source exams are planned.
 
@@ -24,7 +24,7 @@ The planner currently covers **TEF Canada**, **TCF** (tout public and TCF Canada
 - **Link-checked library.** Resources are stored with their official domain and a reachability check.
 - **Placement self-check** (unofficial) and extra practice when you want a short diagnostic before you plan.
 - **Progress coach** that can adjust the remaining days of a plan.
-- **Guest by default.** Anonymous use is enough to build and download a plan as Markdown or JSON.
+- **Free account to generate a plan.** An account (email or Google) is required so the AI token budget cannot be reused for repeat requests. A sample TEF Canada plan is available to preview first. You can export your plan as Markdown or JSON.
 - **Funding transparency.** Free forever, funded openly by donations and a few dashboard ads (ads are not live yet). All income is published on the Transparency page. Ads come off once the next 5 years of running costs are covered.
 - **Open source (MIT).**
 

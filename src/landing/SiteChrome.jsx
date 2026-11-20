@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { GithubMark } from './icons.jsx';
-import { APP_PATH, CONTACT_EMAIL, REPO_URL } from './content.js';
+import {
+  APP_PATH,
+  CONTACT_EMAIL,
+  LEGAL_EMAIL,
+  LIBRARY_PATH,
+  REPO_URL,
+  SUPPORT_EMAIL,
+  TRANSPARENCY_PATH
+} from './content.js';
 import { DONATION_PLATFORMS } from '../donations.js';
 
 export function Wordmark({ className = '' }) {
@@ -14,11 +22,10 @@ export function Wordmark({ className = '' }) {
 }
 
 const NAV = [
-  { href: '/#story', label: 'Our story' },
   { href: '/#how', label: 'How it works' },
-  { href: '/#sources', label: 'Sources' },
-  { href: '/#free', label: 'Why it’s free' },
-  { href: '/#faq', label: 'FAQ' }
+  { href: '/#exams', label: 'Exams' },
+  { href: '/about', label: 'About' },
+  { href: '/faq', label: 'FAQ' }
 ];
 
 export function SiteHeader() {
@@ -79,35 +86,75 @@ export function SiteHeader() {
   );
 }
 
+const FOOTER_COLS = [
+  {
+    title: 'Product',
+    links: [
+      { href: '/#exams', label: 'Exams' },
+      { href: LIBRARY_PATH, label: 'Library' },
+      { href: APP_PATH, label: 'Dashboard' }
+    ]
+  },
+  {
+    title: 'Project',
+    links: [
+      { href: '/about', label: 'About' },
+      { href: TRANSPARENCY_PATH, label: 'Transparency' },
+      { href: '/funding', label: 'Funding & donate' },
+      { href: REPO_URL, label: 'Open source on GitHub', external: true },
+      { href: `${REPO_URL}/issues`, label: 'Report a problem', external: true },
+      ...DONATION_PLATFORMS.map((d) => ({ href: d.url, label: `Support on ${d.name}`, external: true }))
+    ]
+  },
+  {
+    title: 'Help',
+    links: [
+      { href: '/faq', label: 'FAQ' },
+      { href: `mailto:${CONTACT_EMAIL}`, label: CONTACT_EMAIL },
+      { href: `mailto:${SUPPORT_EMAIL}`, label: SUPPORT_EMAIL }
+    ]
+  },
+  {
+    title: 'Legal',
+    links: [
+      { href: '/privacy', label: 'Privacy' },
+      { href: '/terms', label: 'Terms' },
+      { href: `mailto:${LEGAL_EMAIL}`, label: LEGAL_EMAIL }
+    ]
+  }
+];
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-[#E7E1D7] bg-[#F1EDE5]">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-14 grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
-        <div className="max-w-sm">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
+        <div className="max-w-sm sm:col-span-2 lg:col-span-1">
           <Wordmark />
           <p className="mt-4 text-[15px] leading-relaxed text-[#5C554C]">
             A free, independent study planner for language exams. Made by Jadiss El Antaki. Not affiliated with any exam body.
           </p>
+          <p className="mt-3 text-[15px] leading-relaxed text-[#5C554C]">
+            Free. Create a free account to generate your plan.
+          </p>
         </div>
-        <div>
-          <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8A8178]">Project</h2>
-          <ul className="mt-4 space-y-2.5 text-[15px] text-[#3B352F]">
-            <li><a className="hover:text-[#C2410C]" href={APP_PATH}>Study planner</a></li>
-            <li><a className="hover:text-[#C2410C]" href={REPO_URL} target="_blank" rel="noopener noreferrer">Source code (GitHub)</a></li>
-            <li><a className="hover:text-[#C2410C]" href={`${REPO_URL}/issues`} target="_blank" rel="noopener noreferrer">Report a problem</a></li>
-            {DONATION_PLATFORMS.map((d) => (
-              <li key={d.key}><a className="hover:text-[#C2410C]" href={d.url} target="_blank" rel="noopener noreferrer">Support on {d.name}</a></li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8A8178]">Contact &amp; legal</h2>
-          <ul className="mt-4 space-y-2.5 text-[15px] text-[#3B352F]">
-            <li><a className="hover:text-[#C2410C] break-all" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
-            <li><a className="hover:text-[#C2410C]" href="/privacy">Privacy</a></li>
-            <li><a className="hover:text-[#C2410C]" href="/terms">Terms</a></li>
-          </ul>
-        </div>
+        {FOOTER_COLS.map((col) => (
+          <div key={col.title}>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8A8178]">{col.title}</h2>
+            <ul className="mt-4 space-y-2.5 text-[15px] text-[#3B352F]">
+              {col.links.map((l) => (
+                <li key={l.href + l.label}>
+                  <a
+                    className="hover:text-[#C2410C] break-all"
+                    href={l.href}
+                    {...(l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
       <div className="mx-auto max-w-6xl px-5 sm:px-8 pb-10 text-[13px] text-[#8A8178]">
         © {new Date().getFullYear()} OpenExam Hub. Exam names belong to their owners and are used only to describe what a plan prepares you for.

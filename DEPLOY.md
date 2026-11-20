@@ -358,7 +358,7 @@ for f in $(find api lib -name '*.js'); do node --check "$f" || echo "FAIL $f"; d
 node scripts/test-ledger.mjs     # offline: webhooks, idempotency, rollover, FX, dead-link logic
 ```
 
-### End-to-end test (local, no accounts needed)
+### End-to-end test (local, no production accounts needed)
 
 ```bash
 npm install          # dev deps: firebase-tools (emulator, needs Java 11+), firebase + @firebase/rules-unit-testing

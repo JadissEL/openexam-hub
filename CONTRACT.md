@@ -38,6 +38,7 @@ Roadmap object (what the client renders):
 
 HTTP API (JSON, CORS via lib/http.js cors()):
 - POST /api/generate-roadmap  {exam, level, days, forceRefresh?, variant?, diagnostic?:{skillScores:{listening:0..1,...}}} -> {roadmap}
+                              Authorization: Bearer <Firebase ID token of a non-anonymous user>. 401 if missing, invalid, or anonymous.
 - GET  /api/check-link?url=   -> {url, status, httpCode, finalUrl}  (Cache-Control s-maxage=86400)
 - GET  /api/library?exam=&level=&skill= -> {resources:[...rank, relevance], shelfVersion?}  (with level: served from the shelf; s-maxage=600 + ETag)
 - GET  /api/plan?exam=&level=&days=[&profile=wms---][&variant=canada] -> {roadmap, polished} | 404 {planKey}   shared plan cache, rescheduled for exactly `days`

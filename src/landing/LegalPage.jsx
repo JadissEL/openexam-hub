@@ -13,6 +13,29 @@ const PAGES = {
       'OpenExam Hub is a small, independent project run by Jadiss El Antaki. This page explains, in plain words, what data the site handles and why.',
     sections: [
       {
+        h: 'In short',
+        body: (
+          <ul>
+            <li>
+              <strong>A free account to generate a plan.</strong> Creating a plan uses AI, so you need a free account
+              (email or Google). You can still look at a sample TEF Canada plan before you sign up.
+            </li>
+            <li>
+              <strong>Your plans are yours.</strong> Plans and ticks are stored in Google Firebase (EU region), under
+              your account only. Other people can’t read them.
+            </li>
+            <li>
+              <strong>Your account keeps your plans.</strong> Signing in with email or Google lets you generate plans
+              and use them on more than one device.
+            </li>
+            <li>
+              <strong>No analytics.</strong> We don’t use analytics tools. AI requests contain your exam, level, timeline
+              and progress, never your name or email.
+            </li>
+          </ul>
+        )
+      },
+      {
         h: 'Who is responsible',
         body: (
           <p>
@@ -25,12 +48,9 @@ const PAGES = {
         body: (
           <ul>
             <li>
-              <strong>Guest use.</strong> When you open the planner, Firebase Authentication creates an anonymous account
-              with a random ID. It contains no name or email.
-            </li>
-            <li>
-              <strong>Optional sign-in.</strong> If you sign in with email or Google, Firebase stores your email address
-              (and, for Google, the basic profile Google shares, such as your name).
+              <strong>Accounts.</strong> To generate a plan you create a free account with email or Google. Firebase
+              stores your email address (and, for Google, the basic profile Google shares, such as your name). You can
+              look at a sample TEF Canada plan before you sign up.
             </li>
             <li>
               <strong>Your plans.</strong> The plans you build and the tasks you tick are saved in Google Cloud Firestore
@@ -93,7 +113,8 @@ const PAGES = {
         body: (
           <p>
             OpenExam Hub builds study plans that point to free resources published by official exam bodies and public broadcasters.
-            It is free to use. There is no paid tier.
+            It is free to use and there is no paid tier. Generating a plan requires a free account, so the AI budget
+            cannot be reused for repeat requests. You can look at a sample TEF Canada plan before you sign up.
           </p>
         )
       },

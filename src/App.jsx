@@ -45,7 +45,6 @@ import {
 import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
-  signInAnonymously,
   signInWithCustomToken,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -183,10 +182,12 @@ function friendlyError(err, fallback) {
   return err instanceof ApiError && err.status === 400 && err.message ? err.message : fallback;
 }
 
-async function apiPost(path, body) {
+async function apiPost(path, body, { token } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body)
   });
   const data = await res.json().catch(() => ({}));
@@ -556,6 +557,26 @@ const SAMPLE_ROADMAP = {
   completedTasks: {}
 };
 
+const TAB_FROM_HASH = {
+  library: 'library',
+  transparency: 'treasury',
+  support: 'treasury',
+  dashboard: 'generator',
+  planner: 'generator',
+  saved: 'saved',
+  practice: 'practice'
+};
+
+function tabFromLocation() {
+  if (typeof window === 'undefined') return null;
+  const h = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+  return TAB_FROM_HASH[h] || null;
+}
+
+function isRegisteredUser(user) {
+  return !!(user && !user.isAnonymous);
+}
+
 // ============================================================================
 // DESIGN SYSTEM: neutral surfaces + warm orange accent (defined once, reused)
 // ============================================================================
@@ -722,7 +743,7 @@ function toClientPhases(serverPhases) {
 // ============================================================================
 export default function App() {
   // Navigation & Modal State
-  const [activeTab, setActiveTab] = useState('generator');
+  const [activeTab, setActiveTab] = useState(() => tabFromLocation() || 'generator');
   const [showOriginModal, setShowOriginModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showContributeModal, setShowContributeModal] = useState(false);
@@ -821,8 +842,6 @@ export default function App() {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
-        } else if (!auth.currentUser) {
-          await signInAnonymously(auth);
         }
       } catch (e) {
         console.warn('Initial auth fallback:', e);
@@ -836,6 +855,15 @@ export default function App() {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const onHash = () => {
+      const tab = tabFromLocation();
+      if (tab) setActiveTab(tab);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
   // ==========================================================================
@@ -1011,6 +1039,15 @@ export default function App() {
   // ==========================================================================
   const examVariant = selectedExam === 'TCF' ? normalizeVariant('TCF', selectedTcfVariant) : null;
   const handleGenerateStudyPath = async (forceRefresh = false) => {
+    // Firebase is configured: a real (non-anonymous) account is required before
+    // we spend AI tokens or hit the shared plan cache on behalf of a learner.
+    if (auth && !isRegisteredUser(firebaseUser)) {
+      setAuthMode('signup');
+      setShowAuthModal(true);
+      setStatusNotice('Create a free account to generate your plan.');
+      return;
+    }
+
     const cacheKey = `${selectedExam}${examVariant && examVariant !== defaultVariant(selectedExam) ? `-${examVariant.toUpperCase()}` : ''}-${selectedLevel}-${daysUntilExam}`;
     setStatusNotice(null);
 
@@ -1113,6 +1150,7 @@ export default function App() {
         setTimeout(() => setAgentStep(4), 2700)
       ];
       try {
+        const token = isRegisteredUser(firebaseUser) ? await firebaseUser.getIdToken() : null;
         const { roadmap } = await apiPost('/api/generate-roadmap', {
           exam: selectedExam.toUpperCase(),
           level: selectedLevel,
@@ -1122,7 +1160,7 @@ export default function App() {
           diagnostic: diagnosticResult
             ? { skillScores: diagnosticResult.skillScores }
             : undefined
-        });
+        }, { token });
         const newRoadmap = {
           ...roadmap,
           id: cacheKey,
@@ -1462,7 +1500,8 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
     if (!auth) return;
     try {
       await signOut(auth);
-      await signInAnonymously(auth);
+      setSavedRoadmaps([]);
+      setActiveRoadmapId(null);
       setShowAuthModal(false);
     } catch (err) {
       console.warn('Sign-out notice:', err);
@@ -1937,7 +1976,9 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs text-neutral-500">
                       <span className="inline-flex items-center gap-2 text-center">
                         <StatusDot tone="green" />
-                        Plans you've built before open instantly, at no cost.
+                        {auth && !isRegisteredUser(firebaseUser)
+                          ? 'Free. Create a free account to generate your plan.'
+                          : "Plans you've built before open instantly, at no cost."}
                       </span>
                       <button
                         type="button"
@@ -2138,7 +2179,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       </div>
                       {activeRoadmap.sample && (
                         <p className="mt-4 text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                          This is an example so you can see how a plan looks. Pick your exam, level and date above and press "Build my plan" to get your own.
+                          This is a sample TEF Canada plan, so you can see how a plan looks. Create a free account, then pick your exam, level and date above and press “Build my plan” to get your own.
                         </p>
                       )}
                       <p className="mt-4 text-sm text-neutral-600 leading-relaxed">{activeRoadmap.summary}</p>
@@ -2925,7 +2966,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
             <div className="flex items-center justify-between pb-3 border-b border-black/5">
               <h3 id="oe-auth-title" className="font-bold text-neutral-900 text-lg">
-                Sync Your Study Cache Profile
+                {authMode === 'signup' ? 'Create a free account' : 'Sign in'}
               </h3>
               <button
                 type="button"
@@ -2937,8 +2978,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             </div>
 
             <p className="text-xs text-neutral-600 mt-3 leading-relaxed">
-              Sign in with Google or Email to persist your study roadmaps and checklist progress across devices at{' '}
-              <strong className="text-orange-700">€0.00 repeat API cost</strong>.
+              Free. Create a free account to generate your plan. An account also keeps your plans and ticks in sync across devices.
             </p>
 
             {firebaseUser && !firebaseUser.isAnonymous ? (
@@ -2952,7 +2992,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                   className="w-full py-2 rounded-lg bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  Sign Out to Guest Session
+                  Sign out
                 </button>
               </div>
             ) : (
@@ -3025,12 +3065,12 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     {authMode === 'signup' ? (
                       <>
                         <UserPlus className="w-4 h-4" />
-                        Create Free Cached Account
+                        Create a free account
                       </>
                     ) : (
                       <>
                         <LogIn className="w-4 h-4" />
-                        Sign In to Saved Cache
+                        Sign in
                       </>
                     )}
                   </button>

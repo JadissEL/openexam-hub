@@ -51,6 +51,7 @@ const ENV = {
   GITHUB_SPONSORS_WEBHOOK_SECRET: 'gh-secret-e2e',
   KOFI_VERIFICATION_TOKEN: 'kofi-token-e2e',
   OPEN_COLLECTIVE_WEBHOOK_TOKEN: 'oc-token-e2e',
+  E2E_GENERATE_TOKEN: 'e2e-generate-token',
   OPEN_COLLECTIVE_SLUG: 'openexam-hub',
   FX_USD_EUR: '0.92',
   LOCAL_SERVER_QUIET: '1'
@@ -126,9 +127,17 @@ async function http(method, p, { body, headers = {}, raw } = {}) {
   try { json = JSON.parse(text); } catch { /* not JSON */ }
   return { status: res.status, json, text, headers: res.headers };
 }
-const post = (p, body, opts = {}) => http('POST', p, { body, ...opts });
+const post = (p, body, opts = {}) => {
+  const headers = { ...(opts.headers || {}) };
+  const hasAuth = Object.keys(headers).some((k) => k.toLowerCase() === 'authorization');
+  if (p === '/api/generate-roadmap' && !hasAuth && !opts.noAuth) {
+    headers.authorization = `Bearer ${ENV.E2E_GENERATE_TOKEN}`;
+  }
+  return http('POST', p, { ...opts, body, headers });
+};
 const get = (p, opts = {}) => http('GET', p, opts);
 const admin = { authorization: 'Bearer admin-secret-e2e' };
+const learner = { authorization: `Bearer ${ENV.E2E_GENERATE_TOKEN}` };
 
 const llmCalls = async () => (await (await fetch(`${LLM}/__calls`)).json());
 const llmControl = (c) => fetch(`${LLM}/__control`, { method: 'POST', body: JSON.stringify(c) });
@@ -255,12 +264,13 @@ async function main() {
   section('Bad input');
   await test('400s for invalid requests (and 405/401/404 where relevant)', async () => {
     const cases = [
-      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'Z9', days: 30 }, 400],
-      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 0 }, 400],
-      ['POST', '/api/generate-roadmap', { level: 'B2', days: 30 }, 400],
-      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30, forceRefresh: 'yes' }, 400],
-      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30, diagnostic: { skillScores: { cooking: 0.5 } } }, 400],
-      ['POST', '/api/generate-roadmap', { exam: 'ZZTOP', level: 'B2', days: 30 }, 400],
+      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30 }, 401],
+      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'Z9', days: 30 }, 400, learner],
+      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 0 }, 400, learner],
+      ['POST', '/api/generate-roadmap', { level: 'B2', days: 30 }, 400, learner],
+      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30, forceRefresh: 'yes' }, 400, learner],
+      ['POST', '/api/generate-roadmap', { exam: 'TCF', level: 'B2', days: 30, diagnostic: { skillScores: { cooking: 0.5 } } }, 400, learner],
+      ['POST', '/api/generate-roadmap', { exam: 'ZZTOP', level: 'B2', days: 30 }, 400, learner],
       ['POST', '/api/diagnostic', { action: 'explode', exam: 'TCF', level: 'B2' }, 400],
       ['POST', '/api/diagnostic', { action: 'create', exam: 'XYZ', level: 'B2' }, 400],
       ['POST', '/api/diagnostic', { action: 'score', exam: 'TCF', level: 'B2', answers: [] }, 400],
@@ -301,7 +311,8 @@ async function main() {
   });
   await test('malformed JSON bodies are 400, not 500, on every JSON route', async () => {
     for (const p of ['/api/generate-roadmap', '/api/diagnostic', '/api/coach', '/api/practice', '/api/admin/expand', '/api/admin/approve', '/api/admin/review-profile']) {
-      const r = await http('POST', p, { raw: '{"exam": "TCF",', headers: { 'content-type': 'application/json', ...admin } });
+      const auth = p === '/api/generate-roadmap' ? learner : admin;
+      const r = await http('POST', p, { raw: '{"exam": "TCF",', headers: { 'content-type': 'application/json', ...auth } });
       assert.equal(r.status, 400, `${p} -> ${r.status} ${r.text.slice(0, 120)}`);
     }
   });
