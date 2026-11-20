@@ -211,7 +211,10 @@ function assertRoadmap(r, { exam, level, days }) {
     assert.equal(typeof s.agent, 'string');
     assert.ok(['ok', 'skipped', 'failed'].includes(s.status), `pipeline status ${s.status}`);
     assert.equal(typeof s.detail, 'string');
+    // The build log is shown to learners: exam names, never plan keys or raw exam ids.
+    if (s.status === 'ok') assert.doesNotMatch(s.detail, /plan key|\b[A-Z]{2,}_[A-Z0-9_]{2,}\b|\b[A-Z]{3,}-[A-C][12]-\d+\b/, `raw id in build log: ${s.detail}`);
   }
+  if (process.env.E2E_SHOW_PIPELINE) console.log(r.pipeline.map((s) => `      ${s.agent}: ${s.detail}`).join('\n'));
   // v3 deterministic schedule (lib/algo/schedule.js): one compact code per day + empty progress map.
   if (r.calendar !== undefined) {
     assert.equal(r.calendar.length, days, 'calendar covers every day');
@@ -415,7 +418,7 @@ async function main() {
       assert.equal(r.status, 200, r.text);
       assertRoadmap(r.json.roadmap, { exam: 'IELTS', level: 'C1', days: 10 });
       assert.equal(step(r.json.roadmap, 'planner')[0].status, 'failed');
-      assert.match(step(r.json.roadmap, 'global_cache').at(-1).detail, /deterministic wording/);
+      assert.match(step(r.json.roadmap, 'global_cache').at(-1).detail, /standard wording/);
       assert.equal((await docData('plans', 'IELTS_C1_14')).wording, null);
       assert.ok((await counter('fallbackPlans')) >= 1);
     } finally {
