@@ -70,7 +70,7 @@ function Hero() {
             </a>
           </div>
           <p className={`mt-6 text-[15px] ${muted}`}>
-            No account needed · No ads · Code public on GitHub
+            Free forever · No account needed · Code public on GitHub
           </p>
         </div>
 
@@ -269,8 +269,8 @@ function ProductPeek() {
 
 function Free() {
   const promises = [
-    ['No paywall', 'Every feature is free. There is no premium tier waiting behind it.'],
-    ['No ads', 'There are no ads on OpenExam Hub, and no advertising trackers.'],
+    ['No paywall', 'Every feature is free, forever. There is no premium tier waiting behind it.'],
+    ['Open books', 'Every euro from donations and dashboard ads is shown publicly, so you can see exactly how the site is paid for.'],
     ['No selling data', 'We don’t sell or rent personal data, and never will.']
   ];
   return (
@@ -278,12 +278,17 @@ function Free() {
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-20 sm:py-28 grid lg:grid-cols-[1fr_1.4fr] gap-12 lg:gap-20">
         <div>
           <p className={eyebrow}>How it’s free</p>
-          <h2 id="free-title" className={`mt-4 ${h2}`}>Free because the material is free.</h2>
+          <h2 id="free-title" className={`mt-4 ${h2}`}>How the lights stay on.</h2>
         </div>
         <div>
           <p className={lead}>
-            The expensive part of exam prep is usually the course, not the content. We skip the course. What’s
-            left costs little: web hosting and AI calls for writing plans. We pay for those ourselves, helped by optional tips.
+            Free forever. Funded openly by donations and a few dashboard ads, which go away once the next 5 years
+            are covered.
+          </p>
+          <p className={`mt-5 text-[17px] leading-[1.7] ${muted}`}>
+            The expensive part of exam prep is usually the course, not the content. We skip the course. What’s left
+            is hosting and AI calls for writing plans. Ads appear only on the study dashboard, never on this page,
+            and all earnings from ads and donations are published so anyone can check them.
           </p>
           <dl className="mt-10 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]">
             {promises.map(([t, d]) => (
@@ -294,10 +299,9 @@ function Free() {
             ))}
           </dl>
           <p className={`mt-8 text-[17px] leading-[1.7] ${muted}`}>
-            If you’d like to help keep it running, you can leave a tip on{' '}
+            Want to help the ads disappear sooner? You can leave a tip on{' '}
             <a className="text-[#C2410C] underline underline-offset-4" href={DONATION_LINKS.kofi} target="_blank" rel="noopener noreferrer">Ko-fi</a>.
-            It’s entirely optional and unlocks nothing: everyone gets the same planner. We’re connecting donations to a
-            public ledger inside the app, so anyone can see what came in and what it paid for.
+            It’s optional and unlocks nothing: everyone gets the same planner.
           </p>
           <a
             href={DONATION_LINKS.kofi}
@@ -318,7 +322,7 @@ function Privacy() {
     ['Use it as a guest', 'When you open the planner, it creates an anonymous account in your browser. No name, no email.'],
     ['Your plans are yours', 'Plans and ticks are stored in Google Firebase (EU region), under your account only. Other people can’t read them.'],
     ['Sign in only to sync', 'Signing in with email or Google is optional and only lets you use your plans on more than one device.'],
-    ['Nothing to track you', 'No analytics, no ad pixels. AI requests contain your exam, level, timeline and progress, never your name or email.']
+    ['No analytics', 'We don’t use analytics tools. AI requests contain your exam, level, timeline and progress, never your name or email.']
   ];
   return (
     <section id="privacy" className="scroll-mt-6 bg-[#F1EDE5]" aria-labelledby="privacy-title">
@@ -408,7 +412,7 @@ function FinalCTA() {
         <h2 id="cta-title" className={`font-display ${ink} text-[38px] leading-[1.05] sm:text-6xl tracking-[-0.03em] font-medium`}>
           Your exam date is set.<br className="hidden sm:block" /> Make the weeks before it calmer.
         </h2>
-        <p className={`mt-6 ${lead} max-w-xl mx-auto`}>Three choices and you have a plan. No account, no card, no ads.</p>
+        <p className={`mt-6 ${lead} max-w-xl mx-auto`}>Three choices and you have a plan. No account, no card.</p>
         <div className="mt-9"><PrimaryCTA /></div>
       </div>
     </section>

@@ -47,7 +47,7 @@ const PAGES = {
         h: 'What we don’t do',
         body: (
           <ul>
-            <li>No ads, no advertising trackers and no analytics tools.</li>
+            <li>No analytics tools. There are no ads yet; before dashboard ads go live, this notice will be updated to name the ad provider and what it collects, and ads will never appear on the landing page.</li>
             <li>We don’t sell, rent or share your personal data for marketing.</li>
             <li>We don’t ask for your real name, phone number or payment details.</li>
           </ul>

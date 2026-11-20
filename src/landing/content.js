@@ -40,7 +40,7 @@ export const SOURCES = [
 export const FAQ = [
   {
     q: 'Is it really free? What’s the catch?',
-    a: 'There is no paid tier, no paywall and no ads, and we don’t sell data. Running it costs a little money (hosting and AI calls), which we cover ourselves, helped by optional tips on Ko-fi. Tipping unlocks nothing; everyone gets the same planner. If that ever changes, we’ll say so on this page first.'
+    a: 'There is no paid tier and no paywall, and we don’t sell data. Running it costs money (hosting and AI calls). It’s funded openly by donations and, on the study dashboard only, a few ads. Every euro from both is shown publicly, and once the next 5 years of running costs are covered, the ads go away. This page will never show ads.'
   },
   {
     q: 'Do I need an account?',

@@ -1270,7 +1270,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             </span>
           </span>
           <span className="inline-flex items-center gap-3 whitespace-nowrap">
-            <span className="text-neutral-400">No ads · no paywall</span>
+            <span className="text-neutral-400">Free forever · earnings shown publicly</span>
             <a href="/" className="text-white font-semibold hover:text-orange-200 transition">About this project →</a>
           </span>
         </div>
