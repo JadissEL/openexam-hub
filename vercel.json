@@ -64,11 +64,31 @@
       "destination": "/blog/index.html"
     },
     {
-      "source": "/((?!api/|blog(?:/|$)|sitemap\\.xml|robots\\.txt).*)",
+      "source": "/((?!api/|blog(?:/|$)|demo(?:/|$)|sitemap\\.xml|robots\\.txt).*)",
       "destination": "/index.html"
     }
   ],
   "regions": [
     "fra1"
+  ],
+  "headers": [
+    {
+      "source": "/demo/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/demo/desktop.vtt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/vtt; charset=utf-8"
+        }
+      ]
+    }
   ]
 }

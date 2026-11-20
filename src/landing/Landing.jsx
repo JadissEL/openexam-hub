@@ -23,7 +23,7 @@ function PrimaryCTA({ children = 'Build my free plan', className = '' }) {
 function Hero() {
   return (
     <section className="relative overflow-hidden" aria-labelledby="hero-title">
-      <div className="relative mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 lg:pt-20 pb-16 sm:pb-24 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
+      <div className="relative mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 lg:pt-20 pb-10 sm:pb-14 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
         <div>
           <p className={eyebrow}>Free study plans · TEF Canada · TCF · IELTS · TOEFL · Goethe · DELE</p>
           <h1 id="hero-title" className={`mt-5 font-display ${ink} text-[44px] leading-[1.02] sm:text-6xl lg:text-[68px] lg:leading-[1.0] tracking-[-0.03em] font-medium`}>
@@ -85,29 +85,41 @@ const STEPS = [
 function HowItWorks() {
   return (
     <section id="how" className="scroll-mt-6 bg-[#F1EDE5]" aria-labelledby="how-title">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-20 grid lg:grid-cols-[1.25fr_1fr] gap-14 lg:gap-20 items-center">
-        <div>
-          <p className={eyebrow}>How it works</p>
+      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-12 sm:py-16">
+        <div className="max-w-3xl">
+          <p className={eyebrow}>See how it works</p>
           <h2 id="how-title" className={`mt-4 ${h2}`}>Three choices, then a plan you can actually follow.</h2>
-          <ol className="mt-12 space-y-10">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="grid grid-cols-[3.25rem_1fr] gap-4">
-                <span aria-hidden="true" className="font-display text-[40px] leading-none text-[#C76A3A]">{String(i + 1).padStart(2, '0')}</span>
-                <div>
-                  <h3 className={`${ink} text-xl sm:text-[22px] font-semibold tracking-[-0.01em]`}>{s.title}</h3>
-                  <p className={`mt-2 text-[17px] leading-[1.7] ${muted}`}>{s.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <p className={`mt-4 text-[17px] leading-[1.7] ${muted}`}>
+            A two-and-a-half-minute walkthrough, from creating a free account to building a plan.
+          </p>
         </div>
-        <PhoneFrame
-          src="/landing/mob-plan.webp"
-          alt="Screenshot of a TCF B2 plan on a phone, showing official resources marked ‘link checked, reachable’."
-          width={512}
-          height={1024}
-          className="w-[260px] sm:w-[300px] mx-auto"
-        />
+        <figure className="mt-8 max-w-3xl rounded-[18px] bg-[#1A1714] ring-1 ring-black/[0.07] shadow-[0_40px_80px_-40px_rgba(60,40,20,0.45)] overflow-hidden">
+          <video
+            controls
+            preload="none"
+            playsInline
+            poster="/demo/poster.jpg"
+            width={1280}
+            height={720}
+            className="block w-full h-auto aspect-video bg-[#1A1714]"
+            aria-label="OpenExam Hub demo: signing up, building a TEF Canada plan, and logging back in"
+          >
+            <source src="/demo/desktop.mp4" type="video/mp4" />
+            <track kind="captions" src="/demo/desktop.vtt" srcLang="en" label="English" default />
+          </video>
+        </figure>
+        <p className={`mt-3 max-w-3xl text-[13px] leading-relaxed ${muted}`}>
+          English captions are available in the player. Background music: “Chill Out Theme” by Komiku, released under CC0 1.0.
+        </p>
+        <ol className="mt-12 grid md:grid-cols-3 gap-x-10 gap-y-10">
+          {STEPS.map((s, i) => (
+            <li key={s.title}>
+              <span aria-hidden="true" className="font-display text-[40px] leading-none text-[#C76A3A]">{String(i + 1).padStart(2, '0')}</span>
+              <h3 className={`mt-3 ${ink} text-xl sm:text-[22px] font-semibold tracking-[-0.01em]`}>{s.title}</h3>
+              <p className={`mt-2 text-[17px] leading-[1.7] ${muted}`}>{s.body}</p>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );
