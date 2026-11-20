@@ -1,0 +1,38 @@
+{
+  "name": "openexam-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Free, official-source study roadmaps for language exams (DELF/DALF, IELTS, Goethe, ...). Vite + React frontend, Vercel Node functions, Firestore.",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "node scripts/local-server.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node scripts/test-orchestrator.mjs && node scripts/test-learner-agents.mjs && node scripts/test-ledger.mjs && node scripts/test-algo.mjs",
+    "test:algo": "node scripts/test-algo.mjs",
+    "e2e": "node scripts/e2e.mjs",
+    "mock-llm": "node scripts/mock-llm.mjs",
+    "seed": "node scripts/seed-library.js",
+    "emulator": "firebase emulators:start --only firestore --project demo-openexam --config firebase.json"
+  },
+  "dependencies": {
+    "firebase": "^13.4.0",
+    "firebase-admin": "^13.0.0",
+    "lucide-react": "^1.77.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "autoprefixer": "^10.4.20",
+    "firebase-tools": "^15.37.0",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^3.4.19",
+    "vite": "^8.3.0"
+  }
+}

@@ -1,0 +1,342 @@
+# OpenExam Hub: deployment guide
+
+One Vercel project serves both halves: the static Vite build (`dist/`) and the Node 20 serverless
+functions in `api/**`. The functions that use Firestore
+through `firebase-admin`. All AI calls go through one OpenAI-compatible endpoint (`lib/llm.js`).
+The default is a self-hosted **OmniRoute** gateway on a small always-on host.
+
+```
+Browser (src/App.jsx) ──reads──▶ Firestore (public/**, read-only for clients)
+      │                         ▲
+      └──POST /api/*──▶ Vercel functions ──Admin SDK writes──┘
+                              │
+                              └──▶ https://llm.example.org/v1  (OmniRoute on a VPS, behind HTTPS)
+Donation platforms ──webhooks──▶ /api/webhooks/*   (signature/token verified, idempotent)
+Vercel cron (daily) ──▶ /api/cron/recheck-links    (link health + ledger month rollover)
+```
+
+---
+
+## 1. Environment variables
+
+Set these in Vercel → Project → Settings → Environment Variables (Production, and Preview if you
+use it), or with `vercel env add NAME production`. Never commit them.
+
+### Core
+| Variable | Required | What it is |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | yes | The full service-account JSON as **one line**. Firebase console → Project settings → Service accounts → Generate new private key. Minify it first, for example with `jq -c . key.json`. Missing or invalid JSON makes routes return 503 `ConfigError`. |
+| `APP_ID` | yes | Must equal the client's `VITE_APP_ID`, because every document lives under `artifacts/{APP_ID}/`. Default `openexam-hub` on both sides. |
+| `ALLOWED_ORIGIN` | yes in prod | The site origin allowed by CORS, for example `https://openexamhub.org`. Default `*`. |
+| `CRON_SECRET` | yes | A random string (`openssl rand -hex 32`). Vercel sends `Authorization: Bearer $CRON_SECRET` to cron routes automatically once this variable exists. |
+| `ADMIN_SECRET` | yes | A random string (`openssl rand -hex 32`) for `/api/admin/*`. Send it as `Authorization: Bearer …`. Keep it out of the browser. |
+
+### LLM gateway (`lib/llm.js`)
+| Variable | Required | What it is |
+|---|---|---|
+| `LLM_BASE_URL` | yes | OpenAI-compatible base URL **including `/v1`**, for example `https://llm.example.org/v1` (OmniRoute). |
+| `LLM_API_KEY` | yes | The OmniRoute API key from Dashboard → **Endpoints**, or the key for any other OpenAI-compatible endpoint. |
+| `LLM_MODEL` | no | The default model or combo for every agent. Default `auto`, which lets OmniRoute pick among eligible connections. |
+| `LLM_MODEL_<AGENT>` | no | A per-agent override. AGENT is one of `DISCOVERY`, `PLANNER`, `FORMAT`, `DIAGNOSTIC`, `COACH`, `PRACTICE`, `EXPANSION`. Example: `LLM_MODEL_PLANNER=groq/llama-3.3-70b-versatile`, or the name of an OmniRoute combo. |
+| `LLM_FALLBACK_BASE_URL` | no | A second OpenAI-compatible endpoint, used when the primary errors (4xx/5xx/timeouts). A cheap **paid** API is recommended once you have real traffic. |
+| `LLM_FALLBACK_API_KEY` | with fallback | The key for the fallback endpoint. |
+| `LLM_FALLBACK_MODEL` | with fallback | The model id on the fallback endpoint. |
+
+### Donations
+| Variable | Required | What it is |
+|---|---|---|
+| `GITHUB_SPONSORS_WEBHOOK_SECRET` | yes | The "Secret" you type when creating the Sponsors webhook. It is used for the `X-Hub-Signature-256` HMAC check. |
+| `KOFI_VERIFICATION_TOKEN` | yes | The Verification Token shown on ko-fi.com/manage/webhooks (under *Advanced*). |
+| `OPEN_COLLECTIVE_WEBHOOK_TOKEN` | yes | A random string (`openssl rand -hex 32`) that you put in the webhook URL as `?token=`. Open Collective webhooks carry no signature (see §5.3). |
+| `OPEN_COLLECTIVE_SLUG` | yes | Your collective's slug, for example `openexam-hub`. Transactions on any other account are ignored. |
+| `OPEN_COLLECTIVE_API_TOKEN` | no | An Open Collective Personal Token (personal settings → *For developers*), sent as the `Personal-Token` header on the re-confirmation query. Public reads work without it. It only raises rate limits. |
+| `FX_<CUR>_EUR` | per currency | Rate to EUR, for example `FX_USD_EUR=0.92`, `FX_GBP_EUR=1.17`, `FX_CHF_EUR=1.05`, `FX_CAD_EUR=0.66`. EUR is always 1. GitHub Sponsors is always **USD**, so `FX_USD_EUR` is effectively required. If a rate is missing, the event is still recorded, but it is **left out of the EUR total** and gets the flag `missing_fx_rate` (`amountEur: null`, `countedInTotal: false`; `monthly_ledger.pendingFxEvents` goes up by one). Update the rates monthly. |
+
+### Library
+| Variable | Required | What it is |
+|---|---|---|
+| `EXTRA_ALLOWED_DOMAINS` | no | A comma-separated list of extra official domains, used for new exams. Example: `cervantes.es,testdaf.de,celpip.ca`. Use bare hostnames only (no scheme, path or wildcard). Subdomains are included automatically. Invalid entries are ignored with a warning. Never add multi-tenant hosts (`github.io`, `blogspot.com`) or public suffixes (`co.uk`). Mirror the same list in src/App.jsx's allowlist so the client agrees. Redeploy after changing it. |
+
+Other routes (roadmap, diagnostic, coach, practice) use only the variables above.
+
+---
+
+## 2. Deploy to Vercel
+
+```bash
+npm i -g vercel
+vercel link            # create or link the project; root directory = repo root
+vercel env add FIREBASE_SERVICE_ACCOUNT production   # repeat for every variable in §1
+vercel --prod
+```
+
+Or import the GitHub repo in the Vercel dashboard (root directory = `./`); `vercel.json` already sets
+`framework: vite`, `buildCommand: npm run build` and `outputDirectory: dist`.
+
+* The function runtime comes from `package.json` (`"type": "module"`, `engines.node: 20.x`). The build step is `vite build` for the frontend only; `api/**` is bundled by Vercel.
+* `vercel.json` rewrites every non-`/api/` path to `/index.html` (SPA). Same-origin `/api` means the client needs no `VITE_API_BASE`.
+* Client build variables (`VITE_*`, see `.env.example`) are optional: `src/firebaseConfig.js` defaults to the public `openexam-hub` web config. `VITE_SERVER_ENABLED=false` builds a preview-only UI that never calls `/api`.
+* `vercel.json` sets a **daily** cron (`0 3 * * *`, 03:00 UTC) for `/api/cron/recheck-links` and gives it and `/api/admin/expand` `maxDuration: 300`. On Hobby the cap is 300 s and only daily crons are allowed. Each run checks 150 links and stops starting new checks after 240 s, so each run fits the limit and the whole library is re-checked about every `N/150` days.
+* To smoke-test the cron: `curl -H "Authorization: Bearer $CRON_SECRET" https://<app>/api/cron/recheck-links`.
+* **Before go-live, reset the old browser-written treasury.** The old client wrote sample and arbitrary amounts into `treasury/monthly_ledger` and `ledger_events`. Delete `artifacts/{APP_ID}/public/data/treasury/monthly_ledger` and every existing `ledger_events/*` doc in the Firestore console. (`lib/ledger.js` also ignores the money fields of any ledger doc that has no `month`, keeping only `adsenseBridge`. Deleting the old events is still needed to clean the public feed.)
+
+### Rate-limit the expensive routes (recommended)
+`/api/generate-roadmap` (especially with `forceRefresh: true`), `/api/practice` and
+`/api/diagnostic` can trigger live LLM calls, so one abusive client can burn your free-tier quotas.
+Add a Vercel Firewall rule: Project → **Firewall** → **Configure** → **New rule**:
+* **If** Request Path *matches* `^/api/(generate-roadmap|practice|diagnostic)$`
+* **Then** **Rate Limit**: fixed window, 60 s, about 10 requests, keyed on **IP**. Action: *Too Many Requests (429)*.
+* Optionally add a stricter second rule for requests whose body contains `"forceRefresh":true`, or handle that in code.
+The webhooks, cron and admin routes are already authenticated, so they don't need this rule.
+Check your plan's Firewall limits on vercel.com/docs/vercel-firewall.
+
+---
+
+## 3. Firestore rules and indexes
+
+`firestore.rules` works like this:
+* `artifacts/{appId}/public/**`: anyone can read; **no client can write**. Everything shared is written by the server through the Admin SDK, which bypasses rules.
+* `artifacts/{appId}/users/{uid}/**`: only the owner (`request.auth.uid == uid`) can read or write. Roadmap docs must pass a shape and size check: `exam`, `level` A1–C2, `days` 1–180, bounded list and map sizes, at most 25 keys, and `id` must match the doc id.
+* Everything else is denied.
+
+`firestore.indexes.json` defines the composite index that
+`lib/library.js` `findResources` needs: `resources`: `exams` (array-contains) + `approved` (==)
++ `linkStatus` (in). The link-maintenance query (`orderBy lastCheckedAt`) uses the automatic
+single-field index.
+
+Deploy both with the Firebase CLI from the repo root (`firebase.json` and `.firebaserc` are committed; the default project is `openexam-hub`):
+
+```bash
+npm i -g firebase-tools
+firebase login
+firebase use openexam-hub
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
+Indexes take a few minutes to build. Until then, `findResources` fails with `FAILED_PRECONDITION`,
+and the error message contains a console link that creates the same index.
+
+The rules were checked against the Firestore emulator (16 allow/deny cases: public read, no client
+writes to ledger/events/cache, owner-only roadmaps, bad level/days/id rejected, default deny).
+
+---
+
+## 4. Admin endpoints (exam expansion)
+
+All admin endpoints need `Authorization: Bearer $ADMIN_SECRET` and accept JSON.
+
+```bash
+# 1. Draft resources for a new exam. The exam board's domain must already be allowlisted:
+#    add it to EXTRA_ALLOWED_DOMAINS (and src/App.jsx) and redeploy first.
+curl -X POST https://<app>/api/admin/expand -H "Authorization: Bearer $ADMIN_SECRET" \
+  -H 'Content-Type: application/json' -d '{"exam":"DELE","levels":["B1","B2"]}'
+#    -> { saved:[{id,url,title,...,approved:false}], rejected:[{url,reason}], suggestedDomains:[...] }
+#    suggestedDomains are model suggestions. Verify they are the official board before allowlisting.
+
+# 2. Review each saved URL by hand, then approve the good ones
+curl -X POST https://<app>/api/admin/approve -H "Authorization: Bearer $ADMIN_SECRET" \
+  -H 'Content-Type: application/json' -d '{"resourceIds":["<24-hex id>"],"approve":true}'
+
+# 3. After checking an exam format fact sheet against its sourceUrl
+curl -X POST https://<app>/api/admin/review-profile -H "Authorization: Bearer $ADMIN_SECRET" \
+  -H 'Content-Type: application/json' -d '{"exam":"DELE","reviewed":true}'
+```
+
+The link-maintenance cron sets `approved:false` and `deadSince` once a link has been **dead twice in
+a row** (404/410/DNS). It also deletes every `global_verified_roadmaps` doc that cites that link,
+so the next request rebuilds the roadmap. If a link comes back to life, it stays unapproved until
+you approve it again with `/api/admin/approve`. Timeouts and 5xx errors never count as dead. Each
+run's summary is stored at `public/data/metrics/link_health`.
+
+---
+
+## 5. Register the donation webhooks
+
+### 5.1 GitHub Sponsors
+1. github.com/sponsors/**<you>**/dashboard → **Webhooks** → **Add webhook**. For an org, use the org's Sponsors dashboard.
+2. Payload URL: `https://<app>/api/webhooks/github-sponsors`
+3. Content type: `application/json` (form-encoded also works).
+4. Secret: the value of `GITHUB_SPONSORS_WEBHOOK_SECRET`.
+5. Save. GitHub sends a `ping`, which gets a 200 reply. Use *Recent Deliveries → Redeliver* to re-test. Redeliveries keep the same `X-GitHub-Delivery`, so they are no-ops.
+
+How events are handled (per GitHub's `sponsorship` event docs): `created` adds the tier's
+`monthly_price_in_cents` (USD) to `githubSponsors`, the monthly recurring revenue, which does not
+reset each month. `cancelled` subtracts it; GitHub sends this when the last billing cycle ends.
+`tier_changed` adds `new − changes.tier.from`. `pending_cancellation`, `pending_tier_change` and
+`edited` change no money. When `privacy_level: "private"`, the feed shows "Anonymous sponsor" and
+no tier name. **One-time** sponsorships (`tier.is_one_time`) go into `githubOneTime` instead, which
+resets monthly.
+
+### 5.2 Ko-fi
+1. ko-fi.com/manage/webhooks → Webhook URL: `https://<app>/api/webhooks/kofi` → Update.
+2. Under *Advanced*, copy the **Verification Token** into `KOFI_VERIFICATION_TOKEN`.
+3. Use *Send Single Donation Test* to check the setup.
+
+Ko-fi posts `application/x-www-form-urlencoded` with one `data` field holding JSON, and retries
+until it gets a 200 with the same `message_id`; that id is the idempotency key. Only `Donation` and
+`Subscription` are counted, into `koFiTips`, which resets monthly. `Shop Order` and `Commission`
+get a 200 reply and are ignored. When `is_public` is false, the name and message are not stored.
+Emails and shipping data are never stored.
+
+### 5.3 Open Collective: what verification exists today
+* **No signature.** The generic webhook (Collective → Settings → **Webhooks**) is a plain JSON `POST` of the activity. There is no HMAC, secret, or signature header. Verified against the `opencollective-api` source (`server/lib/notifications/index.ts` → `axios.post(webhookUrl, activity)`) and the public docs, November 2026.
+* That is why this endpoint uses **two defenses**:
+  1. **A secret token in the URL.** Register `https://<app>/api/webhooks/open-collective?token=<OPEN_COLLECTIVE_WEBHOOK_TOKEN>`. It is compared in constant time.
+  2. **Re-confirmation.** The payload is treated only as a hint. The server re-reads the transaction by its UUID from the public GraphQL API (`https://api.opencollective.com/graphql/v2`, `transaction(transaction:{id})`) and counts only what the API returns: the amount, the currency, that the account is `OPEN_COLLECTIVE_SLUG`, that the kind is `CONTRIBUTION`/`ADDED_FUNDS`, and that the type is `CREDIT`. A refund (`DEBIT` + `isRefund`) is subtracted. A forged payload can't inflate the total. At most it can replay a real transaction, and the idempotency key (the transaction UUID) makes that a no-op.
+* Setup: Collective → Settings → Webhooks → add the URL above → activity **"New transaction"** (`collective.transaction.created`).
+* Caveats: Open Collective does **not retry** failed deliveries; it ignores the failure. If the API is down, the route returns 503 and the contribution is missed, so compare the month against the collective's transactions page. The token sits in a URL, so keep it out of screenshots and rotate it if it leaks (change the env var and the webhook URL together). Incognito contributors show as "Anonymous backer".
+
+### Ledger model (all sources)
+`treasury/monthly_ledger` = `{month:'YYYY-MM' (UTC), githubSponsors, githubOneTime, openCollective,
+koFiTips, adsenseBridge, communityTotalEur, pendingFxEvents, updatedAt}`. Every event runs one
+Firestore transaction:
+1. If `ledger_events/{source}-{eventId}` exists, stop: duplicate, reply 200.
+2. If the month changed, archive the old ledger to `treasury/{YYYY-MM}` and reset `githubOneTime`, `openCollective` and `koFiTips`. `githubSponsors` and `adsenseBridge` carry over.
+3. Apply the EUR delta. Totals are clamped at 0, with the flag `clamped_at_zero`.
+4. `create()` the event doc. A concurrent duplicate fails the commit and is reported as a duplicate.
+
+The daily cron also rolls the month over, so tips reset on the 1st even if nobody donates.
+`communityTotalEur` is what the ad kill-switch should compare with €350.83. `adsenseBridge` is
+written only by hand or by a future job.
+
+---
+
+## 6. Self-host the LLM gateway: OmniRoute (recommended)
+
+OmniRoute (github.com/cheaper-inference/OmniRoute, formerly `diegosouzapw/OmniRoute`; npm
+`omniroute`, Docker `diegosouzapw/omniroute`) is an OpenAI-compatible gateway. It pools many
+providers behind `http://<host>:20128/v1`, with quota-aware fallback, and `model: "auto"` picks an
+eligible connection. It keeps its state in **SQLite** (one process, one writer), so it **cannot run
+on Vercel functions**. Run it on a small always-on host:
+* A €4–6/month VPS (Hetzner CX22, OVH, Scaleway) with 2 GB RAM. The image defaults to a 1 GB V8 heap for dashboard and light chat, so give the container at least 2 GB, **or**
+* Fly.io or Railway with a persistent volume mounted at `/app/data`.
+
+Run exactly **one** replica. Its docs warn that several replicas on the same SQLite file corrupt it.
+
+### 6.1 Install with Docker Compose and Caddy for HTTPS
+Point a DNS A record (for example `llm.example.org`) at the VPS, open ports 80 and 443 only, then:
+
+```bash
+mkdir -p ~/omniroute && cd ~/omniroute
+cat > .env <<ENV
+REQUIRE_API_KEY=true                       # /v1 requires an OmniRoute key (default is false = open proxy!)
+AUTH_COOKIE_SECURE=true                    # we are behind HTTPS
+JWT_SECRET=$(openssl rand -base64 48)      # dashboard session signing
+API_KEY_SECRET=$(openssl rand -hex 32)     # encrypts API keys at rest
+STORAGE_ENCRYPTION_KEY=$(openssl rand -hex 32)   # full SQLite encryption; BACK THIS UP, losing it = losing data
+INITIAL_PASSWORD=$(openssl rand -base64 18)      # dashboard password; write it down, then change it in Settings → Security
+OMNIROUTE_WS_BRIDGE_SECRET=$(openssl rand -base64 32)
+NEXT_PUBLIC_BASE_URL=https://llm.example.org
+BASE_URL=http://omniroute:20128
+ENV
+chmod 600 .env
+
+cat > docker-compose.yml <<'YML'
+services:
+  omniroute:
+    image: diegosouzapw/omniroute:latest   # pin a version (e.g. :3.8.54) once it works
+    container_name: omniroute
+    restart: unless-stopped
+    stop_grace_period: 40s                  # lets SQLite WAL checkpoint on stop
+    env_file: .env
+    environment:
+      - PORT=20128
+    volumes:
+      - omniroute-data:/app/data            # DB, encrypted provider keys, config
+    # no "ports:" — only Caddy can reach it
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    command: caddy reverse-proxy --from https://llm.example.org --to http://omniroute:20128
+    volumes:
+      - caddy-data:/data
+volumes:
+  omniroute-data:
+  caddy-data:
+YML
+
+docker compose up -d
+docker compose logs -f omniroute    # wait for it to be ready
+curl -fsS https://llm.example.org/healthz
+```
+
+Without a domain, you can bind it to loopback only (`-p 127.0.0.1:20128:20128`) and use a
+Cloudflare Tunnel or Tailscale Funnel for HTTPS. The dashboard's "Quick Tunnel" URLs change on
+every restart, so they aren't suitable for `LLM_BASE_URL`. Alternative without Docker:
+`npm install -g omniroute && omniroute`. It keeps its data in `~/.omniroute`; run it under systemd
+behind the same Caddy or nginx.
+
+### 6.2 First login and locking down the dashboard
+1. Open `https://llm.example.org` and log in with `INITIAL_PASSWORD`. If the onboarding wizard asks for a bootstrap token: `docker logs omniroute | grep BOOTSTRAP`. **Do not skip the password step.** Skipping it turns dashboard login off.
+2. Change the password in Settings → Security. Keep `REQUIRE_API_KEY=true`. Note that `GET /v1/models` follows the dashboard login setting rather than `REQUIRE_API_KEY`, so a 401 there doesn't prove inference is protected. Test with a key-less `POST /v1/chat/completions`, which must return 401.
+3. Restrict the dashboard further. Only `/v1/*` needs to be public, so in Caddy you can proxy just `/v1/*` publicly and reach the dashboard over SSH (`ssh -L 20128:omniroute:20128 …`), Tailscale, or an IP allowlist / basic auth on every other path.
+4. Don't enable the optional `cli`, `host`, `web` or `autoupdate` profiles or the Docker-socket updater on a public server.
+5. Back up the `omniroute-data` volume and the `.env` file. Without `STORAGE_ENCRYPTION_KEY` and `API_KEY_SECRET`, the backup is unreadable.
+
+### 6.3 Connect free providers (official API keys ONLY)
+Dashboard → **Providers** → add a provider → paste its API key. Use **only official, API-key free
+tiers whose terms allow your use**, for example:
+* **Google Gemini API** (aistudio.google.com API key, free tier)
+* **Groq** (console.groq.com)
+* **OpenRouter** `:free` models (openrouter.ai key)
+* **Mistral** (La Plateforme free tier)
+* **GitHub Models** (a GitHub token with the models permission)
+* **Cerebras**, **NVIDIA NIM**, **Cloudflare Workers AI**, **SambaNova** and similar developer API tiers
+
+**Do not connect**, for a public app:
+* any **"web cookie" / web-session provider** (Gemini Web, ChatGPT web and similar, which need the `-web` image and Playwright), and
+* any **OAuth reuse of personal coding-tool subscriptions** (Claude Code, Codex, Cursor, Kiro, Copilot and similar).
+
+Those break provider terms when they serve a public website's traffic, and they can get your
+accounts banned. When that happens, the app's AI stops working with no warning.
+Leave OmniRoute's default `excludeTosAvoid` on, so providers marked **`tos: avoid`** stay out of
+`auto` routing; connecting such an account does not override it, and you shouldn't try to. Read
+OmniRoute's Free Tiers Guide (`docs/getting-started/FREE-TIERS-GUIDE.md`) and each provider's
+current terms. **The free-tier terms of each provider still apply when traffic goes through the
+gateway.** Some forbid production use, and some log prompts (for example, Logfare logs every
+request). Learners' text is sent to these providers, so mention that in the privacy policy.
+
+### 6.4 Get the key and point the server at it
+1. Dashboard → **Endpoints** → create or copy an **OmniRoute API key**.
+2. Test it:
+   ```bash
+   curl https://llm.example.org/v1/chat/completions -H "Authorization: Bearer $KEY" \
+     -H 'Content-Type: application/json' -d '{"model":"auto","messages":[{"role":"user","content":"Reply with {\"ok\":true}"}]}'
+   ```
+3. In Vercel set `LLM_BASE_URL=https://llm.example.org/v1`, `LLM_API_KEY=<that key>`,
+   and optionally `LLM_MODEL=auto` and per-agent `LLM_MODEL_<AGENT>` (a provider/model id or an OmniRoute combo name). Redeploy.
+4. Strongly recommended: set `LLM_FALLBACK_*` to a cheap paid API, because free tiers have no SLA and run out late in the (UTC) day.
+
+### 6.5 Alternative: FreeLLMAPI
+FreeLLMAPI (github.com/tashfeenahmed/freellmapi) is a similar self-hosted router, also SQLite and
+also OpenAI-compatible. Install it with Docker: `git clone` the repo, write
+`ENCRYPTION_KEY=$(openssl rand -hex 32)` and `PORT=3001` into `.env`, then `docker compose up -d`. It
+listens on `127.0.0.1:3001`; put the same Caddy reverse proxy in front instead of using
+`HOST_BIND=0.0.0.0`. Create the dashboard account, add official provider keys on **Keys**, and copy
+the unified `freellmapi-…` key from the Keys page header. Then set
+`LLM_BASE_URL=https://llm.example.org/v1` and `LLM_API_KEY=freellmapi-…`. Its README states it is
+**"for personal experimentation and learning, not production"** and tells you to swap in a paid API
+before shipping. The same rules apply as for OmniRoute: use only official API-key tiers, and each
+provider's terms still apply.
+
+---
+
+## 7. Verify
+
+```bash
+for f in $(find api lib -name '*.js'); do node --check "$f" || echo "FAIL $f"; done
+node scripts/test-ledger.mjs     # offline: webhooks, idempotency, rollover, FX, dead-link logic
+```
+
+### End-to-end test (local, no accounts needed)
+
+```bash
+npm install          # dev deps: firebase-tools (emulator, needs Java 11+), firebase + @firebase/rules-unit-testing
+npm test             # the four offline unit suites (orchestrator, learner agents, ledger, algo)
+npm run e2e          # Firestore emulator (project demo-openexam, rules + indexes from the repo root), mock OmniRoute
+                     # (scripts/mock-llm.mjs), api/** via scripts/local-server.mjs, live link checks
+```
+`npm run e2e` starts and stops everything itself and refuses any project id that does not start
+with `demo-`, so it can never write to the real Firebase project.

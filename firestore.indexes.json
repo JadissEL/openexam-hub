@@ -1,0 +1,22 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "resources",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "exams", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "approved", "order": "ASCENDING" },
+        { "fieldPath": "linkStatus", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "resources",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "exams", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "approved", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

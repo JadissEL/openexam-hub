@@ -1,0 +1,27 @@
+# deps / build
+node_modules/
+dist/
+.vercel/
+.vite/
+
+# env + secrets (never commit)
+.env
+.env.*
+!.env.example
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+
+# firebase
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+pubsub-debug.log
+.firebase/
+
+# misc
+npm-debug.log*
+.DS_Store
+coverage/

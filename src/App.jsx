@@ -1,0 +1,3378 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  ShieldCheck,
+  Sparkles,
+  BookOpen,
+  CheckCircle2,
+  Circle,
+  ExternalLink,
+  Search,
+  FileCheck2,
+  Link2,
+  Calendar,
+  HeartHandshake,
+  Coins,
+  Server,
+  Code2,
+  Lock,
+  UserCheck,
+  LogOut,
+  TrendingUp,
+  Info,
+  ArrowRight,
+  Zap,
+  Globe,
+  Award,
+  Sliders,
+  RefreshCw,
+  Layers,
+  EyeOff,
+  Check,
+  Download,
+  FileText,
+  FileJson,
+  Database,
+  PlusCircle,
+  Mail,
+  KeyRound,
+  UserPlus,
+  LogIn,
+  ShieldAlert,
+  Activity,
+  Home,
+  Heart
+} from 'lucide-react';
+import { initializeApp, getApps } from 'firebase/app';
+import {
+  getAuth,
+  signInAnonymously,
+  signInWithCustomToken,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot,
+  collection
+} from 'firebase/firestore';
+import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
+
+// ============================================================================
+// FIREBASE INITIALIZATION (MANDATORY CONFIG + SAFE FALLBACK)
+// ============================================================================
+let db = null;
+let auth = null;
+let appId = APP_ID;
+
+try {
+  // Gemini Canvas / embedded hosts may inject __firebase_config; otherwise use src/firebaseConfig.js (Vite env + defaults).
+  const injected =
+    typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : null;
+  const config = injected || firebaseConfig;
+  if (config && config.apiKey && config.projectId) {
+    const app = getApps().length === 0 ? initializeApp(config) : getApps()[0];
+    auth = getAuth(app);
+    db = getFirestore(app);
+  }
+  if (typeof __app_id !== 'undefined' && __app_id) appId = __app_id;
+} catch (err) {
+  console.warn('Firebase initialization standby:', err);
+}
+
+// ============================================================================
+// OFFICIAL DOMAIN ALLOWLIST (COPYRIGHT & LICENSE AUDITOR GUARDRAIL)
+// ============================================================================
+const OFFICIAL_DOMAIN_ALLOWLIST = [
+  'france-education-international.fr',
+  'tv5monde.com',
+  'rfi.fr',
+  'britishcouncil.org',
+  'ielts.org',
+  'cambridgeenglish.org',
+  'goethe.de',
+  'dw.com',
+  'vhs-lernportal.de',
+  'europa.eu'
+];
+
+/**
+ * Strict allowlist check ONLY. This does not prove a link works; reachability
+ * comes from the server's real HTTP check (see linkStatusBadge / /api/check-link).
+ */
+function verifyOfficialDomain(url) {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase().replace(/\.$/, '');
+    const isAllowlisted =
+      parsed.protocol === 'https:' &&
+      !parsed.username &&
+      !parsed.password &&
+      OFFICIAL_DOMAIN_ALLOWLIST.some(
+        (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+      );
+    return { isOfficial: isAllowlisted, hostname };
+  } catch {
+    return { isOfficial: false, hostname: null };
+  }
+}
+
+/** Truthful label + colour for a resource's link state. Never claims "verified" without a real check. */
+function linkStatusBadge(res, liveStatus) {
+  const { isOfficial } = verifyOfficialDomain(res.url);
+  if (!isOfficial) return { label: 'Not on official allowlist', tone: 'red' };
+  const status = liveStatus || res.linkStatus;
+  switch (status) {
+    case 'ok':
+      return { label: 'Official domain • link checked, reachable', tone: 'green' };
+    case 'unverified':
+      return { label: 'Official domain • site blocks automated checks', tone: 'amber' };
+    case 'dead':
+      return { label: 'Official domain • link appears broken', tone: 'red' };
+    case 'error':
+      return { label: 'Official domain • check failed, try later', tone: 'amber' };
+    case 'checking':
+      return { label: 'Checking link…', tone: 'slate' };
+    default:
+      return { label: 'Official domain • link not checked yet', tone: 'slate' };
+  }
+}
+
+// ============================================================================
+// SERVER + DONATION CONFIG
+// ============================================================================
+// API_BASE and SERVER_ENABLED come from src/firebaseConfig.js (VITE_API_BASE / VITE_SERVER_ENABLED).
+// '' = same-origin /api (the Vercel functions in this repo). SERVER_ENABLED=false = preview mode:
+// fallback roadmaps + in-browser generation, nothing link-checked, nothing written to shared data.
+
+async function apiPost(path, body) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+  return data;
+}
+
+async function apiGet(path) {
+  const res = await fetch(`${API_BASE}${path}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Server error ${res.status}`);
+  return data;
+}
+
+// Real donation pages. Amounts reach the public ledger only through
+// signature-verified server webhooks, never from this browser.
+const DONATION_LINKS = {
+  githubSponsors: '', // TODO: 'https://github.com/sponsors/JadissEL'
+  openCollective: '', // TODO: 'https://opencollective.com/<your-collective>'
+  kofi: '' // TODO: 'https://ko-fi.com/<your-page>'
+};
+
+// ============================================================================
+// CURATED OFFICIAL FALLBACK REPOSITORIES
+// ============================================================================
+const FALLBACK_ROADMAPS = {
+  TCF: {
+    exam: 'TCF',
+    level: 'B2',
+    days: 30,
+    summary:
+      'Structured 30-day TCF preparation leveraging official France Éducation international sample papers, TV5Monde comprehension drills, and RFI Savoirs audio archives.',
+    verifiedResources: [
+      {
+        title: 'France Éducation international — Official TCF Candidate Manual & Samples',
+        url: 'https://www.france-education-international.fr/test/tcf-tout-public',
+        license: 'Official Public Exam Portal (Free Access)',
+        category: 'Official Mock Tests'
+      },
+      {
+        title: 'TV5Monde — Apprendre le français (TCF Simulation Series)',
+        url: 'https://apprendre.tv5monde.com/fr/tcf',
+        license: 'Public Service Broadcaster Educational Commons',
+        category: 'Listening & Grammar'
+      },
+      {
+        title: 'RFI Savoirs — Le journal en français facile & TCF Exercises',
+        url: 'https://francaisfacile.rfi.fr/fr/',
+        license: 'Open Public Media Archive',
+        category: 'Oral Comprehension'
+      }
+    ],
+    phases: [
+      {
+        phaseTitle: 'Days 1–10: Diagnostic & Listening Mechanics (Compréhension Orale)',
+        focus: 'Audio speed adaptation, radio broadcasts, and fast multiple-choice elimination',
+        tasks: [
+          'Day 1–3: Complete 1 full official diagnostic listening set on TV5Monde TCF simulator.',
+          'Day 4–7: Listen daily to 15 minutes of RFI Journal en français facile without subtitles, then verify transcript.',
+          'Day 8–10: Master B2 discourse markers (cependant, néanmoins, en revanche) using official grammar sheets.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 11–20: Reading Speed & Language Structures (Structures de la langue)',
+        focus: 'Subjunctive triggers, relative pronouns (dont, auquel), and timed press reading',
+        tasks: [
+          'Day 11–14: Complete 3 timed 25-minute reading comprehension drills using France Éducation sample items.',
+          'Day 15–17: Drill 50 high-frequency TCF grammar structure questions focusing on verb mood and prepositions.',
+          'Day 18–20: Summarize 2 Francophone editorial articles in 120 words to build syntactic precision.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 21–30: Full Exam Simulation & Weakness Calibration',
+        focus: 'Strict time management (90 minutes total core sections) and error logging',
+        tasks: [
+          'Day 21–25: Take 2 full back-to-back mock exams under strict timer conditions.',
+          'Day 26–28: Audit every missed question from Days 1–20 and re-test weak grammar patterns.',
+          'Day 29–30: Final light audio warm-up and rest 24 hours prior to exam day.'
+        ]
+      }
+    ]
+  },
+  IELTS: {
+    exam: 'IELTS',
+    level: 'C1',
+    days: 30,
+    summary:
+      'High-efficiency 30-day IELTS Academic/General roadmap built exclusively from British Council TakeIELTS free practice tests, IDP official sample tasks, and Cambridge open sample papers.',
+    verifiedResources: [
+      {
+        title: 'British Council — Free Online IELTS Practice Tests (All 4 Skills)',
+        url: 'https://takeielts.britishcouncil.org/prepare/ielts-free-practice-mock-tests',
+        license: 'Official Co-Owner Public Resource',
+        category: 'Full Practice Tests'
+      },
+      {
+        title: 'IDP / IELTS.org — Official Sample Test Questions & Band Descriptors',
+        url: 'https://ielts.org/take-a-test/preparation-resources/sample-test-questions',
+        license: 'Official IELTS Partners Open Samples',
+        category: 'Writing & Speaking'
+      },
+      {
+        title: 'Cambridge English — Official IELTS Preparation Guides & Sample Papers',
+        url: 'https://www.cambridgeenglish.org/exams-and-tests/ielts/preparation/',
+        license: 'Official Assessment Board Free Downloads',
+        category: 'Reading & Listening'
+      }
+    ],
+    phases: [
+      {
+        phaseTitle: 'Days 1–10: Question Archetypes & Skimming/Scanning Precision',
+        focus: 'True/False/Not Given logic, Matching Headings, and Section 3/4 Listening',
+        tasks: [
+          'Day 1–3: Complete British Council Reading & Listening diagnostic tests under strict 60/30 min clocks.',
+          'Day 4–7: Build keyword paraphrasing tables for Academic Reading passages.',
+          'Day 8–10: Record 5 two-minute Speaking Part 2 cue-card monologues and evaluate coherence.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 11–20: Task 1 Data Synthesis & Task 2 Essay Architecture',
+        focus: 'Cohesion & Coherence (25% of Writing score) and Lexical Resource',
+        tasks: [
+          'Day 11–14: Write 4 Task 1 visual reports (trend charts, process diagrams) comparing against official samples.',
+          'Day 15–18: Write 4 Task 2 argumentative essays in 40 minutes each using clear PEEL paragraph structure.',
+          'Day 19–20: Practice Listening Section 4 academic lectures at 1.1x speed.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 21–30: Full Timed Simulations & Band Descriptor Audit',
+        focus: 'Endurance across 2h 45m continuous testing without fatigue drops',
+        tasks: [
+          'Day 21–25: Execute 2 complete uninterrupted IELTS mock sittings.',
+          'Day 26–28: Cross-check all writing essays against official public IELTS Band Descriptors.',
+          'Day 29–30: Review personal vocabulary collocation bank and exam logistics.'
+        ]
+      }
+    ]
+  },
+  Goethe: {
+    exam: 'Goethe',
+    level: 'B1',
+    days: 30,
+    summary:
+      'Focused 30-day Goethe-Zertifikat preparation utilizing official Goethe-Institut Modellsätze, Deutsche Welle (DW) Nicos Weg / Top-Thema, and VHS Lernportal open curriculum.',
+    verifiedResources: [
+      {
+        title: 'Goethe-Institut — Official Modellsätze & Übungsmaterialien (A1–C2)',
+        url: 'https://www.goethe.de/de/spr/prf/ueb.html',
+        license: 'Official Examination Board Free Downloads (PDF + MP3)',
+        category: 'Official Mock Sets'
+      },
+      {
+        title: 'Deutsche Welle (DW) — Deutsch Lernen & Top-Thema mit Vokabeln',
+        url: 'https://learngerman.dw.com/de/deutsch-lernen/s-9095',
+        license: 'Public Broadcaster Open Educational Resource',
+        category: 'Listening & Vocabulary'
+      },
+      {
+        title: 'VHS-Lernportal — Deutscher Volkshochschul-Verband Free Courses',
+        url: 'https://www.vhs-lernportal.de/',
+        license: 'Federal Ministry Funded Public Education Portal',
+        category: 'Structured Modules'
+      }
+    ],
+    phases: [
+      {
+        phaseTitle: 'Days 1–10: Goethe Modellsatz Familiarization & Core Connectors',
+        focus: 'Nebensätze (weil, obwohl, damit), Hören Teil 1–4 formats',
+        tasks: [
+          'Day 1–4: Download official Goethe Modellsatz 1 PDF + MP3s and complete Lesen & Hören.',
+          'Day 5–7: Complete 5 Deutsche Welle Top-Thema audio lessons with interactive comprehension checks.',
+          'Day 8–10: Build a template bank of Redemittel (fixed phrases) for Schreiben & Sprechen.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 11–20: Schreiben Modules & Sprechen Partner Simulation',
+        focus: 'Formal/informal emails, opinion forum posts, and joint planning dialogue',
+        tasks: [
+          'Day 11–14: Write 4 complete Schreiben tasks adhering strictly to word-count and all 4 Leitpunkte.',
+          'Day 15–17: Practice Sprechen Teil 1 (Gemeinsam etwas planen) using Redemittel prompts.',
+          'Day 18–20: Work through VHS-Lernportal grammar units for passive voice and Konjunktiv II.'
+        ]
+      },
+      {
+        phaseTitle: 'Days 21–30: Modellsatz 2 Under Exam Conditions',
+        focus: 'Strict module timing and zero missed Leitpunkte',
+        tasks: [
+          'Day 21–25: Run full Goethe Modellsatz 2 under strict official clock rules.',
+          'Day 26–28: Review every false friend and preposition-case pair (warten auf + Akk, etc.).',
+          'Day 29–30: Light review of speaking Redemittel cards before test day.'
+        ]
+      }
+    ]
+  }
+};
+
+// ============================================================================
+// TREASURY & 3-YEAR ROADMAP CONSTANTS
+// ============================================================================
+const MONTHLY_TARGET = 350.83;
+const ESTIMATED_QUERY_COST_EUR = 0.15;
+
+const THREE_YEAR_TREASURY = [
+  {
+    category: '1. Scaled AI API Compute',
+    annual: '€18,000',
+    threeYear: '€54,000',
+    percent: 27,
+    details:
+      'Frontier reasoning models handling millions of multi-agent exam queries, copyright audits, and PDF extractions as user volume scales.'
+  },
+  {
+    category: '2. Full-Time Maintainer Runway',
+    annual: '€36,000',
+    threeYear: '€108,000',
+    percent: 54,
+    details:
+      'Dedicated maintainer salary (€3,000/mo) eliminating delivery burnout so the creator can code, audit links, and maintain infrastructure full-time.'
+  },
+  {
+    category: '3. Infrastructure & Edge Scaling',
+    annual: '€2,400',
+    threeYear: '€7,200',
+    percent: 3.6,
+    details:
+      'Database tiers, edge bandwidth, global CDN, automated link-checker cron workers, and multi-domain SSL security.'
+  },
+  {
+    category: '4. Open-Source Bounties',
+    annual: '€5,000',
+    threeYear: '€15,000',
+    percent: 7.5,
+    details:
+      'Direct bounties paid to community developers who contribute verified scrapers for additional certifications (DELE, JLPT, TestDaF, CELPIP).'
+  },
+  {
+    category: '5. Treasury Safety Buffer',
+    annual: '—',
+    threeYear: '€15,800',
+    percent: 7.9,
+    details:
+      'Emergency reserve protecting free public access against sudden API token rate spikes or traffic surges.'
+  }
+];
+
+// ============================================================================
+// DESIGN SYSTEM: neutral surfaces + warm orange accent (defined once, reused)
+// ============================================================================
+const THEME = {
+  page: 'bg-[#F4F4F2] text-[#111111]',
+  card: 'bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)]',
+  label: 'text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500',
+  primaryBtn:
+    'inline-flex items-center justify-center gap-2 rounded-full bg-[#111111] hover:bg-neutral-800 text-white font-semibold transition disabled:opacity-60',
+  accentBtn:
+    'inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white text-lg font-bold min-h-[56px] px-6 shadow-[0_12px_28px_-12px_rgba(255,107,26,0.8)] transition disabled:opacity-70',
+  ghostBtn:
+    'inline-flex items-center justify-center gap-2 rounded-full border border-black/10 bg-white hover:bg-neutral-50 text-neutral-800 font-semibold transition',
+  segWrap: 'flex p-1 gap-1 rounded-full bg-[#F4F4F2] border border-black/5',
+  seg: (active) =>
+    `flex-1 min-h-[44px] px-2 sm:px-3 rounded-full text-sm font-semibold transition ${
+      active ? 'bg-[#111111] text-white shadow-sm' : 'text-neutral-600 hover:text-neutral-950 hover:bg-white/70'
+    }`,
+  chip: 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-black/5 text-xs font-semibold text-neutral-700',
+  dot: { green: 'bg-green-500', amber: 'bg-amber-500', red: 'bg-red-500', slate: 'bg-neutral-300', orange: 'bg-[#FF6B1A]' },
+  iconTile: 'w-10 h-10 rounded-xl bg-[#F4F4F2] text-neutral-800 flex items-center justify-center shrink-0',
+  heroStyle: {
+    backgroundImage:
+      'radial-gradient(120% 120% at 0% 0%, #FF7A1A 0%, #FF6B1A 30%, rgba(255,107,26,0) 60%), radial-gradient(110% 120% at 100% 100%, #F7A8D8 0%, #F58BB8 35%, rgba(247,168,216,0) 70%), linear-gradient(135deg, #FF6B1A 0%, #F4708A 55%, #EFA0CF 100%)'
+  },
+  backdropStyle: {
+    backgroundColor: 'rgba(17,17,17,0.28)',
+    backgroundImage: 'linear-gradient(160deg, rgba(255,122,26,0.55) 0%, rgba(247,168,216,0.55) 100%)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)'
+  }
+};
+
+const OE_GLOBAL_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+.oe-root { -webkit-tap-highlight-color: transparent; }
+.oe-root h1, .oe-root h2, .oe-root h3 { letter-spacing: -0.02em; }
+.oe-root :focus { outline: none; }
+.oe-root :focus-visible { outline: 2px solid #FF6B1A; outline-offset: 2px; }
+@keyframes oe-pop { 0% { transform: scale(.9); opacity: 0 } 60% { transform: scale(1.04); opacity: 1 } 100% { transform: scale(1); opacity: 1 } }
+@keyframes oe-glow { 0% { box-shadow: 0 0 0 0 rgba(255,107,26,.35) } 100% { box-shadow: 0 0 0 16px rgba(255,107,26,0) } }
+@keyframes oe-sheet { from { transform: translateY(28px); opacity: 0 } to { transform: none; opacity: 1 } }
+.oe-pop { animation: oe-pop .45s cubic-bezier(.2,.8,.2,1) both; }
+.oe-celebrate { animation: oe-glow 1.2s ease-out 1; }
+.oe-sheet { animation: oe-sheet .28s cubic-bezier(.2,.8,.2,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .oe-root *, .oe-root *::before, .oe-root *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}
+`;
+
+const LEVEL_OPTIONS = [
+  { value: 'A2', hint: 'Elementary' },
+  { value: 'B1', hint: 'Intermediate · residency & citizenship' },
+  { value: 'B2', hint: 'Upper intermediate · university & work' },
+  { value: 'C1', hint: 'Advanced proficiency' }
+];
+const DAY_OPTIONS = [
+  { value: 14, hint: 'Sprint' },
+  { value: 30, hint: 'Steady' },
+  { value: 60, hint: 'Deep' }
+];
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+function ProgressRing({ pct = 0, size = 64, stroke = 7 }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }} role="img" aria-label={`${pct}% complete`}>
+      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EFEFEC" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="#FF6B1A"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - Math.min(100, Math.max(0, pct)) / 100)}
+          style={{ transition: 'stroke-dashoffset .6s ease' }}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-neutral-950">{pct}%</span>
+    </div>
+  );
+}
+
+function StatusDot({ tone = 'slate', className = '' }) {
+  return <span aria-hidden="true" className={`inline-block w-2 h-2 rounded-full shrink-0 ${THEME.dot[tone] || THEME.dot.slate} ${className}`} />;
+}
+
+// ============================================================================
+// ROADMAP SHAPE GUARD: keeps personal saves inside the Firestore rule
+// (<= 25 keys, integer days 1..180, CEFR level, id == doc id, bounded lists)
+// ============================================================================
+const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const ROADMAP_ALLOWED_KEYS = [
+  'id', 'exam', 'level', 'days', 'createdAt', 'summary', 'completedTasks',
+  'verifiedResources', 'phases', 'examProfile', 'pipeline', 'source'
+];
+function sanitizeRoadmapForStore(raw, docId) {
+  if (!raw || typeof raw !== 'object' || !docId) return null;
+  const days = Math.round(Number(raw.days));
+  const exam = String(raw.exam || '').slice(0, 24);
+  if (!CEFR_LEVELS.includes(raw.level) || !Number.isInteger(days) || days < 1 || days > 180) return null;
+  if (exam.length < 2 || !Array.isArray(raw.phases)) return null;
+  const out = {};
+  ROADMAP_ALLOWED_KEYS.forEach((k) => {
+    if (raw[k] !== undefined && raw[k] !== null) out[k] = raw[k];
+  });
+  out.id = docId;
+  out.exam = exam;
+  out.days = days;
+  out.phases = raw.phases.slice(0, 60);
+  if (typeof out.summary === 'string') out.summary = out.summary.slice(0, 5000);
+  else delete out.summary;
+  if (out.completedTasks && (typeof out.completedTasks !== 'object' || Array.isArray(out.completedTasks))) delete out.completedTasks;
+  if (out.completedTasks) out.completedTasks = Object.fromEntries(Object.entries(out.completedTasks).slice(0, 2000));
+  if (out.verifiedResources) out.verifiedResources = Array.isArray(out.verifiedResources) ? out.verifiedResources.slice(0, 60) : undefined;
+  if (out.pipeline) out.pipeline = Array.isArray(out.pipeline) ? out.pipeline.slice(0, 40) : undefined;
+  if (out.createdAt !== undefined && typeof out.createdAt !== 'string') out.createdAt = String(out.createdAt);
+  // JSON round-trip drops undefined values, which Firestore rejects.
+  return JSON.parse(JSON.stringify(out));
+}
+
+// Coach agent returns {phaseTitle, focus, days, dayStart, dayEnd, tasks}; the checklist
+// (and orchestrator roadmaps) use {phaseTitle, focus, tasks, startDay, endDay}.
+function toClientPhases(serverPhases) {
+  return (serverPhases || []).map((p, i) => ({
+    phaseTitle: String(p.phaseTitle || `Phase ${i + 1}`),
+    focus: String(p.focus || ''),
+    tasks: Array.isArray(p.tasks) ? p.tasks.map(String) : [],
+    ...(Number.isInteger(p.dayStart) ? { startDay: p.dayStart } : {}),
+    ...(Number.isInteger(p.dayEnd) ? { endDay: p.dayEnd } : {})
+  }));
+}
+
+// ============================================================================
+// MAIN APPLICATION COMPONENT
+// ============================================================================
+export default function App() {
+  // Navigation & Modal State
+  const [activeTab, setActiveTab] = useState('generator');
+  const [showOriginModal, setShowOriginModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showContributeModal, setShowContributeModal] = useState(false);
+
+  // Firebase Auth State
+  const [firebaseUser, setFirebaseUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authFeedback, setAuthFeedback] = useState(null);
+
+  // Multi-Agent Generator Inputs
+  const [selectedExam, setSelectedExam] = useState('TCF');
+  const [selectedLevel, setSelectedLevel] = useState('B2');
+  const [daysUntilExam, setDaysUntilExam] = useState(30);
+
+  // Agent Pipeline & 2-Layer Cache Metrics State
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [agentStep, setAgentStep] = useState(0); // 0 = idle, 1..4 = running agents, 5 = complete
+  const [cacheLayerHit, setCacheLayerHit] = useState('personal'); // 'personal' | 'global' | 'live'
+  const [cacheHitsCount, setCacheHitsCount] = useState(0); // this session only
+  const [pipelineTrace, setPipelineTrace] = useState([]);
+  const [diagnosticResult, setDiagnosticResult] = useState(null); // {skillScores, estimatedLevel, advice}
+  const [linkStatuses, setLinkStatuses] = useState({});
+  const [statusNotice, setStatusNotice] = useState(null);
+
+  // Saved Roadmaps (Layer 1 Personal Cache)
+  const [savedRoadmaps, setSavedRoadmaps] = useState(() => [
+    {
+      id: 'TCF-B2-30',
+      createdAt: '2026-11-18',
+      completedTasks: { '0-0': true },
+      ...FALLBACK_ROADMAPS.TCF
+    }
+  ]);
+  const [activeRoadmapId, setActiveRoadmapId] = useState('TCF-B2-30');
+
+  // Public Financial Ledger & Ad-Sunset Engine (Backed by Firestore)
+  // Real figures only: start at zero, filled from the server-written Firestore ledger.
+  const [fundingSources, setFundingSources] = useState({
+    githubSponsors: 0,
+    githubOneTime: 0,
+    openCollective: 0,
+    koFiTips: 0,
+    adsenseBridge: 0,
+    communityTotalEur: null // server-computed total; preferred when present
+  });
+  const [ledgerLoaded, setLedgerLoaded] = useState(false);
+  const [ledgerEvents, setLedgerEvents] = useState([]);
+  // Local-only what-if value for the simulator. Never written anywhere.
+  const [simulatedTotal, setSimulatedTotal] = useState(150);
+
+  // Computed Patronage Totals & Ad-Sunset Kill-Switch
+  const totalPatronage = useMemo(() => {
+    if (fundingSources.communityTotalEur != null) {
+      return Number(Number(fundingSources.communityTotalEur).toFixed(2));
+    }
+    return Number(
+      (
+        fundingSources.githubSponsors +
+        fundingSources.githubOneTime +
+        fundingSources.openCollective +
+        fundingSources.koFiTips
+      ).toFixed(2)
+    );
+  }, [fundingSources]);
+
+  const fundingPercentage = useMemo(() => {
+    return Math.min(100, Math.round((totalPatronage / MONTHLY_TARGET) * 100));
+  }, [totalPatronage]);
+
+  // PROGRAMMATIC AD-SUNSET KILL-SWITCH: Turns ads off site-wide when patronage >= €350.83
+  const adsDisabledForever = ledgerLoaded && totalPatronage >= MONTHLY_TARGET;
+  const simulatedAdsOff = simulatedTotal >= MONTHLY_TARGET;
+
+  const estimatedTotalSavedEur = useMemo(() => {
+    return (cacheHitsCount * ESTIMATED_QUERY_COST_EUR).toFixed(2);
+  }, [cacheHitsCount]);
+
+  const activeRoadmap = useMemo(() => {
+    return (
+      savedRoadmaps.find((r) => r.id === activeRoadmapId) || savedRoadmaps[0]
+    );
+  }, [savedRoadmaps, activeRoadmapId]);
+
+  // ==========================================================================
+  // 1. FIREBASE AUTHENTICATION LISTENER (RULE 3 COMPLIANT)
+  // ==========================================================================
+  useEffect(() => {
+    if (!auth) {
+      setAuthReady(true);
+      return;
+    }
+
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else if (!auth.currentUser) {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        console.warn('Initial auth fallback:', e);
+      }
+    };
+
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      setAuthReady(true);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // ==========================================================================
+  // 2. FIRESTORE REAL-TIME SYNC: PERSONAL ROADMAPS + PUBLIC TREASURY LEDGER
+  // ==========================================================================
+  useEffect(() => {
+    if (!db || !firebaseUser) return;
+
+    // A) Sync User's Personal Saved Roadmaps (Layer 1 Cache)
+    const userRoadmapsCol = collection(
+      db,
+      'artifacts',
+      appId,
+      'users',
+      firebaseUser.uid,
+      'roadmaps'
+    );
+
+    const unsubUserRoadmaps = onSnapshot(
+      userRoadmapsCol,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          setSavedRoadmaps(docs);
+        }
+      },
+      (err) => console.warn('User roadmaps sync standby:', err)
+    );
+
+    // B) Sync Global Public Treasury Metrics (Ad-Sunset Source of Truth)
+    const treasuryDocRef = doc(
+      db,
+      'artifacts',
+      appId,
+      'public',
+      'data',
+      'treasury',
+      'monthly_ledger'
+    );
+
+    const unsubTreasury = onSnapshot(
+      treasuryDocRef,
+      (docSnap) => {
+        setLedgerLoaded(true);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setFundingSources({
+            githubSponsors: Number(data.githubSponsors ?? 0) || 0,
+            githubOneTime: Number(data.githubOneTime ?? 0) || 0,
+            openCollective: Number(data.openCollective ?? 0) || 0,
+            koFiTips: Number(data.koFiTips ?? 0) || 0,
+            adsenseBridge: Number(data.adsenseBridge ?? 0) || 0,
+            communityTotalEur:
+              data.communityTotalEur != null && Number.isFinite(Number(data.communityTotalEur))
+                ? Number(data.communityTotalEur)
+                : null
+          });
+        }
+      },
+      (err) => console.warn('Treasury sync standby:', err)
+    );
+
+    // C) Sync Public Patronage Transactions Feed
+    const eventsColRef = collection(
+      db,
+      'artifacts',
+      appId,
+      'public',
+      'data',
+      'ledger_events'
+    );
+
+    const unsubEvents = onSnapshot(
+      eventsColRef,
+      (snapshot) => {
+        const fetched = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...d.data()
+        }));
+        fetched.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        setLedgerEvents(fetched);
+      },
+      (err) => console.warn('Ledger events sync standby:', err)
+    );
+
+    return () => {
+      unsubUserRoadmaps();
+      unsubTreasury();
+      unsubEvents();
+    };
+  }, [firebaseUser]);
+
+  // Helper: Persist roadmap to user's Layer 1 personal cache
+  const saveToPersonalCache = async (roadmapObj) => {
+    if (!db || !firebaseUser) return;
+    try {
+      const ref = doc(
+        db,
+        'artifacts',
+        appId,
+        'users',
+        firebaseUser.uid,
+        'roadmaps',
+        roadmapObj.id
+      );
+      const clean = sanitizeRoadmapForStore(roadmapObj, roadmapObj.id);
+      if (!clean) {
+        console.warn('Roadmap failed the saved-roadmap shape check; kept locally only.');
+        return;
+      }
+      await setDoc(ref, clean);
+    } catch (err) {
+      console.warn('Personal cache write skipped:', err);
+    }
+  };
+
+  // The shared community cache and usage metrics are written only by the server
+  // (after real link checks). The browser just counts hits for this session.
+  const recordCacheHitMetric = async () => {
+    setCacheHitsCount((c) => c + 1);
+  };
+
+  // ==========================================================================
+  // 3. 2-LAYER TOKEN-COST DEFENSE + 4-STAGE MULTI-AGENT GENERATOR
+  // ==========================================================================
+  const handleGenerateStudyPath = async (forceRefresh = false) => {
+    const cacheKey = `${selectedExam}-${selectedLevel}-${daysUntilExam}`;
+    setStatusNotice(null);
+
+    // LAYER 1 DEFENSE: Check user's personal saved roadmaps first (€0.00 cost)
+    const personalHit = savedRoadmaps.find((r) => r.id === cacheKey);
+    if (personalHit && !forceRefresh) {
+      setActiveRoadmapId(personalHit.id);
+      setCacheLayerHit('personal');
+      setAgentStep(5);
+      await recordCacheHitMetric();
+      setStatusNotice(
+        `Layer 1 Personal Cache Hit: Loaded "${cacheKey}" instantaneously at €0.00 API token cost.`
+      );
+      return;
+    }
+
+    // LAYER 2 DEFENSE: Check shared Global Firestore Cache across all learners (€0.00 cost)
+    if (db && firebaseUser && !forceRefresh) {
+      try {
+        const globalRef = doc(
+          db,
+          'artifacts',
+          appId,
+          'public',
+          'data',
+          'global_verified_roadmaps',
+          cacheKey
+        );
+        const globalSnap = await getDoc(globalRef);
+        if (globalSnap.exists()) {
+          const sharedDoc = globalSnap.data();
+          // Server stores { roadmap: {...}, serverVerified, pipelineVersion, ... }
+          const sharedData = sharedDoc.roadmap ?? sharedDoc;
+          const clonedForUser = {
+            id: cacheKey,
+            exam: sharedData.exam || selectedExam,
+            level: sharedData.level || selectedLevel,
+            days: Number(sharedData.days || daysUntilExam),
+            createdAt: new Date().toISOString().split('T')[0],
+            completedTasks: {},
+            summary: sharedData.summary,
+            verifiedResources: sharedData.verifiedResources,
+            phases: sharedData.phases
+          };
+
+          setSavedRoadmaps((prev) => [
+            clonedForUser,
+            ...prev.filter((item) => item.id !== cacheKey)
+          ]);
+          setActiveRoadmapId(cacheKey);
+          setCacheLayerHit('global');
+          setAgentStep(5);
+          await saveToPersonalCache(clonedForUser);
+          await recordCacheHitMetric();
+          setStatusNotice(
+            `Layer 2 Global Community Cache Hit: Another learner already audited "${cacheKey}". Cloned to your profile at €0.00 API token cost!`
+          );
+          return;
+        }
+      } catch (err) {
+        console.warn('Global cache lookup skipped:', err);
+      }
+    }
+
+    setIsGenerating(true);
+    setCacheLayerHit('live');
+    setAgentStep(1);
+    setPipelineTrace([]);
+    const today = new Date().toISOString().split('T')[0];
+
+    // A) SERVER MODE: the real orchestrator runs server-side (library first,
+    //    discovery only when needed, real link checks, then planning).
+    if (SERVER_ENABLED) {
+      const stepTimers = [
+        setTimeout(() => setAgentStep(2), 900),
+        setTimeout(() => setAgentStep(3), 1800),
+        setTimeout(() => setAgentStep(4), 2700)
+      ];
+      try {
+        const { roadmap } = await apiPost('/api/generate-roadmap', {
+          exam: selectedExam.toUpperCase(),
+          level: selectedLevel,
+          days: Number(daysUntilExam),
+          forceRefresh,
+          diagnostic: diagnosticResult
+            ? { skillScores: diagnosticResult.skillScores }
+            : undefined
+        });
+        const newRoadmap = {
+          ...roadmap,
+          id: cacheKey,
+          exam: selectedExam,
+          completedTasks: {},
+          createdAt: roadmap.createdAt || today
+        };
+        stepTimers.forEach(clearTimeout);
+        setAgentStep(5);
+        setPipelineTrace(roadmap.pipeline || []);
+        if (roadmap.source === 'global_cache') setCacheLayerHit('global');
+        setSavedRoadmaps((prev) => [
+          newRoadmap,
+          ...prev.filter((item) => item.id !== cacheKey)
+        ]);
+        setActiveRoadmapId(cacheKey);
+        await saveToPersonalCache(newRoadmap);
+        const n = newRoadmap.verifiedResources?.length || 0;
+        setStatusNotice(
+          roadmap.source === 'library'
+            ? `Built from ${n} resources already in the OpenExam library. No outside search was needed.`
+            : roadmap.source === 'global_cache'
+            ? `Another learner already generated "${cacheKey}". Loaded it from the community cache.`
+            : `Searched official sources, link-checked every result, and added ${n} resources to the shared library.`
+        );
+      } catch (err) {
+        stepTimers.forEach(clearTimeout);
+        console.warn('Roadmap server error:', err);
+        await loadFallbackRoadmap(cacheKey, "We couldn't reach the plan builder, so here's a hand-picked plan for now.");
+      } finally {
+        setIsGenerating(false);
+      }
+      return;
+    }
+
+    // B) PREVIEW MODE (no server configured): in-browser generation. Results are
+    //    filtered to the official allowlist but NOT link-checked, are labeled so,
+    //    and are never written to the shared community cache.
+    const stepTimers = [
+      setTimeout(() => setAgentStep(2), 650),
+      setTimeout(() => setAgentStep(3), 1300),
+      setTimeout(() => setAgentStep(4), 1950)
+    ];
+
+    try {
+      const apiKey = '';
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const systemPrompt = `You are an exam-preparation planner for OpenExam Hub.
+Suggest only free resources hosted on these official domains: ${OFFICIAL_DOMAIN_ALLOWLIST.join(', ')}.
+Build a day-by-day study roadmap for ${selectedExam} at CEFR level ${selectedLevel} spanning ${daysUntilExam} days.
+Never include pirated PDFs, paywalled courses, or third-party blogs. Output strictly valid JSON.`;
+
+      const userQuery = `Build a chronological ${daysUntilExam}-day preparation roadmap for ${selectedExam} (CEFR ${selectedLevel}) with 3 official free resource portals and 3 structured study phases. Return JSON with summary, verifiedResources (title, url, license, category) and phases (phaseTitle, focus, tasks).`;
+
+      const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'OBJECT',
+            properties: {
+              summary: { type: 'STRING' },
+              verifiedResources: {
+                type: 'ARRAY',
+                items: {
+                  type: 'OBJECT',
+                  properties: {
+                    title: { type: 'STRING' },
+                    url: { type: 'STRING' },
+                    license: { type: 'STRING' },
+                    category: { type: 'STRING' }
+                  },
+                  required: ['title', 'url', 'license', 'category']
+                }
+              },
+              phases: {
+                type: 'ARRAY',
+                items: {
+                  type: 'OBJECT',
+                  properties: {
+                    phaseTitle: { type: 'STRING' },
+                    focus: { type: 'STRING' },
+                    tasks: { type: 'ARRAY', items: { type: 'STRING' } }
+                  },
+                  required: ['phaseTitle', 'focus', 'tasks']
+                }
+              }
+            },
+            required: ['summary', 'verifiedResources', 'phases']
+          }
+        }
+      };
+
+      let response = null;
+      let delay = 1000;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (response.ok) break;
+        } catch (err) {
+          if (attempt === 2) throw err;
+        }
+        await new Promise((res) => setTimeout(res, delay));
+        delay *= 2;
+      }
+      if (!response || !response.ok) throw new Error('Live inference unavailable.');
+
+      const result = await response.json();
+      const rawText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) throw new Error('Empty payload');
+      const parsed = JSON.parse(rawText);
+
+      // Drop anything off the allowlist; mark the rest as not yet link-checked.
+      const allowed = (parsed.verifiedResources || [])
+        .filter((r) => verifyOfficialDomain(r.url).isOfficial)
+        .map((r) => ({ ...r, linkStatus: 'not_checked' }));
+      const dropped = (parsed.verifiedResources || []).length - allowed.length;
+      if (allowed.length === 0) throw new Error('No allowlisted resources returned.');
+
+      const newRoadmap = {
+        id: cacheKey,
+        exam: selectedExam,
+        level: selectedLevel,
+        days: Number(daysUntilExam),
+        createdAt: today,
+        completedTasks: {},
+        summary: parsed.summary,
+        verifiedResources: allowed,
+        phases: parsed.phases,
+        source: 'preview'
+      };
+
+      stepTimers.forEach(clearTimeout);
+      setAgentStep(5);
+      setSavedRoadmaps((prev) => [newRoadmap, ...prev.filter((item) => item.id !== cacheKey)]);
+      setActiveRoadmapId(cacheKey);
+      await saveToPersonalCache(newRoadmap);
+      setStatusNotice(
+        `Preview mode: generated in your browser. Links are on official domains but have not been checked${
+          dropped > 0 ? `, and ${dropped} off-allowlist link${dropped > 1 ? 's were' : ' was'} removed` : ''
+        }. Connect the server for verified, shared results.`
+      );
+    } catch (err) {
+      stepTimers.forEach(clearTimeout);
+      await loadFallbackRoadmap(cacheKey, 'Loaded a hand-curated roadmap and saved it to your profile.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const loadFallbackRoadmap = async (cacheKey, notice) => {
+    const baseFallback = FALLBACK_ROADMAPS[selectedExam] || FALLBACK_ROADMAPS.TCF;
+    const fallbackRoadmap = {
+      ...baseFallback,
+      id: cacheKey,
+      exam: selectedExam,
+      level: selectedLevel,
+      days: Number(daysUntilExam),
+      createdAt: new Date().toISOString().split('T')[0],
+      completedTasks: {},
+      source: 'fallback',
+      summary: `${daysUntilExam}-day ${selectedExam} (${selectedLevel}) study roadmap built from hand-picked official examination portals.`
+    };
+    setAgentStep(5);
+    setSavedRoadmaps((prev) => [fallbackRoadmap, ...prev.filter((item) => item.id !== cacheKey)]);
+    setActiveRoadmapId(cacheKey);
+    await saveToPersonalCache(fallbackRoadmap);
+    setStatusNotice(notice);
+  };
+
+  // Toggle task completion & persist to Firestore
+  const toggleTaskCompletion = async (phaseIdx, taskIdx) => {
+    if (!activeRoadmap) return;
+    const key = `${phaseIdx}-${taskIdx}`;
+    const updatedCompleted = {
+      ...(activeRoadmap.completedTasks || {}),
+      [key]: !activeRoadmap.completedTasks?.[key]
+    };
+
+    const updatedRoadmap = {
+      ...activeRoadmap,
+      completedTasks: updatedCompleted
+    };
+
+    setSavedRoadmaps((prev) =>
+      prev.map((r) => (r.id === updatedRoadmap.id ? updatedRoadmap : r))
+    );
+    await saveToPersonalCache(updatedRoadmap);
+  };
+
+  // ==========================================================================
+  // 4. EXPORT STUDY PLAN (MARKDOWN & JSON DOWNLOADS)
+  // ==========================================================================
+  const handleExportMarkdown = () => {
+    if (!activeRoadmap) return;
+    const lines = [
+      `# OpenExam Hub — ${activeRoadmap.exam} (Level ${activeRoadmap.level}) ${activeRoadmap.days}-Day Study Plan`,
+      `Generated: ${activeRoadmap.createdAt} | License: 100% Free & Open Source`,
+      '',
+      `## Executive Summary`,
+      activeRoadmap.summary,
+      '',
+      `## Verified Free & Non-Copyrighted Official Portals`,
+      ...(activeRoadmap.verifiedResources || []).map(
+        (r) => `- **[${r.title}](${r.url})** — *${r.license}* (${r.category})`
+      ),
+      '',
+      `## Chronological Study Schedule`,
+      ...(activeRoadmap.phases || []).flatMap((p, pIdx) => [
+        `### ${p.phaseTitle}`,
+        `*Focus: ${p.focus}*`,
+        ...p.tasks.map((t, tIdx) => {
+          const checked = activeRoadmap.completedTasks?.[`${pIdx}-${tIdx}`]
+            ? 'x'
+            : ' ';
+          return `- [${checked}] ${t}`;
+        }),
+        ''
+      ])
+    ];
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `OpenExam-${activeRoadmap.exam}-${activeRoadmap.level}-${activeRoadmap.days}d.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportJSON = () => {
+    if (!activeRoadmap) return;
+    const blob = new Blob([JSON.stringify(activeRoadmap, null, 2)], {
+      type: 'application/json'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `OpenExam-${activeRoadmap.exam}-${activeRoadmap.level}-${activeRoadmap.days}d.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // ==========================================================================
+  // 5. FIREBASE AUTH HANDLERS (GOOGLE + EMAIL/PASSWORD + SIGN OUT)
+  // ==========================================================================
+  const handleGoogleSignIn = async () => {
+    if (!auth) return;
+    setAuthLoading(true);
+    setAuthFeedback(null);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      setShowAuthModal(false);
+    } catch (err) {
+      setAuthFeedback(err.message || 'Google sign-in popup closed or blocked.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleEmailAuthSubmit = async (e) => {
+    e.preventDefault();
+    if (!auth || !authEmail.trim() || !authPassword.trim()) return;
+    setAuthLoading(true);
+    setAuthFeedback(null);
+    try {
+      if (authMode === 'signup') {
+        await createUserWithEmailAndPassword(auth, authEmail.trim(), authPassword);
+      } else {
+        await signInWithEmailAndPassword(auth, authEmail.trim(), authPassword);
+      }
+      setAuthEmail('');
+      setAuthPassword('');
+      setShowAuthModal(false);
+    } catch (err) {
+      setAuthFeedback(err.message || 'Authentication error. Please verify credentials.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      await signInAnonymously(auth);
+      setShowAuthModal(false);
+    } catch (err) {
+      console.warn('Sign-out notice:', err);
+    }
+  };
+
+  // Real link checks for resources that haven't been checked yet (server mode only).
+  useEffect(() => {
+    if (!SERVER_ENABLED || !activeRoadmap?.verifiedResources) return;
+    const pending = activeRoadmap.verifiedResources.filter(
+      (r) =>
+        !['ok', 'unverified', 'dead'].includes(r.linkStatus) &&
+        !linkStatuses[r.url] &&
+        verifyOfficialDomain(r.url).isOfficial
+    );
+    if (!pending.length) return;
+    setLinkStatuses((prev) => ({
+      ...prev,
+      ...Object.fromEntries(pending.map((r) => [r.url, 'checking']))
+    }));
+    pending.forEach(async (r) => {
+      let status = 'error';
+      try {
+        const out = await apiGet(`/api/check-link?url=${encodeURIComponent(r.url)}`);
+        status = out.status;
+      } catch {
+        /* keep 'error' */
+      }
+      setLinkStatuses((prev) => ({ ...prev, [r.url]: status }));
+    });
+  }, [activeRoadmap]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Active roadmap milestone progress calculation
+  const roadmapProgress = useMemo(() => {
+    if (!activeRoadmap?.phases) return { done: 0, total: 0, pct: 0 };
+    let total = 0;
+    let done = 0;
+    activeRoadmap.phases.forEach((p, pIdx) => {
+      p.tasks.forEach((_, tIdx) => {
+        total += 1;
+        if (activeRoadmap.completedTasks?.[`${pIdx}-${tIdx}`]) done += 1;
+      });
+    });
+    return {
+      done,
+      total,
+      pct: total > 0 ? Math.round((done / total) * 100) : 0
+    };
+  }, [activeRoadmap]);
+
+  // First unchecked task of the active plan (for "Continue your plan").
+  const nextTask = useMemo(() => {
+    if (!activeRoadmap?.phases) return null;
+    for (let p = 0; p < activeRoadmap.phases.length; p++) {
+      const tasks = activeRoadmap.phases[p].tasks || [];
+      for (let t = 0; t < tasks.length; t++) {
+        if (!activeRoadmap.completedTasks?.[`${p}-${t}`]) {
+          return { pIdx: p, tIdx: t, task: tasks[t], phaseTitle: activeRoadmap.phases[p].phaseTitle };
+        }
+      }
+    }
+    return null;
+  }, [activeRoadmap]);
+
+  const isSupportTab = activeTab === 'treasury' || activeTab === 'roadmap3yr';
+  const showAside = activeTab === 'generator' || isSupportTab;
+  const greetingName =
+    firebaseUser && !firebaseUser.isAnonymous && firebaseUser.displayName
+      ? firebaseUser.displayName.trim().split(/\s+/)[0]
+      : null;
+  const noticeIsError = !!statusNotice && /couldn't|could not|unavailable|failed|error/i.test(statusNotice);
+  const scrollToId = (id) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+  const NAV_TABS = [
+    { id: 'generator', label: 'Home', short: 'Home', icon: Home },
+    { id: 'saved', label: 'My plans', short: 'Plans', icon: Database, count: savedRoadmaps.length },
+    { id: 'library', label: 'Library', short: 'Library', icon: Layers },
+    { id: 'practice', label: 'Level & practice', short: 'Practice', icon: Award },
+    { id: 'treasury', label: 'Support', short: 'Support', icon: Heart }
+  ];
+  const isNavActive = (id) => (id === 'treasury' ? isSupportTab : activeTab === id);
+
+  return (
+    <div
+      className={`oe-root min-h-screen ${THEME.page} font-sans antialiased selection:bg-orange-100 selection:text-neutral-900`}
+      style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" }}
+    >
+      <style>{OE_GLOBAL_CSS}</style>
+      {/* ====================================================================
+          SLIM TRANSPARENCY STRIP (tablet/desktop; on phones it lives in Support)
+      ==================================================================== */}
+      <div className="hidden md:block bg-[#111111] text-neutral-300">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-9 flex items-center justify-between gap-4 text-xs">
+          <span className="inline-flex items-center gap-2 min-w-0">
+            <StatusDot tone="green" />
+            <span className="truncate">
+              Free for everyone · Community pool{' '}
+              <strong className="text-white font-semibold">€{totalPatronage.toFixed(2)}</strong> / €
+              {MONTHLY_TARGET.toFixed(2)} ({fundingPercentage}%)
+            </span>
+          </span>
+          {adsDisabledForever ? (
+            <span className="inline-flex items-center gap-1.5 text-white font-semibold whitespace-nowrap">
+              <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
+              Ads are off for everyone
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setActiveTab('treasury')}
+              className="inline-flex items-center gap-2 text-white font-semibold hover:text-orange-200 whitespace-nowrap transition"
+            >
+              <span className="w-24 h-1.5 rounded-full bg-white/15 overflow-hidden" aria-hidden="true">
+                <span className="block h-full bg-[#FF6B1A] rounded-full" style={{ width: `${fundingPercentage}%` }} />
+              </span>
+              Ads switch off at 100% →
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ====================================================================
+          COMPACT STICKY HEADER + PILL NAV (lg inline, sm–md second row)
+      ==================================================================== */}
+      <header className="sticky top-0 z-30 bg-[#F4F4F2]/85 backdrop-blur-md border-b border-black/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab('generator')}
+            aria-label="OpenExam Hub home"
+            className="flex items-center gap-2.5 min-w-0 min-h-[44px] rounded-full"
+          >
+            <span className="w-9 h-9 rounded-full bg-[#111111] text-white flex items-center justify-center shrink-0" aria-hidden="true">
+              <BookOpen className="w-[18px] h-[18px]" />
+            </span>
+            <span className="min-w-0 text-left">
+              <span className="block font-bold text-[17px] tracking-tight leading-none text-neutral-950">OpenExam Hub</span>
+              <span className="hidden 2xl:block whitespace-nowrap text-[11px] text-neutral-500 mt-1">Free official exam prep · MIT open source</span>
+            </span>
+          </button>
+
+          <nav aria-label="Main" className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-white border border-black/5 shadow-sm">
+            {NAV_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const active = isNavActive(tab.id);
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`inline-flex items-center gap-2 h-10 px-4 rounded-full text-sm font-semibold whitespace-nowrap transition ${
+                    active ? 'bg-[#111111] text-white' : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" aria-hidden="true" />
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <span className={`text-[11px] px-1.5 rounded-full ${active ? 'bg-white/20' : 'bg-neutral-100 text-neutral-600'}`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowOriginModal(true)}
+              aria-label="Why OpenExam Hub exists"
+              title="Why OpenExam Hub exists"
+              className="w-11 h-11 rounded-full flex items-center justify-center text-neutral-700 hover:bg-white hover:text-neutral-950 transition"
+            >
+              <HeartHandshake className="w-5 h-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowContributeModal(true)}
+              className={`${THEME.ghostBtn} hidden md:inline-flex h-11 px-4 text-sm`}
+            >
+              <PlusCircle className="w-4 h-4 text-[#EA580C]" aria-hidden="true" />
+              Back the pool
+            </button>
+            {authReady && firebaseUser && !firebaseUser.isAnonymous ? (
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                aria-label="Your account"
+                className="h-11 pl-1.5 pr-1.5 sm:pr-4 rounded-full bg-white border border-black/5 inline-flex items-center gap-2 text-sm font-semibold hover:bg-neutral-50 transition"
+              >
+                <span className="w-8 h-8 rounded-full bg-[#111111] text-white flex items-center justify-center" aria-hidden="true">
+                  <UserCheck className="w-4 h-4" />
+                </span>
+                <span className="hidden sm:inline max-w-[120px] truncate">
+                  {firebaseUser.displayName || firebaseUser.email || 'Member'}
+                </span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(true)}
+                className={`${THEME.primaryBtn} h-11 px-4 text-sm`}
+              >
+                <LogIn className="w-4 h-4" aria-hidden="true" />
+                Sign in
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Tablet: full-width segmented nav row */}
+        <div className="hidden sm:block lg:hidden max-w-7xl mx-auto px-6 pb-3">
+          <nav aria-label="Main" className={`${THEME.segWrap} bg-white`}>
+            {NAV_TABS.map((tab) => {
+              const Icon = tab.icon;
+              const active = isNavActive(tab.id);
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`${THEME.seg(active)} inline-flex items-center justify-center gap-1.5 whitespace-nowrap`}
+                >
+                  <Icon className="w-4 h-4" aria-hidden="true" />
+                  {tab.short}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-32 sm:pb-12">
+        {/* HOME HERO: greeting over the orange → pink glow, with real stats only */}
+        {activeTab === 'generator' && (
+          <section
+            aria-labelledby="oe-greeting"
+            className="relative overflow-hidden rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 lg:p-10 mb-5 sm:mb-6 text-white"
+            style={THEME.heroStyle}
+          >
+            <div aria-hidden="true" className="absolute -top-24 -right-10 w-72 h-72 rounded-full bg-[#F7A8D8] blur-3xl opacity-70" />
+            <div aria-hidden="true" className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-[#FF7A1A] blur-3xl opacity-60" />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/5 to-black/10" />
+            <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 lg:items-end">
+              <div className="lg:col-span-7">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-xs font-semibold backdrop-blur-sm">
+                  <StatusDot tone="green" />
+                  100% free · no paywalls
+                </span>
+                <h1 id="oe-greeting" className="mt-4 text-[32px] sm:text-4xl lg:text-5xl font-bold leading-[1.05] [text-shadow:0_1px_12px_rgba(0,0,0,0.12)]">
+                  {greetingName ? `Welcome back, ${greetingName}` : 'Welcome'}
+                </h1>
+                <p className="mt-2 text-base sm:text-lg font-medium text-white [text-shadow:0_1px_8px_rgba(0,0,0,0.18)]">
+                  Let's plan your exam prep.
+                </p>
+              </div>
+              <dl className="lg:col-span-5 grid grid-cols-3 gap-2 sm:gap-3">
+                {[
+                  { label: 'Saved plans', value: savedRoadmaps.length, sub: 'in your profile' },
+                  { label: 'Cache hits', value: cacheHitsCount, sub: 'this session' },
+                  { label: 'Ad-free goal', value: ledgerLoaded ? `${fundingPercentage}%` : '—', sub: ledgerLoaded ? 'funded' : 'loading' }
+                ].map((st) => (
+                  <div key={st.label} className="rounded-2xl bg-white/95 text-neutral-950 p-3 sm:p-4 shadow-[0_8px_24px_-14px_rgba(0,0,0,0.35)]">
+                    <dt className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500 leading-tight">{st.label}</dt>
+                    <dd className="mt-1 text-xl sm:text-2xl font-bold leading-none">{st.value}</dd>
+                    <dd className="mt-1 text-[10px] sm:text-[11px] text-neutral-500">{st.sub}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </section>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
+          {/* PRIMARY COLUMN */}
+          <div className={`${showAside ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-5 sm:space-y-6 min-w-0`}>
+            {/* SUPPORT AREA SWITCHER (ledger, 3-year plan, donate) */}
+            {isSupportTab && (
+              <section className={`${THEME.card} p-5 sm:p-6`}>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <p className={THEME.label}>Support</p>
+                    <h1 className="text-xl sm:text-2xl font-bold mt-1">Keep OpenExam Hub free</h1>
+                    <p className="text-sm text-neutral-500 mt-1">See where every euro goes, and chip in if you can.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowContributeModal(true)}
+                    className={`${THEME.primaryBtn} w-full md:w-auto min-h-[48px] px-5 text-sm`}
+                  >
+                    <Heart className="w-4 h-4" aria-hidden="true" />
+                    Back the pool
+                  </button>
+                </div>
+                <div className={`${THEME.segWrap} mt-4`} role="tablist" aria-label="Support sections">
+                  {[
+                    { id: 'treasury', label: 'Open ledger' },
+                    { id: 'roadmap3yr', label: '3-year plan' }
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === t.id}
+                      onClick={() => setActiveTab(t.id)}
+                      className={THEME.seg(activeTab === t.id)}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ==============================================================
+                TAB 1: HOME — PLAN BUILDER
+            ============================================================== */}
+            {activeTab === 'generator' && (
+              <>
+                <section id="oe-builder" aria-labelledby="oe-builder-title" className={`${THEME.card} p-5 sm:p-7 scroll-mt-24`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className={THEME.label}>New plan</p>
+                      <h2 id="oe-builder-title" className="text-xl sm:text-2xl font-bold mt-1">
+                        Build your study plan
+                      </h2>
+                      <p className="text-sm text-neutral-500 mt-1">
+                        Three quick picks. We only use free, official sources.
+                      </p>
+                    </div>
+                    <span className={`${THEME.chip} hidden sm:inline-flex`}>
+                      <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+                      Free forever
+                    </span>
+                  </div>
+
+                  <div className="mt-6 space-y-6">
+                    <fieldset>
+                      <legend className="text-sm font-semibold text-neutral-900 mb-2">
+                        <span className="text-[#C2410C] mr-1.5">1</span>Which exam?
+                      </legend>
+                      <div className={THEME.segWrap}>
+                        {['TCF', 'IELTS', 'Goethe'].map((exam) => (
+                          <button
+                            key={exam}
+                            type="button"
+                            aria-pressed={selectedExam === exam}
+                            onClick={() => setSelectedExam(exam)}
+                            className={THEME.seg(selectedExam === exam)}
+                          >
+                            {exam}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+
+                    <fieldset>
+                      <legend className="text-sm font-semibold text-neutral-900 mb-2">
+                        <span className="text-[#C2410C] mr-1.5">2</span>Target level
+                      </legend>
+                      <div className={THEME.segWrap}>
+                        {LEVEL_OPTIONS.map((lv) => (
+                          <button
+                            key={lv.value}
+                            type="button"
+                            aria-pressed={selectedLevel === lv.value}
+                            onClick={() => setSelectedLevel(lv.value)}
+                            className={THEME.seg(selectedLevel === lv.value)}
+                          >
+                            {lv.value}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <p className="text-xs text-neutral-500">
+                          {LEVEL_OPTIONS.find((l) => l.value === selectedLevel)?.hint}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('practice')}
+                          className="self-start sm:self-auto min-h-[44px] -mx-2 px-2 rounded-full text-sm font-semibold text-[#C2410C] hover:text-[#9A3412] inline-flex items-center gap-1 text-left"
+                        >
+                          Not sure of your level? Take the 2-minute check
+                          <ArrowRight className="w-4 h-4 shrink-0" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </fieldset>
+
+                    <fieldset>
+                      <legend className="text-sm font-semibold text-neutral-900 mb-2">
+                        <span className="text-[#C2410C] mr-1.5">3</span>Days until your exam
+                      </legend>
+                      <div className={THEME.segWrap}>
+                        {DAY_OPTIONS.map((d) => (
+                          <button
+                            key={d.value}
+                            type="button"
+                            aria-pressed={daysUntilExam === d.value}
+                            onClick={() => setDaysUntilExam(Number(d.value))}
+                            className={`${THEME.seg(daysUntilExam === d.value)} flex flex-col items-center justify-center leading-tight py-1`}
+                          >
+                            <span>{d.value} days</span>
+                            <span className={`text-[11px] font-medium ${daysUntilExam === d.value ? 'text-white/80' : 'text-neutral-500'}`}>
+                              {d.hint}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </div>
+
+                  <div className="mt-7 space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => handleGenerateStudyPath(false)}
+                      disabled={isGenerating}
+                      className={THEME.accentBtn}
+                    >
+                      <Sparkles className={`w-5 h-5 ${isGenerating ? 'motion-safe:animate-spin' : ''}`} aria-hidden="true" />
+                      {isGenerating ? 'Building your plan…' : 'Build my plan'}
+                    </button>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-xs text-neutral-500">
+                      <span className="inline-flex items-center gap-2 text-center">
+                        <StatusDot tone="green" />
+                        Plans you've built before open instantly, at no cost.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateStudyPath(true)}
+                        disabled={isGenerating}
+                        title="Skip saved copies and build a fresh plan"
+                        className="min-h-[44px] px-3 rounded-full text-neutral-700 hover:bg-neutral-100 font-semibold inline-flex items-center gap-1.5 transition disabled:opacity-50"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                        Rebuild from scratch
+                      </button>
+                    </div>
+                  </div>
+                </section>
+
+                {/* LOADING: skeleton cards while agents work */}
+                {isGenerating && (
+                  <div aria-hidden="true" className="space-y-4">
+                    <div className={`${THEME.card} p-6 space-y-3`}>
+                      <div className="h-3 w-28 rounded-full bg-neutral-200 motion-safe:animate-pulse" />
+                      <div className="h-6 w-2/3 rounded-full bg-neutral-200 motion-safe:animate-pulse" />
+                      <div className="h-3 w-full rounded-full bg-neutral-100 motion-safe:animate-pulse" />
+                      <div className="h-3 w-5/6 rounded-full bg-neutral-100 motion-safe:animate-pulse" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className={`${THEME.card} p-4 space-y-3`}>
+                          <div className="w-10 h-10 rounded-xl bg-neutral-100 motion-safe:animate-pulse" />
+                          <div className="h-3 w-3/4 rounded-full bg-neutral-200 motion-safe:animate-pulse" />
+                          <div className="h-3 w-1/2 rounded-full bg-neutral-100 motion-safe:animate-pulse" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* LIVE AGENT STEPS + WHERE THE PLAN CAME FROM */}
+                {(isGenerating || agentStep > 0) && (
+                  <section aria-live="polite" className={`${THEME.card} p-5 sm:p-6`}>
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                      <h3 className={THEME.label}>{isGenerating ? 'Building your plan' : 'How we built it'}</h3>
+                      {cacheLayerHit === 'personal' && (
+                        <span className={THEME.chip}>
+                          <StatusDot tone="green" />
+                          From your saved plans · free
+                        </span>
+                      )}
+                      {cacheLayerHit === 'global' && (
+                        <span className={THEME.chip}>
+                          <StatusDot tone="green" />
+                          From the community cache · free
+                        </span>
+                      )}
+                      {cacheLayerHit === 'live' && (
+                        <span className={THEME.chip}>
+                          <StatusDot tone="orange" />
+                          Live build
+                        </span>
+                      )}
+                    </div>
+
+                    <ol className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {[
+                        { step: 1, name: 'Find', desc: 'Official sources', icon: Search },
+                        { step: 2, name: 'Copyright check', desc: 'Free to use?', icon: FileCheck2 },
+                        { step: 3, name: 'Link check', desc: 'Live & allowed', icon: Link2 },
+                        { step: 4, name: 'Plan', desc: 'Day-by-day path', icon: Calendar }
+                      ].map((agent) => {
+                        const Icon = agent.icon;
+                        const isDone = cacheLayerHit !== 'live' || agentStep > agent.step;
+                        const isCurrent = cacheLayerHit === 'live' && agentStep === agent.step;
+                        return (
+                          <li
+                            key={agent.step}
+                            className={`p-3 rounded-2xl border transition ${
+                              isDone
+                                ? 'bg-[#FAFAF8] border-black/5 text-neutral-950'
+                                : isCurrent
+                                ? 'bg-orange-50 border-orange-200 text-neutral-950'
+                                : 'bg-white border-black/5 text-neutral-400'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${isCurrent ? 'bg-[#111111] text-white' : 'bg-white border border-black/5'}`}>
+                                <Icon className="w-4 h-4" aria-hidden="true" />
+                              </span>
+                              {isDone && <CheckCircle2 className="w-4 h-4 text-green-600" aria-label="Done" />}
+                              {isCurrent && (
+                                <span className="relative flex w-2.5 h-2.5" aria-label="In progress">
+                                  <span className="absolute inline-flex h-full w-full rounded-full bg-[#FF6B1A] opacity-60 motion-safe:animate-ping" />
+                                  <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-[#FF6B1A]" />
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm font-bold">{agent.name}</div>
+                            <div className="text-[11px] text-neutral-500">{agent.desc}</div>
+                          </li>
+                        );
+                      })}
+                    </ol>
+
+                    {statusNotice && (
+                      <div
+                        role={noticeIsError ? 'alert' : 'status'}
+                        className={`mt-4 p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-3 ${
+                          noticeIsError ? 'bg-amber-50 border border-amber-200' : 'bg-[#FAFAF8] border border-black/5'
+                        }`}
+                      >
+                        <span className="flex items-start gap-3 flex-1 min-w-0">
+                          <span className={`${THEME.iconTile} w-9 h-9 bg-white`}>
+                            <Info className="w-4 h-4" aria-hidden="true" />
+                          </span>
+                          <span className="text-sm text-neutral-700 leading-snug pt-1.5">{statusNotice}</span>
+                        </span>
+                        {noticeIsError && (
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateStudyPath(false)}
+                            disabled={isGenerating}
+                            className={`${THEME.primaryBtn} min-h-[44px] px-5 text-sm w-full sm:w-auto`}
+                          >
+                            <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                            Try again
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    {pipelineTrace.length > 0 && (
+                      <ul className="mt-4 divide-y divide-black/5 text-xs text-neutral-600 border-t border-black/5">
+                        {pipelineTrace.map((step, i) => (
+                          <li key={i} className="flex items-start gap-2.5 py-2">
+                            <StatusDot
+                              className="mt-1"
+                              tone={step.status === 'ok' ? 'green' : step.status === 'skipped' ? 'slate' : 'amber'}
+                            />
+                            <strong className="text-neutral-900 font-semibold">{step.agent}</strong>
+                            <span className="min-w-0">{step.detail}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                )}
+
+                {/* ACTIVE PLAN */}
+                {activeRoadmap && !isGenerating && (
+                  <section id="oe-plan" aria-labelledby="oe-plan-title" className={`${THEME.card} overflow-hidden scroll-mt-24`}>
+                    <div className="p-5 sm:p-7 border-b border-black/5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-3 py-1 rounded-full bg-[#111111] text-white font-bold text-xs">
+                            {activeRoadmap.exam} · {activeRoadmap.level}
+                          </span>
+                          <span className={THEME.chip}>
+                            <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
+                            {activeRoadmap.days}-day plan
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleExportMarkdown}
+                            aria-label="Download plan as Markdown"
+                            className={`${THEME.ghostBtn} h-11 px-4 text-xs`}
+                          >
+                            <FileText className="w-4 h-4" aria-hidden="true" />
+                            .md
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleExportJSON}
+                            aria-label="Download plan as JSON"
+                            className={`${THEME.ghostBtn} h-11 px-4 text-xs`}
+                          >
+                            <FileJson className="w-4 h-4" aria-hidden="true" />
+                            .json
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 flex items-center gap-4 sm:gap-5">
+                        <ProgressRing pct={roadmapProgress.pct} size={76} />
+                        <div className="min-w-0">
+                          <h2 id="oe-plan-title" className="text-xl sm:text-2xl font-bold leading-tight">
+                            Your {activeRoadmap.exam} plan
+                          </h2>
+                          <p className="text-sm text-neutral-500 mt-1">
+                            {roadmapProgress.done} of {roadmapProgress.total} tasks done
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-4 text-sm text-neutral-600 leading-relaxed">{activeRoadmap.summary}</p>
+                    </div>
+
+                    {/* FREE OFFICIAL RESOURCES */}
+                    <div className="p-5 sm:p-7 border-b border-black/5 bg-[#FAFAF8]">
+                      <h3 className={`${THEME.label} mb-3 flex items-center gap-1.5`}>
+                        <ShieldCheck className="w-4 h-4 text-neutral-700" aria-hidden="true" />
+                        Free official resources
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                        {activeRoadmap.verifiedResources?.map((res, idx) => {
+                          const badge = linkStatusBadge(res, linkStatuses[res.url]);
+                          const toneClass = {
+                            green: 'text-green-700',
+                            amber: 'text-amber-700',
+                            red: 'text-red-700',
+                            slate: 'text-neutral-500'
+                          }[badge.tone];
+                          return (
+                            <a
+                              key={idx}
+                              href={res.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group p-4 rounded-2xl bg-white border border-black/5 hover:border-orange-200 hover:shadow-[0_12px_28px_-18px_rgba(17,17,17,0.25)] transition flex flex-col justify-between min-h-[132px]"
+                            >
+                              <div>
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#F4F4F2] text-neutral-700">
+                                    {res.category}
+                                  </span>
+                                  <ExternalLink className="w-4 h-4 text-neutral-400 group-hover:text-[#C2410C] transition" aria-hidden="true" />
+                                </div>
+                                <div className="text-sm font-bold text-neutral-950 leading-snug">{res.title}</div>
+                              </div>
+                              <div className="mt-3 pt-2.5 border-t border-black/5 space-y-1">
+                                <div className={`text-[11px] font-semibold flex items-center gap-1.5 ${toneClass}`}>
+                                  <StatusDot tone={badge.tone} />
+                                  <span>{badge.label}</span>
+                                  {badge.tone === 'red' && <ShieldAlert className="w-3 h-3 shrink-0" aria-hidden="true" />}
+                                </div>
+                                <div className="text-[10px] text-neutral-500 truncate">{res.license}</div>
+                              </div>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* CHECKLIST BY PHASE */}
+                    <div className="p-5 sm:p-7 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className={THEME.label}>Your checklist</h3>
+                        <span className="text-xs text-neutral-500">Ticks save to your profile</span>
+                      </div>
+                      <CoachPanel
+                        roadmap={activeRoadmap}
+                        onApply={async (phases) => {
+                          const updated = { ...activeRoadmap, phases: toClientPhases(phases), completedTasks: {} };
+                          setSavedRoadmaps((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+                          await saveToPersonalCache(updated);
+                        }}
+                      />
+                      <ol className="space-y-4">
+                        {activeRoadmap.phases?.map((phase, pIdx) => {
+                          const phaseTotal = phase.tasks?.length || 0;
+                          const phaseDone = (phase.tasks || []).filter(
+                            (_, tIdx) => !!activeRoadmap.completedTasks?.[`${pIdx}-${tIdx}`]
+                          ).length;
+                          const phaseComplete = phaseTotal > 0 && phaseDone === phaseTotal;
+                          return (
+                            <li
+                              key={pIdx}
+                              className={`rounded-2xl border p-4 sm:p-5 transition ${
+                                phaseComplete
+                                  ? 'border-orange-200 bg-gradient-to-br from-orange-50 to-pink-50 oe-celebrate'
+                                  : 'border-black/5 bg-[#FAFAF8]'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-3 mb-3">
+                                <div className="flex items-start gap-3 min-w-0">
+                                  <span
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 text-white ${
+                                      phaseComplete ? 'bg-[#EA580C]' : 'bg-[#111111]'
+                                    }`}
+                                    aria-hidden="true"
+                                  >
+                                    {phaseComplete ? <Check className="w-4 h-4" /> : pIdx + 1}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <h4 className="font-bold text-neutral-950 text-base leading-snug">{phase.phaseTitle}</h4>
+                                    <p className="text-xs text-neutral-500 mt-0.5">
+                                      Focus: {phase.focus}
+                                      {phase.startDay && phase.endDay ? ` · Days ${phase.startDay}–${phase.endDay}` : ''}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="text-xs font-semibold text-neutral-500 whitespace-nowrap pt-1">
+                                  {phaseDone}/{phaseTotal}
+                                </span>
+                              </div>
+                              <div
+                                className="h-1.5 rounded-full bg-black/5 overflow-hidden mb-3"
+                                role="progressbar"
+                                aria-label={`${phase.phaseTitle} progress`}
+                                aria-valuemin={0}
+                                aria-valuemax={phaseTotal}
+                                aria-valuenow={phaseDone}
+                              >
+                                <div
+                                  className="h-full rounded-full bg-[#FF6B1A] transition-all duration-500"
+                                  style={{ width: `${phaseTotal ? Math.round((phaseDone / phaseTotal) * 100) : 0}%` }}
+                                />
+                              </div>
+                              {phaseComplete && (
+                                <p role="status" className="oe-pop mb-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-xs font-bold text-[#C2410C] border border-orange-200">
+                                  <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                                  Phase complete. Nice work!
+                                </p>
+                              )}
+                              <ul className="divide-y divide-black/5 rounded-xl bg-white border border-black/5 overflow-hidden">
+                                {phase.tasks?.map((task, tIdx) => {
+                                  const isChecked = !!activeRoadmap.completedTasks?.[`${pIdx}-${tIdx}`];
+                                  return (
+                                    <li key={tIdx}>
+                                      <button
+                                        type="button"
+                                        aria-pressed={isChecked}
+                                        onClick={() => toggleTaskCompletion(pIdx, tIdx)}
+                                        className="w-full text-left min-h-[52px] px-3.5 py-3 flex items-start gap-3 hover:bg-neutral-50 transition"
+                                      >
+                                        {isChecked ? (
+                                          <CheckCircle2 className="w-5 h-5 text-[#EA580C] shrink-0 mt-0.5 oe-pop" aria-hidden="true" />
+                                        ) : (
+                                          <Circle className="w-5 h-5 text-neutral-300 shrink-0 mt-0.5" aria-hidden="true" />
+                                        )}
+                                        <span className={`text-sm leading-snug ${isChecked ? 'text-neutral-400 line-through' : 'text-neutral-800'}`}>
+                                          {task}
+                                        </span>
+                                      </button>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
+                  </section>
+                )}
+
+                {/* EMPTY STATE: no plan yet */}
+                {!activeRoadmap && !isGenerating && (
+                  <section className={`${THEME.card} p-8 text-center`}>
+                    <div className="mx-auto w-12 h-12 rounded-full bg-[#111111] text-white flex items-center justify-center">
+                      <Calendar className="w-5 h-5" aria-hidden="true" />
+                    </div>
+                    <h2 className="mt-4 text-lg font-bold">No plan yet</h2>
+                    <p className="mt-1 text-sm text-neutral-500">Pick your exam above and we'll map out every day for you.</p>
+                    <button
+                      type="button"
+                      onClick={() => scrollToId('oe-builder')}
+                      className={`${THEME.primaryBtn} mt-5 min-h-[48px] px-6 text-sm`}
+                    >
+                      Start building
+                    </button>
+                  </section>
+                )}
+              </>
+            )}
+
+            {/* ==============================================================
+                TAB 2: 2-LAYER CACHE & SAVED ROADMAPS
+            ============================================================== */}
+            {activeTab === 'saved' && (
+              <section className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-7 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-black/5">
+                  <div>
+                    <p className={THEME.label}>My plans</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">
+                      Your saved plans
+                    </h2>
+                    <p className="text-sm text-neutral-600 mt-1">
+                      Every plan is saved to your profile and shared with the community, so opening it again costs €0.00.
+                    </p>
+                  </div>
+                  <div className="min-h-[44px] px-3.5 py-2 rounded-xl bg-orange-50 border border-orange-200 text-right">
+                    <div className="text-xs font-bold text-neutral-900">
+                      €{estimatedTotalSavedEur} Saved
+                    </div>
+                    <div className="text-[11px] text-orange-700">
+                      {cacheHitsCount} cache hits this session
+                    </div>
+                  </div>
+                </div>
+
+                {savedRoadmaps.length === 0 && (
+                  <div className="py-10 text-center">
+                    <div className="mx-auto w-12 h-12 rounded-full bg-[#111111] text-white flex items-center justify-center">
+                      <Database className="w-5 h-5" aria-hidden="true" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-bold">No saved plans yet</h3>
+                    <p className="mt-1 text-sm text-neutral-500">Your first plan will show up here.</p>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('generator')}
+                      className={`${THEME.primaryBtn} mt-5 min-h-[48px] px-6 text-sm`}
+                    >
+                      Build my first plan
+                    </button>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {savedRoadmaps.map((rm) => {
+                    const isSelected = rm.id === activeRoadmap?.id;
+                    return (
+                      <div
+                        key={rm.id}
+                        className={`p-4 rounded-xl border transition flex flex-col justify-between ${
+                          isSelected
+                            ? 'border-orange-400 bg-orange-50/30'
+                            : 'border-black/[0.08] bg-white hover:border-neutral-300'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="px-2.5 py-0.5 rounded bg-[#111111] text-white text-xs font-bold">
+                              {rm.exam} • {rm.level}
+                            </span>
+                            <span className="text-xs text-neutral-500">
+                              Cached {rm.createdAt}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-neutral-900 text-base">
+                            {rm.days}-Day {rm.exam} Certification Plan
+                          </h3>
+                          <p className="text-xs text-neutral-600 mt-1 line-clamp-2">
+                            {rm.summary}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveRoadmapId(rm.id);
+                            setCacheLayerHit('personal');
+                            setAgentStep(5);
+                            setActiveTab('generator');
+                          }}
+                          className={`${THEME.primaryBtn} mt-4 w-full min-h-[44px] px-4 text-sm`}
+                        >
+                          Open plan
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'library' && <LibraryTab defaultExam={selectedExam} />}
+
+            {activeTab === 'practice' && (
+              <div className="space-y-6">
+                <DiagnosticPanel
+                  exam={selectedExam}
+                  level={selectedLevel}
+                  result={diagnosticResult}
+                  onResult={setDiagnosticResult}
+                  onBuild={() => {
+                    setActiveTab('generator');
+                    handleGenerateStudyPath(true);
+                  }}
+                />
+                <PracticePanel exam={selectedExam} level={selectedLevel} />
+              </div>
+            )}
+
+            {/* ==============================================================
+                TAB 3: PUBLIC FINANCIAL LEDGER & AD-SUNSET SIMULATOR
+            ============================================================== */}
+            {activeTab === 'treasury' && (
+              <div className="space-y-6">
+                <section className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-7 space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-black/5">
+                    <div>
+                      <h2 className="text-xl font-bold text-neutral-900">
+                        Radical Transparency Ledger & Ad-Sunset Engine
+                      </h2>
+                      <p className="text-sm text-neutral-600 mt-0.5">
+                        100% open-book accounting. When community patronage reaches{' '}
+                        <strong>€350.83/month</strong>, Google AdSense disables automatically site-wide.
+                      </p>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                        adsDisabledForever
+                          ? 'bg-orange-50 text-orange-700 border-orange-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-300'
+                      }`}
+                    >
+                      {adsDisabledForever
+                        ? '100% Funded — Ads Killed'
+                        : `${fundingPercentage}% to Ad-Sunset`}
+                    </span>
+                  </div>
+
+                  {/* Ad-Sunset What-If Simulator (local only, never touches the real ledger) */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-[#111111] text-white">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                        <Sliders className="w-4 h-4" />
+                        What-If Simulator
+                      </span>
+                      <span className="text-xs font-mono text-neutral-300">
+                        Threshold: €{MONTHLY_TARGET.toFixed(2)}/mo
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-300 mb-4">
+                      Drag to see how the kill-switch behaves. This is a local simulation only and does not change the real ledger or the ads anyone sees.
+                    </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Simulated monthly backing:</span>
+                        <span className="font-bold text-orange-300 text-sm">
+                          €{simulatedTotal.toFixed(2)} / €{MONTHLY_TARGET.toFixed(2)}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="400"
+                        step="5"
+                        value={simulatedTotal}
+                        onChange={(e) => setSimulatedTotal(Number(e.target.value))}
+                        className="w-full accent-orange-500 cursor-pointer"
+                      />
+                      <p className="text-xs font-semibold">
+                        {simulatedAdsOff
+                          ? 'At this level, ads would switch off site-wide.'
+                          : `Ads would stay on: €${(MONTHLY_TARGET - simulatedTotal).toFixed(2)} short of the threshold.`}
+                      </p>
+                      <div className="text-[11px] text-neutral-400">
+                        Real backing right now: €{totalPatronage.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cost & Incoming Channels Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="rounded-xl border border-black/[0.08] p-4">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-3">
+                        Monthly Cost Baseline (€350.83/mo)
+                      </h3>
+                      <div className="space-y-2.5 text-sm">
+                        <div className="flex justify-between py-1.5 border-b border-black/5">
+                          <span className="text-neutral-600">
+                            Custom Domain (€10/yr amortized)
+                          </span>
+                          <span className="font-semibold">€0.83</span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b border-black/5">
+                          <span className="text-neutral-600">
+                            Hosting & Database Free Tier
+                          </span>
+                          <span className="font-semibold text-orange-700">
+                            €0.00
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b border-black/5">
+                          <span className="text-neutral-600">
+                            Frontier AI API Token Pool
+                          </span>
+                          <span className="font-semibold">€100.00</span>
+                        </div>
+                        <div className="flex justify-between py-1.5">
+                          <span className="text-neutral-600">
+                            Maintainer Survival Runway
+                          </span>
+                          <span className="font-semibold">€250.00</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-black/[0.08] p-4">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-3">
+                        Incoming Funding Channels
+                      </h3>
+                      <div className="space-y-2.5 text-sm">
+                        <div className="flex justify-between py-1.5 border-b border-black/5">
+                          <span className="text-neutral-700 font-medium">
+                            GitHub Sponsors (0% fee)
+                          </span>
+                          <span className="font-bold text-orange-700">
+                            €{(fundingSources.githubSponsors + fundingSources.githubOneTime).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b border-black/5">
+                          <span className="text-neutral-700 font-medium">
+                            Open Collective (Public Fiscal Host)
+                          </span>
+                          <span className="font-bold text-orange-700">
+                            €{fundingSources.openCollective.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-1.5 border-b border-black/5">
+                          <span className="text-neutral-700 font-medium">
+                            Ko-fi One-Off Token Tips
+                          </span>
+                          <span className="font-bold text-orange-700">
+                            €{fundingSources.koFiTips.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-1.5">
+                          <span className="text-neutral-500">
+                            Google AdSense Bridge (Logged Separately)
+                          </span>
+                          <span className="font-semibold text-amber-700">
+                            {adsDisabledForever
+                              ? '€0.00 (Sunsetted)'
+                              : `€${fundingSources.adsenseBridge.toFixed(2)}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Community Audit Log */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
+                        <Activity className="w-4 h-4 text-orange-700" />
+                        Live Public Patronage Audit Trail
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowContributeModal(true)}
+                        className="min-h-[44px] px-2 -mr-2 rounded-full text-xs font-semibold text-orange-700 hover:underline"
+                      >
+                        Back the project →
+                      </button>
+                    </div>
+                    <div className="divide-y divide-black/5 border border-black/[0.08] rounded-xl overflow-hidden">
+                      {ledgerEvents.length === 0 && (
+                        <div className="p-6 bg-white text-center text-xs text-neutral-500">
+                          {db
+                            ? 'No contributions yet. Confirmed donations appear here automatically.'
+                            : 'Ledger not connected in this preview.'}
+                        </div>
+                      )}
+                      {ledgerEvents.map((ev) => (
+                        <div
+                          key={ev.id}
+                          className="p-3.5 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-neutral-900">
+                                {ev.contributor}
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-[#F4F4F2] text-neutral-600 font-medium">
+                                {ev.source}
+                              </span>
+                              <span className="text-neutral-400">{ev.date}</span>
+                            </div>
+                            <p className="text-neutral-600 mt-0.5">{ev.note}</p>
+                          </div>
+                          <span className="font-bold text-orange-700 text-sm whitespace-nowrap">
+                            +€{Number(ev.amount).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* ==============================================================
+                TAB 4: 3-YEAR €200,000 PUBLIC TREASURY ROADMAP
+            ============================================================== */}
+            {activeTab === 'roadmap3yr' && (
+              <section className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-7 space-y-6">
+                <div className="border-b border-black/5 pb-4">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200 mb-2">
+                    <Globe className="w-3.5 h-3.5" />
+                    Civic-Tech Grants & Enterprise Sponsorship Blueprint
+                  </span>
+                  <h2 className="text-xl font-bold text-neutral-900">
+                    3-Year Public Treasury Roadmap (€200,000 Scale Allocation)
+                  </h2>
+                  <p className="text-sm text-neutral-600 mt-1">
+                    AI inference incurs real compute cost on every uncached search. If OpenExam Hub secures open-source grants or corporate sponsorships up to €200,000, every euro is locked into this transparent 3-year operational ledger so individual learners never pay a cent:
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-black/[0.08] text-xs uppercase text-neutral-500 bg-[#FAFAF8]">
+                        <th className="py-3 px-4 font-bold">Allocation Category</th>
+                        <th className="py-3 px-4 font-bold">Annual</th>
+                        <th className="py-3 px-4 font-bold">3-Year Total</th>
+                        <th className="py-3 px-4 font-bold">Share</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/5">
+                      {THREE_YEAR_TREASURY.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-neutral-50/70">
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-neutral-900">
+                              {row.category}
+                            </div>
+                            <div className="text-xs text-neutral-500 mt-0.5">
+                              {row.details}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 font-medium text-neutral-700 whitespace-nowrap">
+                            {row.annual}
+                          </td>
+                          <td className="py-3.5 px-4 font-bold text-orange-700 whitespace-nowrap">
+                            {row.threeYear}
+                          </td>
+                          <td className="py-3.5 px-4 text-xs font-mono text-neutral-600">
+                            {row.percent}%
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="bg-[#111111] text-white font-bold">
+                        <td className="py-3.5 px-4">Total 3-Year Public Pool</td>
+                        <td className="py-3.5 px-4">—</td>
+                        <td className="py-3.5 px-4 text-orange-300">€200,000</td>
+                        <td className="py-3.5 px-4 font-mono">100%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* ==================================================================
+              RIGHT SIDEBAR: PATRONAGE POOL, AD-SUNSET UNIT & ECOSYSTEM BRIDGE
+          ================================================================== */}
+          {showAside && (
+          <aside
+            className={`lg:col-span-4 space-y-5 sm:space-y-6 min-w-0 ${
+              activeTab === 'generator' ? 'order-first lg:order-none lg:sticky lg:top-24' : ''
+            }`}
+          >
+            {activeTab === 'generator' ? (
+              <>
+                {activeRoadmap ? (
+                  <section aria-labelledby="oe-continue" className={`${THEME.card} p-5 sm:p-6`}>
+                    <p className={THEME.label}>Continue your plan</p>
+                    <div className="mt-3 flex items-center gap-4">
+                      <ProgressRing pct={roadmapProgress.pct} size={64} />
+                      <div className="min-w-0">
+                        <h2 id="oe-continue" className="font-bold text-lg leading-tight">
+                          {activeRoadmap.exam} · {activeRoadmap.level}
+                        </h2>
+                        <p className="text-sm text-neutral-500">
+                          {activeRoadmap.days}-day plan · {roadmapProgress.done}/{roadmapProgress.total} done
+                        </p>
+                      </div>
+                    </div>
+                    {nextTask ? (
+                      <div className="mt-4 p-3.5 rounded-2xl bg-[#FAFAF8] border border-black/5">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500 flex items-center gap-1.5">
+                          <StatusDot tone="orange" />
+                          Up next
+                        </p>
+                        <p className="mt-1.5 text-sm font-semibold text-neutral-950 leading-snug">{nextTask.task}</p>
+                        <p className="mt-0.5 text-xs text-neutral-500 truncate">{nextTask.phaseTitle}</p>
+                      </div>
+                    ) : (
+                      <p className="mt-4 p-3.5 rounded-2xl bg-orange-50 border border-orange-200 text-sm font-semibold text-neutral-900">
+                        Every task is done. Time for a full mock exam!
+                      </p>
+                    )}
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => scrollToId('oe-plan')}
+                        className={`${THEME.primaryBtn} min-h-[48px] px-4 text-sm`}
+                      >
+                        Open plan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => nextTask && toggleTaskCompletion(nextTask.pIdx, nextTask.tIdx)}
+                        disabled={!nextTask}
+                        className={`${THEME.ghostBtn} min-h-[48px] px-4 text-sm disabled:opacity-50`}
+                      >
+                        <Check className="w-4 h-4" aria-hidden="true" />
+                        Mark done
+                      </button>
+                    </div>
+                  </section>
+                ) : (
+                  <section className={`${THEME.card} p-5 sm:p-6 text-center`}>
+                    <p className={THEME.label}>Continue your plan</p>
+                    <p className="mt-3 text-sm text-neutral-600">You don't have a plan yet.</p>
+                    <button
+                      type="button"
+                      onClick={() => scrollToId('oe-builder')}
+                      className={`${THEME.primaryBtn} mt-4 w-full min-h-[48px] px-4 text-sm`}
+                    >
+                      Build my plan
+                    </button>
+                  </section>
+                )}
+
+                <section className={`${THEME.card} p-5 sm:p-6 hidden lg:block`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={THEME.label}>Keep it free</p>
+                    <span className={THEME.chip}>
+                      <StatusDot tone={adsDisabledForever ? 'green' : 'orange'} />
+                      {adsDisabledForever ? 'Ads off' : `${fundingPercentage}% funded`}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-2xl font-bold">
+                    €{totalPatronage.toFixed(2)}
+                    <span className="text-sm font-medium text-neutral-500"> / €{MONTHLY_TARGET.toFixed(2)} a month</span>
+                  </p>
+                  <div className="mt-3 h-2 rounded-full bg-[#F4F4F2] overflow-hidden" aria-hidden="true">
+                    <div className="h-full rounded-full bg-[#FF6B1A] transition-all duration-500" style={{ width: `${fundingPercentage}%` }} />
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-500">At 100%, ads switch off for everyone.</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('treasury')}
+                    className={`${THEME.ghostBtn} mt-4 w-full min-h-[44px] px-4 text-sm`}
+                  >
+                    See how we're funded
+                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                </section>
+              </>
+            ) : (
+              <>
+            {/* 1. Community Patronage & Token Pool Widget */}
+            <div className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-orange-700">
+                  Community Compute Pool
+                </span>
+                <span className="text-xs font-semibold text-neutral-500">
+                  Open Fiscal Host
+                </span>
+              </div>
+
+              <h3 className="text-lg font-bold text-neutral-900">
+                Keep OpenExam Hub Free for Everyone
+              </h3>
+              <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
+                Every €10 covers about {Math.floor(10 / ESTIMATED_QUERY_COST_EUR)} new AI-generated roadmaps at our estimated €{ESTIMATED_QUERY_COST_EUR.toFixed(2)} per query, plus maintainer time to keep links checked.
+              </p>
+
+              <div className="mt-4 p-3.5 rounded-xl bg-[#FAFAF8] border border-black/[0.08]">
+                <div className="flex justify-between text-xs font-semibold mb-1.5">
+                  <span className="text-neutral-700">Monthly Break-Even Goal</span>
+                  <span className="text-orange-700">
+                    €{totalPatronage.toFixed(2)} / €350.83
+                  </span>
+                </div>
+                <div className="w-full h-2.5 bg-neutral-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#111111] transition-all duration-500"
+                    style={{ width: `${fundingPercentage}%` }}
+                  />
+                </div>
+                <div className="mt-2 text-[11px] text-neutral-500 flex justify-between">
+                  <span>{fundingPercentage}% Funded</span>
+                  <span>
+                    {adsDisabledForever
+                      ? 'Ad-Sunset Reached!'
+                      : `€${(MONTHLY_TARGET - totalPatronage).toFixed(2)} to kill ads`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowContributeModal(true);
+                  }}
+                  className="min-h-[44px] w-full py-2.5 px-3.5 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-between transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Code2 className="w-4 h-4 text-orange-400" />
+                    GitHub Sponsors (0% Fee)
+                  </span>
+                  <span className="text-orange-300">Back Pool →</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowContributeModal(true);
+                  }}
+                  className="min-h-[44px] w-full py-2.5 px-3.5 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-xs font-semibold flex items-center justify-between transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4" />
+                    Open Collective (Public Ledger)
+                  </span>
+                  <span className="text-orange-100">Back Pool →</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowContributeModal(true);
+                  }}
+                  className="min-h-[44px] w-full py-2.5 px-3.5 rounded-full bg-white hover:bg-[#FAFAF8] text-neutral-800 border border-neutral-300 text-xs font-semibold flex items-center justify-between transition"
+                >
+                  <span className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-amber-600" />
+                    Ko-fi One-Off Token Tip
+                  </span>
+                  <span className="text-neutral-600">Tip €5 →</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 2. TEMPORARY ADSENSE BRIDGE (Controlled by Ad-Sunset Kill-Switch) */}
+            {!adsDisabledForever ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4">
+                <div className="flex items-center justify-between text-[11px] font-bold text-amber-900 mb-2">
+                  <span>TEMPORARY AD-BRIDGE</span>
+                  <span>{fundingPercentage}% to Sunset</span>
+                </div>
+                <p className="text-[11px] text-amber-900/90 leading-relaxed mb-3">
+                  Ads temporarily offset our API token bill. Once community backing hits{' '}
+                  <strong>€350.83/mo</strong>, this unit disappears automatically for everyone.
+                </p>
+                <div className="rounded-xl bg-white border border-dashed border-amber-300 p-4 text-center">
+                  <span className="text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">
+                    Sponsor Display Slot (AdSense Bridge)
+                  </span>
+                  <div className="text-xs font-semibold text-neutral-700">
+                    Accredited Language Examination Centers & Dictionaries
+                  </div>
+                  <div className="text-[11px] text-neutral-500 mt-0.5">
+                    Policy-compliant static placement • Zero pop-ups
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5 text-center">
+                <div className="w-10 h-10 rounded-full bg-[#111111] text-white flex items-center justify-center mx-auto mb-2.5">
+                  <EyeOff className="w-5 h-5" />
+                </div>
+                <h4 className="text-sm font-bold text-neutral-900">
+                  100% Community Funded — Ads Killed Site-Wide!
+                </h4>
+                <p className="text-xs text-orange-700 mt-1">
+                  Monthly patronage reached €{totalPatronage.toFixed(2)}. The AdSense script is automatically disabled for all learners.
+                </p>
+              </div>
+            )}
+
+            {/* 3. Companion Paid AI Language Studio Bridge */}
+            <div className="rounded-2xl bg-[#111111] text-white p-5 border border-neutral-800">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 uppercase tracking-wider mb-1.5">
+                <Award className="w-3.5 h-3.5" />
+                Companion AI Language Studio
+              </span>
+              <h3 className="text-base font-bold">
+                Want Live AI Speaking & Essay Grading?
+              </h3>
+              <p className="text-xs text-neutral-300 mt-1.5 leading-relaxed">
+                OpenExam Hub will always stay 100% free for official resource discovery. If you want interactive AI voice examiners and instant CEFR writing feedback, explore our dedicated AI Language Studio.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowOriginModal(true)}
+                className="min-h-[44px] mt-4 w-full py-2.5 px-4 rounded-full bg-white text-neutral-900 hover:bg-[#F4F4F2] text-xs font-bold inline-flex items-center justify-center gap-1.5 transition"
+              >
+                Explore Companion AI Studio
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+              </>
+            )}
+          </aside>
+          )}
+        </div>
+      </main>
+
+      {/* ====================================================================
+          MOBILE BOTTOM TAB BAR
+      ==================================================================== */}
+      <nav
+        aria-label="Main"
+        className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-black/5"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="grid grid-cols-5">
+          {NAV_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = isNavActive(tab.id);
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                aria-current={active ? 'page' : undefined}
+                className="flex flex-col items-center justify-center gap-1 min-h-[62px] text-[11px] font-semibold"
+              >
+                <span
+                  className={`w-12 h-7 rounded-full flex items-center justify-center transition ${
+                    active ? 'bg-[#111111] text-white' : 'text-neutral-500'
+                  }`}
+                >
+                  <Icon className="w-[18px] h-[18px]" aria-hidden="true" />
+                </span>
+                <span className={active ? 'text-neutral-950' : 'text-neutral-500'}>{tab.short}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* ====================================================================
+          ORIGIN STORY MODAL ("WHY THIS EXISTS")
+      ==================================================================== */}
+      {showOriginModal && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
+          <div className="oe-sheet bg-white w-full max-w-lg rounded-t-[28px] sm:rounded-[28px] p-6 sm:p-7 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto shadow-2xl">
+            <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
+            <div className="flex items-center justify-between pb-3 border-b border-black/5">
+              <div className="flex items-center gap-2">
+                <span className="w-10 h-10 rounded-full bg-[#111111] text-white flex items-center justify-center shrink-0"><HeartHandshake className="w-5 h-5" aria-hidden="true" /></span>
+                <h3 className="font-bold text-neutral-900 text-lg">
+                  Why OpenExam Hub Exists
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowOriginModal(false)}
+                aria-label="Close" className="w-11 h-11 -mr-2 rounded-full flex items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 text-base font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-sm text-neutral-700 leading-relaxed">
+              <p>
+                <strong>OpenExam Hub</strong> started at our kitchen table when my wife was preparing for her language certification exams. We saw firsthand how stressful it is to hunt for reliable study materials without getting trapped in expensive coaching agencies or broken links.
+              </p>
+              <p>
+                Official bodies like <em>France Éducation international</em>, the <em>Goethe-Institut</em>, and the <em>British Council</em> already publish high-quality free sample exams—they are simply scattered across dozens of pages.
+              </p>
+              <p>
+                So we built a multi-agent AI engine that gathers only verified, non-copyrighted official resources and organizes them into a chronological study roadmap.{' '}
+                <strong>There are no paywalls here, and there never will be.</strong> Every euro of community backing goes openly into our API token pool and keeping the platform maintained for learners worldwide.
+              </p>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowOriginModal(false)}
+                className="min-h-[44px] px-4 py-2 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-sm font-semibold transition"
+              >
+                Back to Study Planner
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================================
+          FIREBASE AUTH MODAL (GOOGLE + EMAIL/PASSWORD)
+      ==================================================================== */}
+      {showAuthModal && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
+          <div className="oe-sheet bg-white w-full max-w-md rounded-t-[28px] sm:rounded-[28px] p-6 sm:p-7 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto shadow-2xl">
+            <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
+            <div className="flex items-center justify-between pb-3 border-b border-black/5">
+              <h3 className="font-bold text-neutral-900 text-lg">
+                Sync Your Study Cache Profile
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(false)}
+                aria-label="Close" className="w-11 h-11 -mr-2 rounded-full flex items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 text-base font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-neutral-600 mt-3 leading-relaxed">
+              Sign in with Google or Email to persist your study roadmaps and checklist progress across devices at{' '}
+              <strong className="text-orange-700">€0.00 repeat API cost</strong>.
+            </p>
+
+            {firebaseUser && !firebaseUser.isAnonymous ? (
+              <div className="mt-4 p-4 rounded-xl bg-orange-50 border border-orange-200 space-y-3">
+                <div className="text-xs text-neutral-900">
+                  Signed in as <strong>{firebaseUser.email}</strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full py-2 rounded-lg bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold inline-flex items-center justify-center gap-1.5 transition"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Sign Out to Guest Session
+                </button>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={authLoading}
+                  className="min-h-[44px] w-full py-2.5 px-4 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-sm font-semibold flex items-center justify-center gap-2 transition"
+                >
+                  <Globe className="w-4 h-4 text-orange-400" />
+                  Continue with Google
+                </button>
+
+                <div className="relative flex py-1 items-center">
+                  <div className="grow border-t border-black/[0.08]" />
+                  <span className="shrink mx-3 text-[11px] uppercase text-neutral-400 font-semibold">
+                    or email account
+                  </span>
+                  <div className="grow border-t border-black/[0.08]" />
+                </div>
+
+                <form onSubmit={handleEmailAuthSubmit} className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+                      <input
+                        type="email"
+                        required
+                        placeholder="learner@example.com"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        className="min-h-[44px] w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="w-4 h-4 text-neutral-400 absolute left-3 top-3" />
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        className="min-h-[44px] w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  {authFeedback && (
+                    <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-1.5">
+                      <ShieldAlert className="w-4 h-4 shrink-0" />
+                      <span>{authFeedback}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="min-h-[44px] w-full py-2.5 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition"
+                  >
+                    {authMode === 'signup' ? (
+                      <>
+                        <UserPlus className="w-4 h-4" />
+                        Create Free Cached Account
+                      </>
+                    ) : (
+                      <>
+                        <LogIn className="w-4 h-4" />
+                        Sign In to Saved Cache
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="text-center text-xs text-neutral-600">
+                  {authMode === 'signin' ? (
+                    <>
+                      Need an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => setAuthMode('signup')}
+                        className="text-orange-700 font-semibold hover:underline"
+                      >
+                        Create one free
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Already have an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => setAuthMode('signin')}
+                        className="text-orange-700 font-semibold hover:underline"
+                      >
+                        Sign in
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================================
+          CONTRIBUTE MODAL (LINKS OUT; LEDGER IS UPDATED ONLY BY SERVER WEBHOOKS)
+      ==================================================================== */}
+      {showContributeModal && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6" style={THEME.backdropStyle}>
+          <div className="oe-sheet bg-white w-full max-w-md rounded-t-[28px] sm:rounded-[28px] p-6 sm:p-7 pb-[calc(1.5rem+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto shadow-2xl">
+            <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
+            <div className="flex items-center justify-between pb-3 border-b border-black/5">
+              <div className="flex items-center gap-2">
+                <span className="w-10 h-10 rounded-full bg-[#111111] text-white flex items-center justify-center shrink-0"><Coins className="w-5 h-5" aria-hidden="true" /></span>
+                <h3 className="font-bold text-neutral-900 text-lg">
+                  Back the Community Token Pool
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowContributeModal(false)}
+                aria-label="Close" className="w-11 h-11 -mr-2 rounded-full flex items-center justify-center text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 text-base font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-neutral-600 mt-3 leading-relaxed">
+              Donations are made on the platforms below. Once a payment is confirmed, the platform notifies our server and the public ledger updates automatically, moving the bar toward the{' '}
+              <strong>€{MONTHLY_TARGET.toFixed(2)}/mo ad-sunset</strong> threshold.
+            </p>
+            <div className="mt-4 space-y-2">
+              {[
+                { label: 'GitHub Sponsors (0% fee, monthly)', url: DONATION_LINKS.githubSponsors, icon: Code2 },
+                { label: 'Open Collective (public fiscal host)', url: DONATION_LINKS.openCollective, icon: ShieldCheck },
+                { label: 'Ko-fi (one-off tip)', url: DONATION_LINKS.kofi, icon: Coins }
+              ].map(({ label, url, icon: Icon }) =>
+                url ? (
+                  <a
+                    key={label}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-h-[44px] w-full py-2.5 px-3.5 rounded-xl border border-neutral-300 hover:border-orange-300 text-sm font-semibold flex items-center justify-between transition"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 text-orange-700" />
+                      {label}
+                    </span>
+                    <ExternalLink className="w-4 h-4 text-neutral-400" />
+                  </a>
+                ) : (
+                  <div
+                    key={label}
+                    className="min-h-[44px] w-full py-2.5 px-3.5 rounded-xl border border-dashed border-black/[0.08] text-sm text-neutral-400 flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Icon className="w-4 h-4" />
+                      {label}
+                    </span>
+                    <span className="text-xs">Coming soon</span>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// SHARED UI HELPERS
+// ============================================================================
+const SKILL_LABELS = {
+  listening: 'Listening',
+  reading: 'Reading',
+  writing: 'Writing',
+  speaking: 'Speaking',
+  grammar: 'Grammar',
+  vocabulary: 'Vocabulary',
+  mock_exam: 'Mock exams',
+  exam_format: 'Exam format'
+};
+
+function ServerRequired({ what }) {
+  return (
+    <div className="p-6 rounded-3xl border border-dashed border-black/10 bg-[#FAFAF8] text-center">
+      <div className="mx-auto w-11 h-11 rounded-full bg-[#111111] text-white flex items-center justify-center">
+        <Server className="w-5 h-5" aria-hidden="true" />
+      </div>
+      <p className="mt-3 font-semibold text-neutral-900">{what} is almost ready</p>
+      <p className="mt-1 text-sm text-neutral-500">
+        It needs the OpenExam Hub server. Set <code>VITE_SERVER_ENABLED</code> / <code>VITE_API_BASE</code> once the API is deployed.
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
+// RESOURCE LIBRARY: every link the platform has already checked, reused by all roadmaps
+// ============================================================================
+function LibraryTab({ defaultExam }) {
+  const [exam, setExam] = useState(defaultExam);
+  const [skill, setSkill] = useState('');
+  const [items, setItems] = useState([]);
+  const [state, setState] = useState('idle');
+  const [reloadKey, setReloadKey] = useState(0); // bumps to retry after an error
+
+  useEffect(() => {
+    if (!SERVER_ENABLED) return;
+    let cancelled = false;
+    setState('loading');
+    const qs = new URLSearchParams({ exam: exam.toUpperCase(), ...(skill ? { skill } : {}) });
+    apiGet(`/api/library?${qs}`)
+      .then((out) => {
+        if (!cancelled) {
+          setItems(out.resources || []);
+          setState('done');
+        }
+      })
+      .catch(() => !cancelled && setState('error'));
+    return () => {
+      cancelled = true;
+    };
+  }, [exam, skill, reloadKey]);
+
+  return (
+    <section className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-7 space-y-4">
+      <div>
+        <p className={THEME.label}>Library</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1">Free official resources</h2>
+        <p className="text-sm text-neutral-600 mt-0.5">
+          Official free resources the platform has already found and link-checked. New roadmaps use these first and only search outside when something is missing.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {['TCF', 'IELTS', 'Goethe'].map((e) => (
+          <button
+            key={e}
+            type="button"
+            onClick={() => setExam(e)}
+            aria-pressed={exam === e}
+            className={`min-h-[44px] px-4 rounded-full text-sm font-semibold border transition ${
+              exam === e ? 'bg-[#111111] text-white border-[#111111]' : 'bg-white border-black/10 text-neutral-700 hover:bg-neutral-50'
+            }`}
+          >
+            {e}
+          </button>
+        ))}
+        <select
+          value={skill}
+          onChange={(e) => setSkill(e.target.value)}
+          aria-label="Filter by skill"
+          className="min-h-[44px] px-4 rounded-full text-sm font-semibold border border-black/10 bg-white text-neutral-800"
+        >
+          <option value="">All skills</option>
+          {Object.entries(SKILL_LABELS).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </select>
+      </div>
+      {!SERVER_ENABLED ? (
+        <ServerRequired what="The shared library" />
+      ) : state === 'loading' ? (
+        <div aria-hidden="true" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="p-4 rounded-2xl border border-black/5 space-y-3">
+              <div className="h-3 w-20 rounded-full bg-neutral-100 motion-safe:animate-pulse" />
+              <div className="h-4 w-3/4 rounded-full bg-neutral-200 motion-safe:animate-pulse" />
+              <div className="h-3 w-1/2 rounded-full bg-neutral-100 motion-safe:animate-pulse" />
+            </div>
+          ))}
+        </div>
+      ) : state === 'error' ? (
+        <div role="alert" className="p-6 rounded-3xl bg-amber-50 border border-amber-200 text-center">
+          <p className="font-semibold text-neutral-900">We couldn't load the library.</p>
+          <p className="mt-1 text-sm text-neutral-600">Check your connection and try again.</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className={`${THEME.primaryBtn} mt-4 min-h-[44px] px-5 text-sm`}
+          >
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
+            Try again
+          </button>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="p-6 rounded-3xl bg-[#FAFAF8] border border-black/5 text-center">
+          <p className="font-semibold text-neutral-900">Nothing here yet for this filter</p>
+          <p className="mt-1 text-sm text-neutral-500">Build a plan for this exam and its resources land here.</p>
+          {skill && (
+            <button
+              type="button"
+              onClick={() => setSkill('')}
+              className={`${THEME.ghostBtn} mt-4 min-h-[44px] px-5 text-sm`}
+            >
+              Show all skills
+            </button>
+          )}
+        </div>
+      ) : (
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {items.map((r) => {
+            const badge = linkStatusBadge(r);
+            return (
+              <a
+                key={r.id || r.url}
+                href={r.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3.5 rounded-xl border border-black/[0.08] hover:border-orange-300 transition block"
+              >
+                <div className="flex flex-wrap gap-1 mb-1.5">
+                  {(r.skills || []).map((sk) => (
+                    <span key={sk} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#F4F4F2] text-neutral-700">
+                      {SKILL_LABELS[sk] || sk}
+                    </span>
+                  ))}
+                </div>
+                <div className="text-sm font-bold text-neutral-900 leading-snug">{r.title}</div>
+                <div className="text-[11px] text-neutral-500 mt-2 flex items-center gap-1.5">
+                  <StatusDot tone={badge.tone} />
+                  {badge.label}
+                </div>
+                {r.lastCheckedAt && (
+                  <div className="text-[10px] text-neutral-400">
+                    Last checked {String(r.lastCheckedAt).slice(0, 10)}
+                  </div>
+                )}
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ============================================================================
+// DIAGNOSTIC AGENT: short self-check that weights the roadmap toward weak skills
+// ============================================================================
+function DiagnosticPanel({ exam, level, result, onResult, onBuild }) {
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState({});
+  const [state, setState] = useState('idle');
+  const [error, setError] = useState(null);
+
+  const start = async () => {
+    setState('loading');
+    setError(null);
+    setAnswers({});
+    try {
+      const out = await apiPost('/api/diagnostic', { action: 'create', exam: exam.toUpperCase(), level });
+      setQuestions(out.questions || []);
+      setState('quiz');
+    } catch (e) {
+      setError(e.message);
+      setState('idle');
+    }
+  };
+
+  const submit = async () => {
+    setState('loading');
+    try {
+      const payload = questions.map((q) => ({
+        id: q.id,
+        skill: q.skill,
+        cefr: q.cefr,
+        correct: answers[q.id] === q.answerIndex
+      }));
+      const out = await apiPost('/api/diagnostic', { action: 'score', exam: exam.toUpperCase(), level, answers: payload });
+      onResult(out);
+      setState('done');
+    } catch (e) {
+      setError(e.message);
+      setState('quiz');
+    }
+  };
+
+  return (
+    <section className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-7 space-y-4">
+      <div>
+        <h2 className="text-xl font-bold text-neutral-900">Placement Self-Check</h2>
+        <p className="text-sm text-neutral-600 mt-0.5">
+          12 quick questions for {exam} around {level}. Your roadmap then gives more days to your weaker skills. This is an unofficial self-check, not an official placement test.
+        </p>
+      </div>
+      {!SERVER_ENABLED ? (
+        <ServerRequired what="The placement check" />
+      ) : (
+        <>
+          {state === 'idle' && (
+            <button type="button" onClick={start} className="min-h-[44px] px-4 py-2 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-sm font-semibold">
+              Start self-check
+            </button>
+          )}
+          {state === 'loading' && <p className="text-xs text-neutral-500">Working…</p>}
+          {error && <p className="text-xs text-red-700">{error}</p>}
+          {state === 'quiz' && (
+            <div className="space-y-4">
+              {questions.map((q, i) => (
+                <div key={q.id} className="p-4 rounded-xl border border-black/[0.08]">
+                  <div className="text-[11px] font-semibold text-neutral-500 mb-1">
+                    {i + 1}. {SKILL_LABELS[q.skill] || q.skill}
+                  </div>
+                  {q.transcript && (
+                    <p className="text-xs text-neutral-600 italic bg-[#FAFAF8] rounded-lg p-2.5 mb-2 whitespace-pre-line">
+                      Transcript: {q.transcript}
+                    </p>
+                  )}
+                  <p className="text-sm text-neutral-900 whitespace-pre-line">{q.prompt}</p>
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {q.options.map((opt, oi) => (
+                      <button
+                        key={oi}
+                        type="button"
+                        onClick={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
+                        className={`text-left px-3 py-2 rounded-lg border text-sm ${
+                          answers[q.id] === oi ? 'border-orange-400 bg-orange-50' : 'border-black/[0.08]'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                disabled={Object.keys(answers).length < questions.length}
+                onClick={submit}
+                className="min-h-[44px] px-4 py-2 rounded-full bg-[#111111] disabled:bg-neutral-300 text-white text-sm font-semibold"
+              >
+                See my results
+              </button>
+            </div>
+          )}
+          {state === 'done' && result && (
+            <div className="space-y-3">
+              <p className="text-sm text-neutral-800">
+                Estimated level: <strong>{result.estimatedLevel || 'not enough data'}</strong>
+              </p>
+              <div className="space-y-1.5">
+                {Object.entries(result.skillScores || {}).map(([sk, v]) => (
+                  <div key={sk} className="flex items-center gap-2 text-xs">
+                    <span className="w-24 text-neutral-600">{SKILL_LABELS[sk] || sk}</span>
+                    <div className="flex-1 h-2 bg-[#F4F4F2] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#111111]" style={{ width: `${Math.round(v * 100)}%` }} />
+                    </div>
+                    <span className="w-10 text-right">{Math.round(v * 100)}%</span>
+                  </div>
+                ))}
+              </div>
+              {result.notice && <p className="text-[11px] text-amber-800">{result.notice}</p>}
+              {(result.advice || []).map((a, i) => (
+                <p key={i} className="text-xs text-neutral-600">{a}</p>
+              ))}
+              <div className="flex gap-2">
+                <button type="button" onClick={onBuild} className="min-h-[44px] px-4 py-2 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-sm font-semibold">
+                  Build my personalised roadmap
+                </button>
+                <button type="button" onClick={start} className="min-h-[44px] px-4 py-2 rounded-xl border border-neutral-300 text-sm">
+                  Retake
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+// ============================================================================
+// PRACTICE GENERATOR: original, clearly-labelled unofficial practice items
+// ============================================================================
+function PracticePanel({ exam, level }) {
+  const [skill, setSkill] = useState('reading');
+  const [data, setData] = useState(null);
+  const [revealed, setRevealed] = useState({});
+  const [state, setState] = useState('idle');
+  const [error, setError] = useState(null);
+
+  const generate = async () => {
+    setState('loading');
+    setError(null);
+    setRevealed({});
+    try {
+      const out = await apiPost('/api/practice', { exam: exam.toUpperCase(), level, skill, count: 5 });
+      setData(out);
+      setState('done');
+    } catch (e) {
+      setError(e.message);
+      setState('idle');
+    }
+  };
+
+  return (
+    <section className="bg-white rounded-3xl border border-black/5 shadow-[0_1px_2px_rgba(17,17,17,0.04),0_12px_32px_-18px_rgba(17,17,17,0.14)] p-5 sm:p-7 space-y-4">
+      <div>
+        <h2 className="text-xl font-bold text-neutral-900">Extra Practice</h2>
+        <p className="text-sm text-neutral-600 mt-0.5">
+          Original practice in the {exam} style to use between official sample papers.
+        </p>
+      </div>
+      {!SERVER_ENABLED ? (
+        <ServerRequired what="Practice generation" />
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2 items-center">
+            {['listening', 'reading', 'grammar', 'vocabulary', 'writing', 'speaking'].map((sk) => (
+              <button
+                key={sk}
+                type="button"
+                onClick={() => setSkill(sk)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                  skill === sk ? 'bg-[#111111] text-white border-neutral-900' : 'border-neutral-300 text-neutral-700'
+                }`}
+              >
+                {SKILL_LABELS[sk]}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={generate}
+              disabled={state === 'loading'}
+              className="min-h-[44px] ml-auto px-4 py-2 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-xs font-semibold inline-flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              {state === 'loading' ? 'Generating…' : 'Get 5 items'}
+            </button>
+          </div>
+          {error && <p className="text-xs text-red-700">{error}</p>}
+          {data && (
+            <div className="space-y-3">
+              <p className="text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                {data.disclaimer}
+              </p>
+              {(data.items || []).map((it, i) => (
+                <div key={it.id || i} className="p-4 rounded-xl border border-black/[0.08]">
+                  {it.transcript && (
+                    <p className="text-xs text-neutral-600 italic bg-[#FAFAF8] rounded-lg p-2.5 mb-2 whitespace-pre-line">
+                      Transcript: {it.transcript}
+                    </p>
+                  )}
+                  <p className="text-sm text-neutral-900 whitespace-pre-line">{i + 1}. {it.prompt}</p>
+                  {Array.isArray(it.options) && (
+                    <ul className="mt-2 text-sm text-neutral-700 list-[upper-alpha] pl-5 space-y-0.5">
+                      {it.options.map((o, oi) => (
+                        <li key={oi}>{o}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {revealed[i] ? (
+                    <div className="mt-2 text-xs text-neutral-700 bg-[#FAFAF8] rounded-lg p-2.5 whitespace-pre-line">
+                      <strong>{it.modelAnswer ? 'Model answer:' : 'Answer:'}</strong> {it.modelAnswer ?? String(it.answer)}
+                      {it.explanation && <div className="mt-1">{it.explanation}</div>}
+                      {Array.isArray(it.checklist) && (
+                        <ul className="mt-1 list-disc pl-4">
+                          {it.checklist.map((c, ci) => (
+                            <li key={ci}>{c}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setRevealed((r) => ({ ...r, [i]: true }))}
+                      className="mt-2 text-xs font-semibold text-orange-700 hover:underline"
+                    >
+                      Show answer
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+// ============================================================================
+// PROGRESS COACH: checks pace and offers to rebalance the remaining tasks
+// ============================================================================
+function CoachPanel({ roadmap, onApply }) {
+  const [daysElapsed, setDaysElapsed] = useState(1);
+  const [advice, setAdvice] = useState(null);
+  const [state, setState] = useState('idle');
+
+  if (!SERVER_ENABLED || !roadmap?.phases) return null;
+
+  const ask = async () => {
+    setState('loading');
+    try {
+      const out = await apiPost('/api/coach', { roadmap, daysElapsed: Number(daysElapsed) });
+      setAdvice(out);
+      setState('done');
+    } catch (e) {
+      setAdvice({ summary: e.message, tips: [] });
+      setState('done');
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-4 space-y-3">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <Activity className="w-4 h-4 text-orange-700" />
+        <span className="font-semibold text-neutral-900">Progress coach</span>
+        <span className="text-xs text-neutral-600">I'm on day</span>
+        <input
+          type="number"
+          min="1"
+          max={roadmap.days}
+          value={daysElapsed}
+          onChange={(e) => setDaysElapsed(e.target.value)}
+          className="w-16 px-2 py-1 rounded-lg border border-neutral-300 text-xs"
+        />
+        <span className="text-xs text-neutral-600">of {roadmap.days}</span>
+        <button
+          type="button"
+          onClick={ask}
+          disabled={state === 'loading'}
+          className="min-h-[44px] ml-auto px-3 py-1.5 rounded-full bg-[#111111] hover:bg-neutral-800 text-white text-xs font-semibold"
+        >
+          {state === 'loading' ? 'Checking…' : 'Check my pace'}
+        </button>
+      </div>
+      {advice && (
+        <div className="text-xs text-neutral-700 space-y-1.5">
+          <p>
+            {typeof advice.onTrack === 'boolean' && (
+              <strong className={advice.onTrack ? 'text-orange-700' : 'text-amber-700'}>
+                {advice.onTrack ? 'On track. ' : 'Behind schedule. '}
+              </strong>
+            )}
+            {advice.summary}
+          </p>
+          {(advice.tips || []).map((t, i) => (
+            <p key={i}>• {t}</p>
+          ))}
+          {!advice.onTrack && advice.rebalancedPhases?.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onApply(advice.rebalancedPhases)}
+              className="px-3 py-1.5 rounded-lg border border-orange-400 text-orange-700 font-semibold"
+            >
+              Use the rebalanced plan for my remaining days
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
