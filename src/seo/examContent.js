@@ -219,7 +219,7 @@ const CONTENT = {
       ['Sections', 'Listening, Reading, Writing, Speaking'],
       ['Total time', '2 h 45 min'],
       ['Scores', 'Bands from 0 to 9'],
-      ['CEFR alignment', '4.0–5.0 = B1, 5.5–6.5 = B2, 7.0–8.0 = C1, 8.5–9.0 = C2']
+      ['CEFR alignment', 'Approximate official alignment: 4.0–4.5 = B1, 5.5–6.0 = B2, 7.0–7.5 = C1, 8.5–9.0 = C2. Bands 5.0, 6.5 and 8.0 sit on the border between two levels']
     ],
     format: {
       sections: [
@@ -245,13 +245,14 @@ const CONTENT = {
       },
       {
         q: 'Which IELTS band matches CEFR B2?',
-        a: 'Under the IELTS–CEFR alignment, bands 5.5 to 6.5 correspond to B2, 7.0 to 8.0 to C1, and 8.5 to 9.0 to C2.'
+        a: 'IELTS publishes an approximate alignment, not a one-to-one match. On that figure, overall bands 5.5 and 6.0 correspond to B2, 7.0 and 7.5 to C1, and 8.5 and 9.0 to C2. Bands 5.0, 6.5 and 8.0 are borderline (5.0 between B1 and B2, 6.5 between B2 and C1, 8.0 between C1 and C2).'
       },
       NOT_AFFILIATED('IELTS, the British Council, IDP or Cambridge University Press & Assessment')
     ],
     sources: [
       { title: 'IELTS Academic test (IELTS.org)', url: IELTS_ACADEMIC },
-      { title: 'IELTS General Training test (IELTS.org)', url: IELTS_GENERAL }
+      { title: 'IELTS General Training test (IELTS.org)', url: IELTS_GENERAL },
+      { title: 'IELTS and the CEFR (IELTS.org)', url: 'https://ielts.org/organisations/ielts-for-organisations/compare-ielts/ielts-and-the-cefr' }
     ],
     related: ['toefl', 'tef-canada', 'tcf-canada']
   }),
