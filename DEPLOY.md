@@ -366,6 +366,7 @@ provider's terms still apply.
 ```bash
 for f in $(find api lib -name '*.js'); do node --check "$f" || echo "FAIL $f"; done
 node scripts/test-ledger.mjs     # offline: webhooks, idempotency, rollover, FX, dead-link logic
+node scripts/test-usage.mjs      # offline: expense totals, token pricing, usage recording, /api/stats
 ```
 
 ### End-to-end test (local, no production accounts needed)

@@ -74,6 +74,7 @@ import {
 import { firebaseConfig, APP_ID, API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { DONATION_LINKS } from './donations.js';
 import { FIVE_YEAR_GOAL_EUR, FUNDING_PROMISE } from './funding.js';
+import { BooksPanel } from './BooksPanel.jsx';
 import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant, parsePlannerQuery, IELTS_BANDS, ieltsBandLevel } from '../lib/exams.js';
 import StudyToday from './StudyToday.jsx';
 import DashboardAd from './DashboardAd.jsx';
@@ -869,6 +870,9 @@ function Dashboard({ initialUser }) {
   const [selectedBand, setSelectedBand] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').band || null);
   const [daysUntilExam, setDaysUntilExam] = useState(30);
   const [publicStats, setPublicStats] = useState(null);
+  const [publicUsage, setPublicUsage] = useState(null);
+  const [publicUsageTotal, setPublicUsageTotal] = useState(null);
+  const [booksLoaded, setBooksLoaded] = useState(!SERVER_ENABLED);
 
   // Agent Pipeline & 2-Layer Cache Metrics State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -1148,10 +1152,16 @@ function Dashboard({ initialUser }) {
     let cancelled = false;
     apiGet('/api/stats')
       .then((out) => {
-        if (!cancelled) setPublicStats(out.stats || null);
+        if (cancelled) return;
+        setPublicStats(out.stats || null);
+        setPublicUsage(out.usage || null);
+        setPublicUsageTotal(out.usageTotal || null);
+        setBooksLoaded(true);
       })
       .catch(() => {
-        if (!cancelled) setPublicStats(null);
+        if (cancelled) return;
+        setPublicStats(null);
+        setBooksLoaded(true);
       });
     return () => {
       cancelled = true;
@@ -2877,6 +2887,15 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       )}
                     </div>
                   </div>
+
+                  <BooksPanel
+                    variant="app"
+                    earnings={ledgerLoaded ? totalFunding : 0}
+                    usage={publicUsage}
+                    usageTotal={publicUsageTotal}
+                    stats={publicStats}
+                    loaded={ledgerLoaded && booksLoaded}
+                  />
 
                   <div>
                     <div className="flex items-center justify-between mb-3">

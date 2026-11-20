@@ -831,7 +831,10 @@ async function main() {
     const st = await get('/api/stats');
     assert.equal(st.status, 200, st.text);
     assert.ok(st.json.stats.approvedResources >= 9 && st.json.stats.plansBuilt >= 5, JSON.stringify(st.json));
-    assert.match(st.headers.get('cache-control'), /s-maxage=300/);
+    assert.match(st.headers.get('cache-control'), /s-maxage=60/);
+    assert.equal(typeof st.json.usage?.calls, 'number');
+    assert.equal(typeof st.json.usageTotal?.costEur, 'number');
+    assert.ok(st.json.treasury);
     const noAuth = await get('/api/cron/rollup');
     assert.equal(noAuth.status, 401);
   });

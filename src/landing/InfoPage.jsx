@@ -6,6 +6,7 @@ import { GithubMark } from './icons.jsx';
 import { ink, muted, eyebrow, h2, lead, pageFont } from './theme.js';
 import { APP_PATH, CONTACT_EMAIL, FAQ, REPO_URL } from './content.js';
 import { DONATION_LINKS } from '../donations.js';
+import { BooksPanel, usePublicBooks } from '../BooksPanel.jsx';
 
 function PageShell({ title, eyebrowText, intro, children }) {
   useEffect(() => {
@@ -180,10 +181,19 @@ export function FaqPage() {
   );
 }
 
+function FundingBooks() {
+  const { treasury, usage, usageTotal, stats, loaded } = usePublicBooks();
+  return (
+    <div className="mt-14 mb-4">
+      <BooksPanel variant="page" treasury={treasury} usage={usage} usageTotal={usageTotal} stats={stats} loaded={loaded} />
+    </div>
+  );
+}
+
 export function FundingPage() {
   const promises = [
     ['No paywall', 'Every feature is free, forever. There is no premium tier waiting behind it.'],
-    ['Open books', 'Every euro from donations and dashboard ads is shown publicly, so you can see exactly how the site is paid for.'],
+    ['Open books', 'Every euro from donations and dashboard ads, and every recorded expense, is shown publicly, so you can see exactly how the site is paid for.'],
     ['No selling data', 'We don’t sell or rent personal data, and never will.']
   ];
   return (
@@ -197,7 +207,8 @@ export function FundingPage() {
         <p className={`text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
           The expensive part of exam prep is usually the course, not the content. We skip the course. What’s left
           is hosting and AI calls for writing plans. Ads appear only on the study dashboard, never on the landing
-          page, and all earnings from ads and donations are published so anyone can check them.
+          page. Earnings from ads and donations, and the project’s expenses, are published so anyone can see what
+          we take in and what we spend.
         </p>
         <dl className="mt-10 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7] max-w-4xl">
           {promises.map(([t, d]) => (
@@ -207,6 +218,7 @@ export function FundingPage() {
             </div>
           ))}
         </dl>
+        <FundingBooks />
         <p className={`mt-8 text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
           Want to help the ads disappear sooner? You can leave a tip on{' '}
           <a className="text-[#C2410C] underline underline-offset-4" href={DONATION_LINKS.kofi} target="_blank" rel="noopener noreferrer">Ko-fi</a>.

@@ -60,6 +60,10 @@ const PAGES = {
               <strong>Shared plan cache.</strong> To save cost, a plan generated for an exam, level and length (for example
               “TCF, B2, 30 days”) can be reused for other learners who pick the same options. It contains no personal data.
             </li>
+            <li>
+              <strong>AI usage totals.</strong> The server keeps monthly totals of how many AI calls were made and how many
+              tokens they used, with no account or personal data attached. Those totals are published on the funding page.
+            </li>
           </ul>
         )
       },

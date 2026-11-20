@@ -25,7 +25,7 @@ The planner currently covers **TEF Canada**, **TCF** (tout public and TCF Canada
 - **Placement self-check** (unofficial) and extra practice when you want a short diagnostic before you plan.
 - **Progress coach** that can adjust the remaining days of a plan.
 - **Free account to generate a plan.** An account (email or Google) is required so the AI token budget cannot be reused for repeat requests. A sample TEF Canada plan is available to preview first. You can export your plan as Markdown or JSON.
-- **Funding transparency.** Free forever, funded openly by donations and a few dashboard ads (ads are not live yet). All income is published on the Transparency page. Ads come off once the next 5 years of running costs are covered.
+- **Funding transparency.** Free forever, funded openly by donations and a few dashboard ads (ads are not live yet). Income, expenses and a net balance are published on the [funding page](https://openexamhub.org/funding) and the signed-in Transparency tab. Ads come off once the next 5 years of running costs are covered.
 - **Open source (MIT).**
 - **Blog.** Guides at `/blog` for students, professionals and immigration applicants, built from Markdown in [`content/blog`](content/blog/README.md).
 
@@ -86,7 +86,15 @@ OpenExam Hub is free to use. Running costs are meant to be covered by donations 
 - [Open Collective](https://opencollective.com/openexam-hub) (fiscal host application pending)
 - GitHub Sponsors (pending, after the fiscal host on the Sponsors profile is corrected)
 
-When the goal is met, the site is intended to become ad-free. Figures on the live site are the source of truth; this README does not invent earnings or user counts.
+When the goal is met, the site is intended to become ad-free. Figures on the live site are the source of truth; this README does not invent earnings, expenses or user counts.
+
+Public books live in two places:
+
+- **Earnings** come from the server-written donation ledger (`treasury/monthly_ledger`) and, when ads are live, the AdSense total.
+- **Expenses** are a reviewed list in [`src/expenses.js`](src/expenses.js). Add a new object when a real cost is paid (date, item, amount, currency, euro amount, source/receipt note). If the amount is not yet known, set `amount` / `amountEur` to `null` and `status` to `"pending"` — the site will show “amount pending” rather than a made-up figure. Recurring plans are listed at €0 only when they have been verified as free.
+- **AI usage** is counted on the server from each provider response (prompt and completion tokens, no user data) into `stats/usage-{YYYY-MM}` and `stats/usage-total`. Costs are computed from the price table in [`lib/llmPricing.js`](lib/llmPricing.js). Free-tier calls are €0 but the token totals are still shown. `GET /api/stats` returns the public aggregates.
+
+Net on the site is earnings minus recorded expenses minus lifetime AI cost.
 
 ## License
 
@@ -98,7 +106,7 @@ When the goal is met, the site is intended to become ad-free. Figures on the liv
 |---|---|
 | `index.html`, `src/` | Vite + React frontend. The planner lives in `src/App.jsx`; the public landing page lives in `src/landing/`. |
 | `api/` | Vercel serverless entrypoints. Route handlers live in `lib/routes/`; add new endpoints to a dispatcher, not as new `api/` files. |
-| `lib/` | Server code: orchestrator, agents, LLM client, library store, ledger, link checker, and `lib/algo/`. |
+| `lib/` | Server code: orchestrator, agents, LLM client, usage counters, library store, ledger, link checker, and `lib/algo/`. |
 | `scripts/` | Unit suites, end-to-end test, mock LLM, local API server, library seeder. |
 | `firestore.rules`, `firestore.indexes.json`, `firebase.json` | Firestore rules and indexes for the `openexam-hub` Firebase project. |
 | `vercel.json` | Static build, functions, SPA rewrite, and scheduled crons. |

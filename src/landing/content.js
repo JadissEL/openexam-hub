@@ -1,3 +1,4 @@
+import { AI_FRUGALITY_FAQ } from '../aiFrugality.js';
 // Single source of truth for marketing copy that must stay factual.
 // If something here stops being true in the code, change it here.
 
@@ -67,7 +68,7 @@ export const SOURCES = [
 export const FAQ = [
   {
     q: 'Is it really free? What’s the catch?',
-    a: 'There is no paid tier and no paywall, and we don’t sell data. Running it costs money (hosting and AI calls). It’s funded openly by donations and, on the study dashboard only, a few ads. Every euro from both is shown publicly, and once the next 5 years of running costs are covered, the ads go away. This page will never show ads.'
+    a: 'There is no paid tier and no paywall, and we don’t sell data. Running it costs money (hosting and AI calls). It’s funded openly by donations and, on the study dashboard only, a few ads. Every euro from donations and ads, and the project’s expenses, are shown publicly, and once the next 5 years of running costs are covered, the ads go away. This page will never show ads.'
   },
   {
     q: 'Do I need an account?',
@@ -92,6 +93,10 @@ export const FAQ = [
   {
     q: 'How are plans made? Is it AI?',
     a: 'Partly. A set of rules picks resources and paces the work to your level and exam date, and an AI model can help write the day-by-day tasks. Every link must come from an allowlist of official websites and passes an automatic check before it is shown. When the AI isn’t available, you still get a plan from the built-in rules.'
+  },
+  {
+    q: 'How do you keep AI use small?',
+    a: AI_FRUGALITY_FAQ
   },
   {
     q: 'I found a broken link or a mistake. What do I do?',

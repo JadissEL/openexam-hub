@@ -16,7 +16,7 @@ export const ROUTES = {
   'check-link': checkLink, // GET /api/check-link?url=
   library, // GET /api/library?exam=&level=&skill=  (served from the ranked shelf)
   plan, // GET /api/plan?exam=&level=&days=&profile=  (CDN-cached shared plan, 404 on miss)
-  stats, // GET /api/stats  (stats/public)
+  stats, // GET /api/stats  (stats/public, live AI usage, treasury snapshot)
   events, // POST /api/events {type:'task_done', planKey, resourceId}
   'ads-txt': adsTxt, // GET /ads.txt -> /api/ads-txt (404 until ADSENSE_PUBLISHER_ID is set)
   account // POST /api/account {action:'delete', confirm:'DELETE'} with a Firebase ID token: delete own data + account
