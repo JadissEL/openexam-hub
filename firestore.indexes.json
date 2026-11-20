@@ -1,22 +1,55 @@
 {
   "indexes": [
-    {
-      "collectionGroup": "resources",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "exams", "arrayConfig": "CONTAINS" },
-        { "fieldPath": "approved", "order": "ASCENDING" },
-        { "fieldPath": "linkStatus", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "resources",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "exams", "arrayConfig": "CONTAINS" },
-        { "fieldPath": "approved", "order": "ASCENDING" }
-      ]
-    }
+    { "collectionGroup": "resources", "queryScope": "COLLECTION", "fields": [{"fieldPath": "exams", "arrayConfig": "CONTAINS"}, {"fieldPath": "approved", "order": "ASCENDING"}, {"fieldPath": "linkStatus", "order": "ASCENDING"}]},
+    { "collectionGroup": "resources", "queryScope": "COLLECTION", "fields": [{"fieldPath": "exams", "arrayConfig": "CONTAINS"}, {"fieldPath": "approved", "order": "ASCENDING"}]},
+    { "collectionGroup": "resources", "queryScope": "COLLECTION", "fields": [{"fieldPath": "approved", "order": "ASCENDING"}, {"fieldPath": "nextCheckAt", "order": "ASCENDING"}]},
+    { "collectionGroup": "srs", "queryScope": "COLLECTION", "fields": [{"fieldPath": "exam", "order": "ASCENDING"}, {"fieldPath": "due", "order": "ASCENDING"}]}
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {"collectionGroup": "resources", "fieldPath": "title", "indexes": []},
+    {"collectionGroup": "resources", "fieldPath": "url", "indexes": []},
+    {"collectionGroup": "resources", "fieldPath": "license", "indexes": []},
+    {"collectionGroup": "resources", "fieldPath": "pageTitle", "indexes": []},
+    {"collectionGroup": "resources", "fieldPath": "auditNotes", "indexes": []},
+    {"collectionGroup": "shelves", "fieldPath": "entries", "indexes": []},
+    {"collectionGroup": "plans", "fieldPath": "roadmap", "indexes": []},
+    {"collectionGroup": "plans", "fieldPath": "wording", "indexes": []},
+    {"collectionGroup": "plans", "fieldPath": "expireAt", "indexes": []},
+    {"collectionGroup": "global_verified_roadmaps", "fieldPath": "roadmap", "indexes": []},
+    {"collectionGroup": "exam_profiles", "fieldPath": "sections", "indexes": []},
+    {"collectionGroup": "practice_sets", "fieldPath": "sets", "indexes": []},
+    {"collectionGroup": "practice_sets", "fieldPath": "items", "indexes": []},
+    {"collectionGroup": "practice_sets", "fieldPath": "variants", "indexes": []},
+    {"collectionGroup": "item_sets", "fieldPath": "items", "indexes": []},
+    {"collectionGroup": "item_bank", "fieldPath": "prompt", "indexes": []},
+    {"collectionGroup": "usage_buckets", "fieldPath": "u", "indexes": []},
+    {"collectionGroup": "usage_buckets", "fieldPath": "c", "indexes": []},
+    {"collectionGroup": "usage_buckets", "fieldPath": "expireAt", "indexes": []},
+    {"collectionGroup": "calib_buckets", "fieldPath": "items", "indexes": []},
+    {"collectionGroup": "calib_buckets", "fieldPath": "expireAt", "indexes": []},
+    {"collectionGroup": "link_checks", "fieldPath": "detail", "indexes": []},
+    {"collectionGroup": "link_checks", "fieldPath": "expireAt", "indexes": []},
+    {"collectionGroup": "stats", "fieldPath": "byExam", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "phases", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "calendar", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "completedTasks", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "progress", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "verifiedResources", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "pipeline", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "summary", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "examProfile", "indexes": []},
+    {"collectionGroup": "srs", "fieldPath": "front", "indexes": []},
+    {"collectionGroup": "srs", "fieldPath": "back", "indexes": []},
+    {"collectionGroup": "placement", "fieldPath": "responses", "indexes": []},
+    {"collectionGroup": "placement", "fieldPath": "report", "indexes": []},
+    {"collectionGroup": "ledger_events", "fieldPath": "note", "indexes": []},
+    {"collectionGroup": "ledger_events", "fieldPath": "meta", "indexes": []},
+    {"collectionGroup": "plans", "fieldPath": "resources", "indexes": []},
+    {"collectionGroup": "plans", "fieldPath": "examProfile", "indexes": []},
+    {"collectionGroup": "plans", "fieldPath": "sectionWeights", "indexes": []},
+    {"collectionGroup": "shelves", "fieldPath": "bySkill", "indexes": []},
+    {"collectionGroup": "roadmaps", "fieldPath": "allocation", "indexes": []},
+    {"collectionGroup": "item_sets", "fieldPath": "b", "indexes": []},
+    {"collectionGroup": "item_sets", "fieldPath": "n", "indexes": []}
+  ]
 }

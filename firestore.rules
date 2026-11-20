@@ -1,72 +1,124 @@
 rules_version = '2';
-
-// OpenExam Hub — Firestore security rules.
-// The browser is a READER of everything shared and a WRITER only of its own user data.
-// Every shared document (resource library, roadmap cache, donation ledger, metrics, exam
-// profiles, practice sets) is written exclusively by the server with the Admin SDK, which
-// bypasses these rules. That is what stops anyone from inflating the donation total to switch
-// the ads off, poisoning the shared roadmap cache, or approving their own links.
+// OpenExam Hub — Firestore security rules, v3 data model (see ARCHITECTURE.md §B.9).
+// Deploy only after the App build that bounds the ledger feed (limit 20) is live: list queries
+// on public collections must carry a limit <= 100.
+// Clients only ever write their own data under artifacts/{appId}/users/{uid}/...; everything
+// public is server-written (firebase-admin bypasses rules). Default deny.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function levels() { return ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']; }
+    function skills() { return ['listening', 'reading', 'writing', 'speaking', 'grammar', 'vocabulary']; }
+    function isNum(x) { return x is int || x is float; }
+    function isTime(x) { return x is int || x is timestamp; }
+    function optStr(d, k, max) { return !(k in d) || (d[k] is string && d[k].size() <= max); }
 
-    function signedIn() {
-      return request.auth != null;
+    // ---------------------------------------------------------------- public (read-only)
+    // Readable collections under public/data. Server-only collections (counters, usage_buckets,
+    // calib_buckets, item_bank, link_checks) are deliberately absent -> denied to clients.
+    function publicReadable(coll) {
+      return coll in ['resources', 'shelves', 'plans', 'exam_profiles', 'practice_sets', 'item_sets',
+                      'ledger_events', 'treasury', 'stats',
+                      // legacy, readable until the migration's cleanup step (§B.12 step 7):
+                      'global_verified_roadmaps', 'metrics'];
     }
-    function isOwner(uid) {
-      return signedIn() && request.auth.uid == uid;
+    match /artifacts/{appId}/public/data/{coll}/{docId} {
+      allow get: if publicReadable(coll);
+      // Listing is limited to the small feeds the app pages through.
+      allow list: if publicReadable(coll) && request.query.limit <= 100;
+      allow write: if false;
+    }
+    match /artifacts/{appId}/public/data/{coll}/{docId}/{rest=**} {
+      allow read, write: if false;
     }
 
-    // Shape + size check for a saved personal roadmap (Firestore rules cannot measure bytes,
-    // so list/string lengths and key counts are bounded instead; the hard 1 MiB doc cap still applies).
+    // ---------------------------------------------------------------- user profile doc
+    match /artifacts/{appId}/users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().size() <= 20
+        && optStr(request.resource.data, 'displayName', 80)
+        && (!('placementSummary' in request.resource.data) || request.resource.data.placementSummary is map)
+        && (!('prefs' in request.resource.data) || (request.resource.data.prefs is map && request.resource.data.prefs.size() <= 20));
+    }
+
+    // ---------------------------------------------------------------- roadmaps (+ progress map)
+    function validProgress(p) {
+      return p is map
+        && p.keys().hasOnly(['done', 'onTrack', 'lastAssessedAt', 'pace'])
+        && (!('done' in p) || (p.done is map && p.done.size() <= 2000))
+        && (!('onTrack' in p) || p.onTrack is bool)
+        && (!('pace' in p) || isNum(p.pace))
+        && (!('lastAssessedAt' in p) || isTime(p.lastAssessedAt));
+    }
     function validRoadmap(roadmapId) {
       let d = request.resource.data;
       return d.keys().hasAll(['exam', 'level', 'days', 'phases'])
-        // Bounded key count rather than hasOnly(): the server roadmap object may gain fields,
-        // and a strict allowlist would silently break saving.
-        && d.keys().size() <= 25
+        && d.keys().size() <= 30
         && (!('id' in d) || d.id == roadmapId)
         && d.exam is string && d.exam.size() >= 2 && d.exam.size() <= 24
-        && d.level in ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+        && d.level in levels()
         && d.days is int && d.days >= 1 && d.days <= 180
         && d.phases is list && d.phases.size() <= 60
-        && (!('summary' in d) || (d.summary is string && d.summary.size() <= 5000))
+        && optStr(d, 'summary', 5000)
+        && optStr(d, 'planKey', 64)
+        && optStr(d, 'scheduleMethod', 32)
         && (!('completedTasks' in d) || (d.completedTasks is map && d.completedTasks.size() <= 2000))
+        && (!('progress' in d) || validProgress(d.progress))
+        && (!('calendar' in d) || (d.calendar is list && d.calendar.size() <= 180))
         && (!('verifiedResources' in d) || (d.verifiedResources is list && d.verifiedResources.size() <= 60))
         && (!('pipeline' in d) || (d.pipeline is list && d.pipeline.size() <= 40))
         && (!('createdAt' in d) || d.createdAt is string || d.createdAt is timestamp);
     }
-
-    // 1) Shared/public data: readable by anyone (signed in or not, the app works logged out);
-    //    never writable from a client. Covers resources, exam_profiles, global_verified_roadmaps,
-    //    practice_sets, treasury/*, ledger_events/*, metrics/*.
-    match /artifacts/{appId}/public/{document=**} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    // 2) The user's own profile doc (artifacts/{appId}/users/{uid}).
-    match /artifacts/{appId}/users/{uid} {
-      allow read, write: if isOwner(uid);
-    }
-
-    // 3) Saved roadmaps: owner only; creates/updates must pass the shape check
-    //    (ticking a task rewrites completedTasks, which is re-validated too).
     match /artifacts/{appId}/users/{uid}/roadmaps/{roadmapId} {
       allow read, delete: if isOwner(uid);
       allow create, update: if isOwner(uid) && validRoadmap(roadmapId);
     }
 
-    // 4) Any other private sub-collection under the user (settings, diagnostic results, ...):
-    //    owner only. `coll != 'roadmaps'` keeps rule 3's validation from being bypassed,
-    //    because Firestore grants access if ANY matching rule allows it.
-    match /artifacts/{appId}/users/{uid}/{coll}/{rest=**} {
-      allow read: if isOwner(uid);
-      allow write: if isOwner(uid) && coll != 'roadmaps';
+    // ---------------------------------------------------------------- SRS cards (one doc per item)
+    function validCard(itemId) {
+      let c = request.resource.data;
+      return itemId.size() <= 80
+        && c.keys().hasOnly(['id', 'exam', 'skill', 'front', 'back', 'state', 'due', 'stability', 'difficulty',
+                             'reps', 'lapses', 'lastReview', 'interval', 'retrievability', 'source', 'createdAt'])
+        && c.keys().hasAll(['state', 'due'])
+        && (!('id' in c) || c.id == itemId)
+        && c.state in ['new', 'learning', 'review', 'relearning']
+        && isTime(c.due)
+        && (!('stability' in c) || (isNum(c.stability) && c.stability >= 0 && c.stability <= 36500))
+        && (!('difficulty' in c) || (isNum(c.difficulty) && c.difficulty >= 0 && c.difficulty <= 10))
+        && (!('reps' in c) || (c.reps is int && c.reps >= 0))
+        && (!('lapses' in c) || (c.lapses is int && c.lapses >= 0))
+        && (!('skill' in c) || c.skill in skills())
+        && optStr(c, 'exam', 24) && optStr(c, 'front', 1000) && optStr(c, 'back', 2000) && optStr(c, 'source', 40);
+    }
+    match /artifacts/{appId}/users/{uid}/srs/{itemId} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validCard(itemId);
     }
 
-    // Note: docs nested below a roadmap (roadmaps/{id}/x/y) match rule 4 with coll == 'roadmaps',
-    // so the owner can read them but nobody can write them.
+    // ---------------------------------------------------------------- placement sessions (one per exam)
+    function validPlacement(exam) {
+      let s = request.resource.data;
+      return exam.matches('^[A-Z][A-Z0-9_-]{1,19}$')
+        && s.keys().size() <= 16
+        && s.targetLevel in levels()
+        && s.responses is list && s.responses.size() <= 20
+        && (!('done' in s) || s.done is bool)
+        && (!('report' in s) || s.report is map);
+    }
+    match /artifacts/{appId}/users/{uid}/placement/{exam} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validPlacement(exam);
+    }
 
-    // 5) Everything else is denied by default (no rule matches -> no access).
+    // ---------------------------------------------------------------- other private sub-collections
+    // Owner only. Listed collections have their own validated rule above and are excluded here,
+    // because Firestore allows access if ANY matching rule allows it.
+    match /artifacts/{appId}/users/{uid}/{coll}/{rest=**} {
+      allow read: if isOwner(uid);
+      allow write: if isOwner(uid) && !(coll in ['roadmaps', 'srs', 'placement']);
+    }
   }
 }
