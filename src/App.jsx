@@ -1058,6 +1058,7 @@ export default function App() {
       return;
     }
 
+    const planName = `${examLabel(selectedExam)} ${selectedLevel}, ${daysUntilExam} days`;
     const cacheKey = `${selectedExam}${examVariant && examVariant !== defaultVariant(selectedExam) ? `-${examVariant.toUpperCase()}` : ''}-${selectedLevel}-${daysUntilExam}`;
     setStatusNotice(null);
 
@@ -1069,7 +1070,7 @@ export default function App() {
       setAgentStep(5);
       await recordCacheHitMetric();
       setStatusNotice(
-        `Layer 1 Personal Cache Hit: Loaded "${cacheKey}" instantaneously at €0.00 API token cost.`
+        `Opened your saved plan for ${planName}.`
       );
       return;
     }
@@ -1105,7 +1106,7 @@ export default function App() {
           await saveToPersonalCache(clonedForUser);
           await recordCacheHitMetric();
           setStatusNotice(
-            `Loaded a shared plan for "${cacheKey}" that other learners already built, rescheduled for your ${daysUntilExam} days at €0.00 API cost.`
+            `Loaded a ${planName} plan that other learners already built, rescheduled for your ${daysUntilExam} days.`
           );
           return;
         }
@@ -1137,7 +1138,7 @@ export default function App() {
           setAgentStep(5);
           await saveToPersonalCache(clonedForUser);
           await recordCacheHitMetric();
-          setStatusNotice(`Loaded "${cacheKey}" from the community cache at €0.00 API token cost.`);
+          setStatusNotice(`Loaded a ${planName} plan that other learners already built.`);
           return;
         }
       } catch (err) {
@@ -1195,7 +1196,7 @@ export default function App() {
           roadmap.source === 'library'
             ? `Built from ${n} resources already in the OpenExam library. No outside search was needed.`
             : roadmap.source === 'global_cache'
-            ? `Another learner already generated "${cacheKey}". Loaded it from the community cache.`
+            ? `Another learner already built a ${planName} plan, so we loaded it for you.`
             : `Searched official sources, link-checked every result, and added ${n} resources to the shared library.`
         );
       } catch (err) {
@@ -1340,7 +1341,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
       createdAt: new Date().toISOString().split('T')[0],
       completedTasks: {},
       source: 'fallback',
-      summary: `${daysUntilExam}-day ${selectedExam} (${selectedLevel}) study roadmap built from hand-picked official examination portals.`
+      summary: `${daysUntilExam}-day ${examLabel(selectedExam)} (${selectedLevel}) study roadmap built from hand-picked official examination portals.`
     };
     setAgentStep(5);
     setSavedRoadmaps((prev) => [fallbackRoadmap, ...prev.filter((item) => item.id !== cacheKey)]);
@@ -1410,7 +1411,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
   const handleExportMarkdown = () => {
     if (!activeRoadmap) return;
     const lines = [
-      `# OpenExam Hub — ${activeRoadmap.exam} (Level ${activeRoadmap.level}) ${activeRoadmap.days}-Day Study Plan`,
+      `# OpenExam Hub — ${examLabel(activeRoadmap.exam)} (Level ${activeRoadmap.level}) ${activeRoadmap.days}-Day Study Plan`,
       `Generated: ${activeRoadmap.createdAt} | License: 100% Free & Open Source`,
       '',
       `## Executive Summary`,
@@ -1801,7 +1802,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               <dl className="lg:col-span-5 grid grid-cols-3 gap-2 sm:gap-3">
                 {[
                   { label: 'Saved plans', value: savedRoadmaps.length, sub: 'in your profile' },
-                  { label: 'Cache hits', value: cacheHitsCount, sub: 'this session' },
+                  { label: 'Reused plans', value: cacheHitsCount, sub: 'this session' },
                   { label: 'Funding', value: !ledgerLoaded ? '—' : hasFundingData ? `€${totalFunding.toFixed(2)}` : '€0', sub: !ledgerLoaded ? 'loading' : FIVE_YEAR_GOAL_EUR != null && fundingPercentage != null ? `${fundingPercentage}% of 5-year goal` : 'goal coming soon' }
                 ].map((st) => (
                   <div key={st.label} className="rounded-2xl bg-white/95 text-neutral-950 p-3 sm:p-4 shadow-[0_8px_24px_-14px_rgba(0,0,0,0.35)]">
@@ -2042,7 +2043,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       {cacheLayerHit === 'global' && (
                         <span className={THEME.chip}>
                           <StatusDot tone="green" />
-                          From the community cache · free
+                          Shared plan · built by other learners
                         </span>
                       )}
                       {cacheLayerHit === 'live' && (
@@ -2430,12 +2431,12 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                       Your saved plans
                     </h2>
                     <p className="text-sm text-neutral-600 mt-1">
-                      Every plan is saved to your profile and shared with the community, so opening it again costs €0.00.
+                      Every plan is saved to your account, so you can open it again any time, on any device.
                     </p>
                   </div>
                   <div className="min-h-[44px] px-3.5 py-2 rounded-xl bg-orange-50 border border-orange-200 text-right">
                     <div className="text-xs font-bold text-neutral-900">
-                      {cacheHitsCount} cache hit{cacheHitsCount === 1 ? '' : 's'}
+                      {cacheHitsCount} reused plan{cacheHitsCount === 1 ? '' : 's'}
                     </div>
                     <div className="text-[11px] text-orange-700">this session</div>
                   </div>
@@ -2472,14 +2473,14 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <span className="px-2.5 py-0.5 rounded bg-[#111111] text-white text-xs font-bold">
-                              {rm.exam} • {rm.level}
+                              {examLabel(rm.exam)} • {rm.level}
                             </span>
                             <span className="text-xs text-neutral-500">
-                              Cached {rm.createdAt}
+                              Saved {rm.createdAt}
                             </span>
                           </div>
                           <h3 className="font-bold text-neutral-900 text-base">
-                            {rm.days}-Day {rm.exam} Certification Plan
+                            {rm.days}-day {examLabel(rm.exam)} plan
                           </h3>
                           <p className="text-xs text-neutral-600 mt-1 line-clamp-2">
                             {rm.summary}
@@ -2990,7 +2991,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             <div aria-hidden="true" className="sm:hidden mx-auto -mt-2 mb-4 h-1.5 w-10 rounded-full bg-neutral-200" />
             <div className="flex items-center justify-between pb-3 border-b border-black/5">
               <h3 id="oe-auth-title" className="font-bold text-neutral-900 text-lg">
-                {authMode === 'signup' ? 'Create a free account' : 'Sign in'}
+                {authMode === 'signup' ? 'Create your free account' : 'Sign in'}
               </h3>
               <button
                 type="button"
@@ -3004,6 +3005,11 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
             <p className="text-xs text-neutral-600 mt-3 leading-relaxed">
               {authPrompt}
             </p>
+            {authMode === 'signup' && (
+              <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
+                A free account saves your plan and progress across devices and keeps the AI free for everyone by preventing repeated requests.
+              </p>
+            )}
 
             {firebaseUser && !firebaseUser.isAnonymous ? (
               <div className="mt-4 p-4 rounded-xl bg-orange-50 border border-orange-200 space-y-3">
@@ -3089,7 +3095,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                     {authMode === 'signup' ? (
                       <>
                         <UserPlus className="w-4 h-4" />
-                        Create a free account
+                        Create free account
                       </>
                     ) : (
                       <>
@@ -3431,7 +3437,7 @@ function DiagnosticPanel({ exam, level, result, onResult, onBuild, needsAccount,
       <div>
         <h2 className="text-xl font-bold text-neutral-900">Placement Self-Check</h2>
         <p className="text-sm text-neutral-600 mt-0.5">
-          12 quick questions for {exam} around {level}. Your roadmap then gives more days to your weaker skills. This is an unofficial self-check, not an official placement test.
+          12 quick questions for {examLabel(exam)} around {level}. Your roadmap then gives more days to your weaker skills. This is an unofficial self-check, not an official placement test.
         </p>
       </div>
       {!SERVER_ENABLED ? (
@@ -3561,7 +3567,7 @@ function PracticePanel({ exam, level, deckIds, onSaveToDeck, needsAccount, getAc
       <div>
         <h2 className="text-xl font-bold text-neutral-900">Extra Practice</h2>
         <p className="text-sm text-neutral-600 mt-0.5">
-          Original practice in the {exam} style to use between official sample papers.
+          Original practice in the {examLabel(exam)} style to use between official sample papers.
         </p>
       </div>
       {!SERVER_ENABLED ? (

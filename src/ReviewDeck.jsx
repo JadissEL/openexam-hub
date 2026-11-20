@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Brain, BookmarkPlus, BookmarkCheck, Eye, RotateCcw } from 'lucide-react';
 import { newCard, nextReview, previewIntervals, dueQueue, retention } from '../lib/algo/srs.js';
 import { fnv1a } from '../lib/algo/common.js';
+import { examLabel } from '../lib/exams.js';
 
 const STUDY = ['listening', 'reading', 'writing', 'speaking', 'grammar', 'vocabulary'];
 const UI = {
@@ -82,7 +83,7 @@ export default function ReviewDeck({ exam, cards, onGrade, onReset }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className={`${UI.label} flex items-center gap-1.5`}><Brain className="w-4 h-4 text-neutral-700" aria-hidden="true" />Review deck</p>
-          <h2 id="oe-review-title" className="text-xl font-bold text-neutral-900 mt-1">Spaced repetition for {exam}</h2>
+          <h2 id="oe-review-title" className="text-xl font-bold text-neutral-900 mt-1">Spaced repetition for {examLabel(exam)}</h2>
           <p className="text-sm text-neutral-600 mt-0.5">Cards come back right before you'd forget them. Save practice items below to add cards.</p>
         </div>
         <div className="flex gap-2 text-xs">
