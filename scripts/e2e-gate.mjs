@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Browser E2E for the /app auth gate (Playwright, headless Chromium).
+ * Browser E2E for the /app auth gate (Playwright, headless Chromium + WebKit for the cookie banner).
  *
  *   npm run e2e:gate                                  signed-out checks against https://openexamhub.org
  *   BASE_URL=http://127.0.0.1:4173 npm run e2e:gate   ... against a local `vite preview`
@@ -12,7 +12,7 @@
  * Signed-out checks never create accounts. The signed-in path only ever talks to the emulators.
  * Screenshots go to SHOTS_DIR (default ./e2e-shots).
  */
-import { chromium } from 'playwright-core';
+import { chromium, webkit } from 'playwright-core';
 import { spawn, execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -74,21 +74,6 @@ async function signedOutChecks(browser, base) {
 
     await check(`${vp}: no dashboard data fetches or ad requests while signed out`, async () => {
       assert.deepEqual(apiCalls.filter((u) => !/securetoken|identitytoolkit/.test(u)), []);
-    });
-
-    await check(`${vp}: cookie banner never blocks the sign-up button`, async () => {
-      await page.evaluate(() => { try { localStorage.removeItem('oeh_consent_v1'); } catch {} if (window.oeh) window.oeh.open(); });
-      await page.locator('#oeh-consent').waitFor({ timeout: 5000 });
-      await page.waitForTimeout(200);
-      const hit = await page.evaluate(() => {
-        const cta = [...document.querySelectorAll('button')].find((b) => /Create free account/.test(b.textContent || ''));
-        if (!cta) return { ok: false, reason: 'no cta' };
-        const r = cta.getBoundingClientRect();
-        const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-        return { ok: !!(el && (el === cta || cta.contains(el))), tag: el && el.tagName, text: el && (el.innerText || '').slice(0, 80), id: el && el.id };
-      });
-      assert.equal(hit.ok, true, `elementFromPoint hit ${hit.id || hit.tag}: ${(hit.text || '').replace(/\s+/g, ' ')}`);
-      await page.getByRole('button', { name: 'Create free account' }).click({ trial: true, timeout: 5000 });
     });
 
     await check(`${vp}: plan preview works without an account`, async () => {
@@ -189,6 +174,69 @@ async function signedOutChecks(browser, base) {
   }
 }
 
+
+/**
+ * Fresh first view of /app: no consent cookie or localStorage, no programmatic scroll, no
+ * oeh.open() after the CTA already exists. elementFromPoint at the "Create free account"
+ * centre must hit the button itself, the banner must not overlap it, and scrollY must stay 0.
+ */
+async function freshCookieBannerChecks(base) {
+  const engines = [
+    ['chromium', chromium],
+    ['webkit', webkit]
+  ];
+  for (const [engine, launcher] of engines) {
+    const browser = await launcher.launch({ headless: true });
+    try {
+      for (const [vp, opts] of Object.entries(VIEWPORTS)) {
+        await check(`${engine} ${vp}: fresh /app cookie banner does not cover the sign-up button`, async () => {
+          const ctx = await browser.newContext({
+            ...opts,
+            locale: 'en-US',
+            storageState: { cookies: [], origins: [] }
+          });
+          try {
+            const page = await ctx.newPage();
+            await page.goto(`${base}/app`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+            await page.getByTestId('auth-gate').waitFor({ timeout: 15000 });
+            const cta = page.getByRole('button', { name: 'Create free account' });
+            await cta.waitFor({ state: 'visible', timeout: 15000 });
+            await page.locator('#oeh-consent').waitFor({ state: 'visible', timeout: 8000 });
+            // QA retest waited 2s; the previous auto-scroll never recovered after that either.
+            await page.waitForTimeout(2000);
+            const hit = await page.evaluate(() => {
+              const ctaEl = [...document.querySelectorAll('button')].find((b) => /Create free account/.test(b.textContent || ''));
+              const banner = document.getElementById('oeh-consent');
+              if (!ctaEl || !banner) return { ok: false, reason: !ctaEl ? 'no cta' : 'no banner' };
+              const r = ctaEl.getBoundingClientRect();
+              const b = banner.getBoundingClientRect();
+              const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+              const onCta = !!(el && (el === ctaEl || ctaEl.contains(el)));
+              const overlaps = !(r.bottom <= b.top || r.top >= b.bottom || r.right <= b.left || r.left >= b.right);
+              return {
+                ok: onCta && !overlaps && window.scrollY === 0,
+                scrollY: window.scrollY,
+                onCta,
+                overlaps,
+                hitId: el && el.id,
+                hitText: el && (el.innerText || '').replace(/\s+/g, ' ').slice(0, 80),
+                cta: { top: Math.round(r.top), bottom: Math.round(r.bottom) },
+                banner: { top: Math.round(b.top), bottom: Math.round(b.bottom) }
+              };
+            });
+            await page.screenshot({ path: path.join(SHOTS, `fresh-${engine}-${vp}-app-gate.png`), fullPage: false });
+            assert.equal(hit.ok, true, `fresh first view failed: ${JSON.stringify(hit)}`);
+          } finally {
+            await ctx.close();
+          }
+        });
+      }
+    } finally {
+      await browser.close();
+    }
+  }
+}
+
 function wait(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -286,6 +334,7 @@ const browser = await chromium.launch();
 try {
   const base = (process.env.BASE_URL || 'https://openexamhub.org').replace(/\/+$/, '');
   console.log(`signed-out gate checks against ${base}`);
+  await freshCookieBannerChecks(base);
   await signedOutChecks(browser, base);
   if (EMULATOR) {
     console.log('signed-in path on the Firebase emulators (demo-openexam)');

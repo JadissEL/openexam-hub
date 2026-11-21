@@ -131,6 +131,7 @@
     // Let the page update its <title> first.
     setTimeout(pageView, 60);
     setTimeout(countView, 60);
+    setTimeout(function () { if (banner) reservePageSpace(); }, 60);
   }
   ['pushState', 'replaceState'].forEach(function (m) {
     var orig = history[m];
@@ -194,33 +195,43 @@
       'flex:1 1 0;min-height:40px;padding:0 16px;border-radius:999px;border:1.5px solid #1A1714;' +
       'background:#1A1714;color:#fff;font:600 15px/1 Inter,system-ui,sans-serif;cursor:pointer';
   }
-  // While the banner is up, pad the page bottom by its height (plus the iOS safe-area) so the last
-  // button (e.g. "Create free account" on the /app gate) can sit above it. If the CTA would still
-  // be under the overlay, scroll just enough to clear it.
+  // Pin the banner to the top of the viewport (with the iOS safe-area) and reserve that height as
+  // padding-top. A bottom banner needed a scroll adjustment that often ran before the /app CTA
+  // mounted and never re-ran, leaving "Create free account" under the Accept/Reject bar. Top
+  // placement does not depend on scroll timing. On /app the banner is slightly more compact and
+  // AuthGate (min-h-screen) consumes --oeh-consent-space itself, so we do not also pad <body>.
   var padWas = null;
   var listening = false;
+  function isAppPath() {
+    var path = location.pathname || '';
+    return path === '/app' || path.indexOf('/app/') === 0;
+  }
   function bannerSpace() {
     var h = banner ? banner.offsetHeight : 0;
-    return 'calc(' + (h + 24) + 'px + env(safe-area-inset-bottom, 0px))';
+    return 'calc(' + (h + 16) + 'px + env(safe-area-inset-top, 0px))';
   }
-  function ensureCtaClear() {
-    if (!banner || !w.scrollBy) return;
-    var gate = d.querySelector('[data-testid="auth-gate"]') || d.querySelector('main');
-    var cta = gate && gate.querySelector('form button[type="submit"], button[type="submit"]');
-    if (!cta) return;
-    var gap = 12;
-    var need = cta.getBoundingClientRect().bottom - banner.getBoundingClientRect().top + gap;
-    if (need > 0) w.scrollBy(0, need);
+  function applyBannerChrome() {
+    if (!banner) return;
+    var compact = isAppPath();
+    banner.style.padding = compact ? '8px 12px' : '12px 14px';
+    banner.style.borderRadius = compact ? '14px' : '18px';
+    var title = banner.querySelector('#oeh-consent-title');
+    if (title) {
+      title.style.margin = compact ? '0 0 2px' : '0 0 4px';
+      title.style.font = compact ? '700 13px/1.3 Inter,system-ui,sans-serif' : '700 14px/1.3 Inter,system-ui,sans-serif';
+    }
+    var p = banner.querySelector('p');
+    if (p) p.style.margin = compact ? '0 0 8px' : '0 0 10px';
   }
   function reservePageSpace() {
     if (!banner || !d.body) return;
+    applyBannerChrome();
     var space = bannerSpace();
     d.documentElement.style.setProperty('--oeh-consent-space', space);
-    d.documentElement.style.scrollPaddingBottom = space;
-    if (padWas === null) padWas = d.body.style.paddingBottom || '';
-    d.body.style.paddingBottom = space;
-    if (w.requestAnimationFrame) w.requestAnimationFrame(function () { ensureCtaClear(); });
-    else ensureCtaClear();
+    d.documentElement.style.scrollPaddingTop = space;
+    d.documentElement.style.scrollPaddingBottom = '';
+    if (padWas === null) padWas = d.body.style.paddingTop || '';
+    d.body.style.paddingTop = isAppPath() ? (padWas || '') : space;
   }
   function onResize() { reservePageSpace(); }
   function listenResize(on) {
@@ -238,10 +249,10 @@
     listenResize(false);
     if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
     banner = null;
-    if (padWas !== null && d.body) d.body.style.paddingBottom = padWas;
+    if (padWas !== null && d.body) d.body.style.paddingTop = padWas;
     padWas = null;
     d.documentElement.style.removeProperty('--oeh-consent-space');
-    d.documentElement.style.scrollPaddingBottom = '';
+    d.documentElement.style.scrollPaddingTop = '';
   }
   function show(focus) {
     if (banner) {
@@ -255,7 +266,7 @@
     banner.setAttribute('aria-label', t.label);
     banner.setAttribute('lang', lang());
     banner.style.cssText =
-      'position:fixed;z-index:2147483000;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom, 0px));margin:0 auto;max-width:38rem;' +
+      'position:fixed;z-index:2147483000;left:12px;right:12px;top:calc(8px + env(safe-area-inset-top, 0px));bottom:auto;margin:0 auto;max-width:38rem;' +
       'background:#fff;color:#1A1714;border:1px solid #E7E1D7;border-radius:18px;padding:12px 14px;' +
       'box-shadow:0 18px 40px -18px rgba(26,23,20,.35);font:13px/1.45 Inter,system-ui,sans-serif';
     var h = d.createElement('h2');

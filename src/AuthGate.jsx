@@ -276,7 +276,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   return (
     <div
       className="min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased"
-      style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", paddingBottom: 'var(--oeh-consent-space, 0px)' }}
+      style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", paddingTop: 'var(--oeh-consent-space, 0px)' }}
       data-testid="auth-gate"
     >
       <main className="mx-auto w-full max-w-md px-5 pt-8 pb-16 sm:pt-16">

@@ -19,8 +19,8 @@ const TV5_TCF = 'https://apprendre.tv5monde.com/fr/tcf';
 const TV5_BOOKLETS = 'https://apprendre.tv5monde.com/fr/article/les-livrets-dentrainement-au-tcf-r-avec-tv5monde';
 const TV5_B1 = 'https://apprendre.tv5monde.com/fr/exercices/b1-intermediaire';
 const TV5_B2 = 'https://apprendre.tv5monde.com/fr/exercices/b2-avance';
-const RFI_JOURNAL = 'https://francaisfacile.rfi.fr/fr/podcasts/journal-en-français-facile/';
-const RFI_REVISER = 'https://francaisfacile.rfi.fr/fr/réviser/';
+const RFI_JOURNAL = 'https://www.rfi.fr/fr/podcasts/journal-français-facile/';
+const RFI_REVISER = 'https://francaisfacile.rfi.fr/fr/réviser/20261112-les-adjectifs-possessifs';
 const RFI_DIPLOMES = 'https://francaisfacile.rfi.fr/fr/diplômes-tests/';
 
 const TEF_PRESENTATION = 'https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/presentation/';

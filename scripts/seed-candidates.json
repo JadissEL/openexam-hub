@@ -316,7 +316,7 @@
   {
     "exam": "TCF",
     "title": "RFI — Journal en français facile (daily news listening)",
-    "url": "https://francaisfacile.rfi.fr/fr/podcasts/journal-en-français-facile/",
+    "url": "https://www.rfi.fr/fr/podcasts/journal-français-facile/",
     "category": "Oral comprehension",
     "skills": [
       "listening",
@@ -329,8 +329,8 @@
   },
   {
     "exam": "TCF",
-    "title": "RFI — Réviser les points de langue essentiels du français",
-    "url": "https://francaisfacile.rfi.fr/fr/réviser/",
+    "title": "RFI — Réviser les points de langue: les adjectifs possessifs",
+    "url": "https://francaisfacile.rfi.fr/fr/réviser/20261112-les-adjectifs-possessifs",
     "category": "Self-study",
     "skills": [
       "grammar",
