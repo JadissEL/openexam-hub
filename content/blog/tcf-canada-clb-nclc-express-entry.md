@@ -5,7 +5,7 @@ date: "2026-11-21"
 updated: "2026-11-21"
 lastVerified: "2026-11-21"
 exams:
-  - TCF
+  - TCF_CANADA
 audience:
   - immigration
 lang: en

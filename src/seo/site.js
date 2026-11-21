@@ -9,8 +9,9 @@ export const REPO_URL = 'https://github.com/JadissEL/openexam-hub';
 export const DEFAULT_OG_IMAGE = `${SITE_ORIGIN}/og-image.jpg`;
 
 /**
- * Per-exam guide pages under /exams/<slug>. `tags` are the blog exam tags (lib/exams.js ids)
- * whose posts are listed on the page and whose blog posts link back to it.
+ * Per-exam guide pages under /exams/<slug>. `tags` are the blog exam tags (BLOG_EXAMS in
+ * scripts/blog-data.mjs: KNOWN_EXAMS plus planner aliases such as TCF_CANADA) whose posts are
+ * listed on the page and whose blog posts link back to it.
  */
 export const EXAM_PAGES = [
   {
@@ -24,7 +25,7 @@ export const EXAM_PAGES = [
   {
     slug: 'tcf-canada',
     label: 'TCF Canada',
-    tags: [],
+    tags: ['TCF_CANADA'],
     title: 'TCF Canada: format, timings and free official practice',
     description:
       'TCF Canada from official sources: four compulsory papers, timings and question counts from France Éducation international, how IRCC uses the results, and free official practice from TV5Monde and RFI.'

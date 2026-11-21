@@ -77,7 +77,7 @@ export const PLAN_PAGES = [
     breadcrumb: 'Official practice and study path',
     level: 'NCLC 7 example target',
     duration: '30 days',
-    tags: ['TCF'],
+    tags: ['TCF_CANADA'],
     title: 'TCF Canada official practice and 30-day study path',
     description:
       'A free 30-day TCF Canada path using only official and public-broadcaster practice, with the four papers, timings and IRCC’s NCLC 7 score bands.',

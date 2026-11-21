@@ -444,7 +444,7 @@ export function PlanPage({ guide, slug, posts = [] }) {
 export function ExamPage({ slug, posts = [] }) {
   const c = examContent(slug);
   if (!c) return null;
-  const blogPosts = relatedPosts(posts, c.examIds.concat(c.tags));
+  const blogPosts = relatedPosts(posts, c.tags);
   return (
     <Shell>
       <article className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">

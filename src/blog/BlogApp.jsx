@@ -8,6 +8,7 @@ export const EXAM_LABELS = {
   TCF: 'TCF',
   TEF: 'TEF',
   TEF_CANADA: 'TEF Canada',
+  TCF_CANADA: 'TCF Canada',
   DELF: 'DELF',
   DALF: 'DALF',
   IELTS: 'IELTS',

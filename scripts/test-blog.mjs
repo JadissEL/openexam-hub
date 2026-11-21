@@ -15,7 +15,8 @@ import {
   firstBodyImage,
   resolveImageUrl,
   SITE_ORIGIN,
-  CONTENT_DIR
+  CONTENT_DIR,
+  BLOG_EXAMS
 } from './blog-data.mjs';
 import { SITEMAP_PATHS, TAG_INDEX_MIN_POSTS, allExamTags } from './blog-data.mjs';
 import { parsePlannerQuery, parsePlannerDays, parsePlannerVariant, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
@@ -138,6 +139,52 @@ sources: []
 Body text is here.
 `;
   assert.throws(() => parsePost('hello.md', raw), /NOT_AN_EXAM/);
+});
+
+test('TCF_CANADA is a valid blog tag and maps only to the TCF Canada guide', () => {
+  assert.ok(BLOG_EXAMS.includes('TCF_CANADA'));
+  assert.ok(BLOG_EXAMS.includes('TCF'));
+  assert.deepEqual(siteModule.examPagesForTag('TCF_CANADA').map((p) => p.slug), ['tcf-canada']);
+  assert.deepEqual(siteModule.examPagesForTag('TCF').map((p) => p.slug), ['tcf']);
+  assert.deepEqual(siteModule.EXAM_PAGES.find((p) => p.slug === 'tcf-canada').tags, ['TCF_CANADA']);
+  assert.deepEqual(PLAN_PAGES.find((p) => p.guide === 'tcf-canada' && p.slug === 'official-practice-study-path').tags, ['TCF_CANADA']);
+
+  const raw = `---
+title: Hello
+description: A post
+date: "2026-01-01"
+updated: "2026-01-01"
+lastVerified: "2026-01-01"
+exams: [TCF_CANADA]
+audience: [immigration]
+lang: en
+draft: false
+sources: []
+---
+
+# Yes
+
+Body text is here.
+`;
+  const post = parsePost('tcf-canada-tag.md', raw);
+  assert.deepEqual(post.exams, ['TCF_CANADA']);
+  const about = articleJsonLd(post).about;
+  assert.equal(about.length, 1);
+  assert.equal(about[0].name, 'TCF Canada');
+  assert.equal(about[0].url, 'https://openexamhub.org/exams/tcf-canada');
+
+  const posts = loadBlogPosts({ includeDrafts: true });
+  const tcfCanada = posts.find((p) => p.slug === 'tcf-canada-clb-nclc-express-entry');
+  const nclc7 = posts.find((p) => p.slug === 'nclc-7-clb-7-express-entry-scores');
+  assert.ok(tcfCanada && nclc7, 'expected published TCF Canada posts');
+  assert.deepEqual(tcfCanada.exams, ['TCF_CANADA']);
+  assert.deepEqual(nclc7.exams, ['TEF_CANADA', 'TCF_CANADA']);
+  const nclcAbout = articleJsonLd(nclc7).about.map((a) => a.url);
+  assert.deepEqual(nclcAbout, [
+    'https://openexamhub.org/exams/tef-canada',
+    'https://openexamhub.org/exams/tcf-canada'
+  ]);
+  assert.equal(articleJsonLd(tcfCanada).about[0].url, 'https://openexamhub.org/exams/tcf-canada');
 });
 
 test('sitemap includes static pages, skips drafts in production, includes posts otherwise', () => {
@@ -465,6 +512,58 @@ if (process.argv.includes('--built')) {
       assert.ok(guide.includes(`href="${p}"`), `guide /exams/${plan.guide} does not link to ${p}`);
       assert.ok(html.includes(`href="/exams/${plan.guide}"`), `${p} does not link back to its guide`);
     }
+  });
+
+  test('TCF Canada posts appear on the TCF Canada guide and plan, not on TCF tout public', () => {
+    const postHrefs = [
+      '/blog/tcf-canada-clb-nclc-express-entry',
+      '/blog/nclc-7-clb-7-express-entry-scores'
+    ];
+    const tcfCanadaGuide = read('exams/tcf-canada/index.html');
+    const tcfCanadaPlan = read('exams/tcf-canada/official-practice-study-path/index.html');
+    const tcfGuide = read('exams/tcf/index.html');
+    const tcfPlan = read('exams/tcf/b2-30-day-study-plan/index.html');
+    for (const href of postHrefs) {
+      assert.ok(tcfCanadaGuide.includes(`href="${href}"`), `TCF Canada guide missing ${href}`);
+      assert.ok(tcfCanadaPlan.includes(`href="${href}"`), `TCF Canada plan missing ${href}`);
+      assert.ok(!tcfGuide.includes(`href="${href}"`), `TCF tout public should not list ${href}`);
+      assert.ok(!tcfPlan.includes(`href="${href}"`), `TCF B2 plan should not list ${href}`);
+    }
+
+    const tefGuide = read('exams/tef-canada/index.html');
+    assert.ok(tefGuide.includes('href="/blog/nclc-7-clb-7-express-entry-scores"'), 'TEF Canada guide should still list the NCLC 7 post');
+    assert.ok(tefGuide.includes('href="/blog/tef-canada-clb-nclc-express-entry"'), 'TEF Canada guide should still list the TEF conversion post');
+    assert.ok(!tefGuide.includes('href="/blog/tcf-canada-clb-nclc-express-entry"'), 'TEF Canada guide should not list the TCF-only conversion post');
+
+    const ielts = read('exams/ielts/index.html');
+    assert.ok(ielts.includes('href="/blog/ielts-fees-registration-2027-test-dates"'));
+    assert.ok(ielts.includes('href="/blog/ielts-6-5-in-30-days"'));
+    const goethe = read('exams/goethe/index.html');
+    assert.ok(goethe.includes('href="/blog/german-exams-visa-university-professional-recognition"'));
+
+    const chipHrefs = (html) => {
+      const m = html.match(/Exam(?: <!-- -->)?guides?(?:<!-- -->)?:<\/span>([\s\S]*?)<\/p>/);
+      assert.ok(m, 'missing Exam guide chip');
+      return [...m[1].matchAll(/href="([^"]+)"/g)].map((x) => x[1]);
+    };
+    const aboutUrls = (html) => {
+      const article = jsonLdBlocks(html)
+        .flatMap((b) => (b['@graph'] ? b['@graph'] : [b]))
+        .find((b) => b['@type'] === 'BlogPosting');
+      assert.ok(article?.about, 'missing BlogPosting about');
+      return (Array.isArray(article.about) ? article.about : [article.about]).map((a) => a.url);
+    };
+
+    const tcfPost = read('blog/tcf-canada-clb-nclc-express-entry/index.html');
+    assert.deepEqual(chipHrefs(tcfPost), ['/exams/tcf-canada']);
+    assert.deepEqual(aboutUrls(tcfPost), ['https://openexamhub.org/exams/tcf-canada']);
+
+    const nclcPost = read('blog/nclc-7-clb-7-express-entry-scores/index.html');
+    assert.deepEqual(chipHrefs(nclcPost), ['/exams/tef-canada', '/exams/tcf-canada']);
+    assert.deepEqual(aboutUrls(nclcPost), [
+      'https://openexamhub.org/exams/tef-canada',
+      'https://openexamhub.org/exams/tcf-canada'
+    ]);
   });
 
   test('info pages are prerendered with their own title and canonical; FAQ has FAQPage JSON-LD', () => {
