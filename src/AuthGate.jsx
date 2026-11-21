@@ -8,7 +8,8 @@ import {
   signInWithPopup
 } from 'firebase/auth';
 import { examLabel } from '../lib/exams.js';
-import { trackAuth } from './analytics.js';
+import { trackAuth, track } from './analytics.js';
+import PlanPreview from './PlanPreview.jsx';
 
 // Sign-up / log-in page shown on /app to anyone who is not signed in with a real account.
 // The dashboard (tabs, plans, ads, data fetches) is never rendered behind it. The URL (including
@@ -28,6 +29,48 @@ function friendlyAuthError(err) {
   if (code.includes('popup-blocked')) return 'Your browser blocked the Google window. Allow pop-ups and try again.';
   if (code.includes('network')) return 'No connection. Check your internet and try again.';
   return 'Something went wrong. Please try again.';
+}
+
+/**
+ * Name of the social app whose in-app browser this is, or null. Google refuses OAuth inside embedded
+ * webviews ("disallowed_useragent"), so learners arriving from these apps must use email or open the
+ * page in their real browser. X and Reddit on iOS open links in Safari's view controller (plain
+ * Safari user agent), which Google allows, so those are not matched.
+ */
+export function inAppBrowser(ua) {
+  const s = String(ua || '');
+  if (/FBAN|FBAV|FB_IAB|FBIOS/.test(s)) return 'Facebook';
+  if (/Instagram/.test(s)) return 'Instagram';
+  if (/LinkedInApp/.test(s)) return 'LinkedIn';
+  if (/TwitterAndroid|Twitter for/.test(s)) return 'X';
+  if (/Reddit\//.test(s)) return 'Reddit';
+  if (/TikTok|musical_ly|BytedanceWebview/.test(s)) return 'TikTok';
+  if (/Snapchat/.test(s)) return 'Snapchat';
+  if (/MicroMessenger/.test(s)) return 'WeChat';
+  if (/ Line\//.test(s)) return 'LINE';
+  if (/Android[^)]*; wv\)/.test(s)) return 'this app';
+  return null;
+}
+
+function InAppNotice({ app }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+    } catch {
+      /* ignore */
+    }
+  };
+  return (
+    <div role="note" data-testid="in-app-notice" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-sm text-[#713F12]">
+      You’re in {app === 'this app' ? 'an app’s' : `the ${app} app’s`} built-in browser, where Google blocks its sign-in window.
+      Sign up with email below, or open this page in Chrome or Safari.{' '}
+      <button type="button" onClick={copy} className="font-semibold underline underline-offset-4">
+        {copied ? 'Link copied' : 'Copy link'}
+      </button>
+    </div>
+  );
 }
 
 function GoogleIcon() {
@@ -96,6 +139,8 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [showSample, setShowSample] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [inApp] = useState(() => (typeof navigator !== 'undefined' ? inAppBrowser(navigator.userAgent) : null));
 
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const wantedExam = params && params.get('exam') ? examLabel(params.get('exam').toUpperCase().replace(/[\s-]+/g, '_')) : null;
@@ -186,6 +231,18 @@ export default function AuthGate({ auth, sampleRoadmap }) {
 
         {showSample ? (
           <SamplePlan roadmap={sampleRoadmap} onBack={() => { setShowSample(false); switchMode('signup'); }} />
+        ) : showPreview ? (
+          <PlanPreview
+            onSample={sampleRoadmap ? () => { setShowPreview(false); setShowSample(true); } : null}
+            onSignUp={(choice) => {
+              setShowPreview(false);
+              switchMode('signup');
+              if (choice) {
+                setNotice(`Create your free account to save your ${examLabel(choice.exam)} ${choice.level} · ${choice.days}-day plan. The planner opens with it selected.`);
+              }
+              window.scrollTo?.(0, 0);
+            }}
+          />
         ) : (
           <>
             <h1 className="mt-8 text-[28px] sm:text-3xl font-semibold tracking-tight leading-tight">
@@ -196,6 +253,26 @@ export default function AuthGate({ auth, sampleRoadmap }) {
               {WHY}
             </p>
 
+            {mode === 'signup' && (
+              <ul className="mt-4 space-y-1 text-sm text-[#3B352F]" aria-label="What you get">
+                <li>✓ A day-by-day plan built only from official, free pages</li>
+                <li>✓ Every link checked automatically</li>
+                <li>✓ Free forever. No payment details, no paid tier</li>
+              </ul>
+            )}
+            {mode === 'signup' && (
+              <p className="mt-4 text-sm">
+                <button
+                  type="button"
+                  data-testid="open-plan-preview"
+                  onClick={() => { setShowPreview(true); setShowSample(false); track('plan_preview_open'); }}
+                  className="font-semibold text-[#C2410C] underline underline-offset-4"
+                >
+                  Not ready? Preview a plan first, no account needed →
+                </button>
+              </p>
+            )}
+
             {mode !== 'reset' && (
               <div role="tablist" aria-label="Account" className="mt-6 flex gap-1 rounded-full bg-[#ECE7DF] p-1">
                 {tab('signup', 'Create account')}
@@ -203,6 +280,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
               </div>
             )}
 
+            {mode !== 'reset' && inApp && <InAppNotice app={inApp} />}
             {mode !== 'reset' && (
               <>
                 <button

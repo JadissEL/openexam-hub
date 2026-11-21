@@ -18,7 +18,7 @@ import {
   CONTENT_DIR
 } from './blog-data.mjs';
 import { SITEMAP_PATHS, TAG_INDEX_MIN_POSTS, allExamTags } from './blog-data.mjs';
-import { parsePlannerQuery, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
+import { parsePlannerQuery, parsePlannerDays, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
 import * as siteModule from '../src/seo/site.js';
 import { PLAN_PAGES, planPath } from '../src/seo/planPages.js';
 import { DONATION_COPY, DONATION_LINKS, DONATION_PLATFORMS } from '../src/donations.js';
@@ -229,6 +229,15 @@ test('study plan data: routes, sitemap paths and sources stay official and claim
     assert.doesNotMatch(all, /\d+\s?%|pass rate|success rate|guaranteed|we guarantee|students who|testimonial/i, `${p}: stat or promise wording`);
   }
   assert.equal(siteModule.routeMeta('/exams/ielts/not-a-plan'), null);
+});
+
+test('parsePlannerDays keeps only the planner lengths', () => {
+  assert.equal(parsePlannerDays('?exam=TCF&level=B2&days=30'), 30);
+  assert.equal(parsePlannerDays('days=14'), 14);
+  assert.equal(parsePlannerDays('?days=60'), 60);
+  assert.equal(parsePlannerDays('?days=45'), null);
+  assert.equal(parsePlannerDays('?days=abc'), null);
+  assert.equal(parsePlannerDays(''), null);
 });
 
 test('parsePlannerQuery pre-selects known exams and levels, ignores junk', () => {

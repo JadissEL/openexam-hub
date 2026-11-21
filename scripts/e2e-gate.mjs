@@ -75,6 +75,21 @@ async function signedOutChecks(browser, base) {
       assert.deepEqual(apiCalls.filter((u) => !/securetoken|identitytoolkit/.test(u)), []);
     });
 
+    await check(`${vp}: cookie banner never blocks the sign-up button`, async () => {
+      await page.getByRole('button', { name: 'Create free account' }).click({ trial: true, timeout: 5000 });
+    });
+
+    await check(`${vp}: plan preview works without an account`, async () => {
+      await page.getByTestId('open-plan-preview').click();
+      await page.getByTestId('plan-preview').waitFor();
+      await page.getByRole('button', { name: 'Preview this plan' }).click();
+      await page.locator('[data-testid="plan-preview-result"], [data-testid="plan-preview-miss"]').first().waitFor({ timeout: 20000 });
+      await assertNoDashboard(page);
+      await page.screenshot({ path: path.join(SHOTS, `${vp}-app-plan-preview.png`), fullPage: true });
+      await page.getByRole('button', { name: 'Back to sign up' }).click();
+      await page.getByRole('heading', { name: 'Create your free account' }).waitFor();
+    });
+
     await check(`${vp}: log-in tab and password reset`, async () => {
       await page.getByRole('tab', { name: 'Log in' }).click();
       await page.getByRole('heading', { name: 'Welcome back' }).waitFor();
@@ -108,7 +123,7 @@ async function signedOutChecks(browser, base) {
 
     await check(`${vp}: landing CTA opens the gate`, async () => {
       await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' });
-      await page.getByRole('link', { name: /Build my free plan/ }).first().click();
+      await page.locator('a:visible', { hasText: 'Build my free plan' }).first().click();
       await page.getByTestId('auth-gate').waitFor({ timeout: 15000 });
       await assertNoDashboard(page);
       await page.screenshot({ path: path.join(SHOTS, `${vp}-landing-cta-gate.png`), fullPage: true });

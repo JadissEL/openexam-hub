@@ -129,7 +129,7 @@
     en: {
       label: 'Cookie consent',
       title: 'Cookies on OpenExam Hub',
-      body: 'With your OK, we use Google Analytics to see which pages help learners, and Google may use cookies for the few ads on the study dashboard. Nothing loads until you choose. You can change this anytime from “Cookie settings” at the bottom of the page.',
+      body: 'With your OK, we use Google Analytics to see which pages help, and Google may set ad cookies on the study dashboard. Nothing loads until you choose; change it anytime in “Cookie settings”.',
       more: 'Privacy notice',
       accept: 'Accept',
       reject: 'Reject'
@@ -137,7 +137,7 @@
     fr: {
       label: 'Consentement aux cookies',
       title: 'Cookies sur OpenExam Hub',
-      body: 'Avec votre accord, nous utilisons Google Analytics pour voir quelles pages aident les candidats, et Google peut utiliser des cookies pour les quelques publicités du tableau de bord. Rien n’est chargé avant votre choix. Vous pouvez changer d’avis à tout moment via le lien « Cookie settings » en bas de page.',
+      body: 'Avec votre accord, nous utilisons Google Analytics pour voir quelles pages aident, et Google peut déposer des cookies publicitaires sur le tableau de bord. Rien n’est chargé avant votre choix ; modifiable à tout moment via « Cookie settings ».',
       more: 'Politique de confidentialité',
       accept: 'Accepter',
       reject: 'Refuser'
@@ -155,12 +155,22 @@
   function btnStyle(b) {
     b.type = 'button';
     b.style.cssText =
-      'flex:1 1 0;min-height:44px;padding:0 18px;border-radius:999px;border:1.5px solid #1A1714;' +
+      'flex:1 1 0;min-height:40px;padding:0 16px;border-radius:999px;border:1.5px solid #1A1714;' +
       'background:#1A1714;color:#fff;font:600 15px/1 Inter,system-ui,sans-serif;cursor:pointer';
+  }
+  // While the banner is up, pad the page bottom by its height so it never hides the last button
+  // on the page (e.g. "Create free account" on the /app gate): the visitor can always scroll past it.
+  var padWas = null;
+  function reservePageSpace() {
+    if (!banner || !d.body) return;
+    if (padWas === null) padWas = d.body.style.paddingBottom || '';
+    d.body.style.paddingBottom = banner.offsetHeight + 24 + 'px';
   }
   function hide() {
     if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
     banner = null;
+    if (padWas !== null && d.body) d.body.style.paddingBottom = padWas;
+    padWas = null;
   }
   function show(focus) {
     if (banner) {
@@ -175,14 +185,14 @@
     banner.setAttribute('lang', lang());
     banner.style.cssText =
       'position:fixed;z-index:2147483000;left:12px;right:12px;bottom:12px;margin:0 auto;max-width:38rem;' +
-      'background:#fff;color:#1A1714;border:1px solid #E7E1D7;border-radius:20px;padding:18px 18px 16px;' +
-      'box-shadow:0 18px 40px -18px rgba(26,23,20,.35);font:14px/1.5 Inter,system-ui,sans-serif';
+      'background:#fff;color:#1A1714;border:1px solid #E7E1D7;border-radius:18px;padding:12px 14px;' +
+      'box-shadow:0 18px 40px -18px rgba(26,23,20,.35);font:13px/1.45 Inter,system-ui,sans-serif';
     var h = d.createElement('h2');
     h.id = 'oeh-consent-title';
     h.textContent = t.title;
-    h.style.cssText = 'margin:0 0 6px;font:700 16px/1.3 Inter,system-ui,sans-serif';
+    h.style.cssText = 'margin:0 0 4px;font:700 14px/1.3 Inter,system-ui,sans-serif';
     var p = d.createElement('p');
-    p.style.cssText = 'margin:0 0 12px;color:#4A443D';
+    p.style.cssText = 'margin:0 0 10px;color:#4A443D';
     p.appendChild(d.createTextNode(t.body + ' '));
     var a = d.createElement('a');
     a.href = '/privacy';
@@ -211,6 +221,7 @@
       if (e.key === 'Escape' && state) hide();
     });
     d.body.appendChild(banner);
+    reservePageSpace();
     if (focus) acc.focus();
   }
 
