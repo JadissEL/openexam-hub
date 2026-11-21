@@ -654,3 +654,14 @@ if (failed) {
   process.exit(1);
 }
 console.log('\nAll blog tests passed.');
+
+{
+  const { isPlannerDeepLink } = await import('../lib/exams.js');
+  const assert = (await import('node:assert/strict')).default;
+  assert.equal(isPlannerDeepLink('?exam=TCF_CANADA&level=B2&days=30'), true);
+  assert.equal(isPlannerDeepLink('?exam=IELTS&band=6.5&days=14'), true);
+  assert.equal(isPlannerDeepLink('?exam=IELTS&level=C1'), false);
+  assert.equal(isPlannerDeepLink('?exam=TEF_CANADA&level=B2&days=45'), false);
+  assert.equal(isPlannerDeepLink('?exam=NOPE&level=B2&days=30'), false);
+  console.log('isPlannerDeepLink ok');
+}

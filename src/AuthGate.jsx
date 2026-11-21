@@ -7,7 +7,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup
 } from 'firebase/auth';
-import { examLabel, parsePlannerQuery, parsePlannerVariant } from '../lib/exams.js';
+import { examLabel, parsePlannerQuery, parsePlannerVariant, isPlannerDeepLink } from '../lib/exams.js';
 import { trackAuth, track, count } from './analytics.js';
 import PlanPreview from './PlanPreview.jsx';
 
@@ -139,7 +139,18 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [showSample, setShowSample] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  // A full deep link (/app?exam=..&level=..&days=..) opens the no-account preview and loads the plan.
+  const [deepLink] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const p = new URLSearchParams(window.location.search);
+    return !accountDeleted && p.get('mode') !== 'login' && isPlannerDeepLink(window.location.search);
+  });
+  const [showPreview, setShowPreview] = useState(deepLink);
+  useEffect(() => {
+    if (!deepLink) return;
+    track('plan_preview_open', { auto: true });
+    count('preview_opened');
+  }, [deepLink]);
   const [inApp] = useState(() => (typeof navigator !== 'undefined' ? inAppBrowser(navigator.userAgent) : null));
 
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -237,6 +248,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
           <SamplePlan roadmap={sampleRoadmap} onBack={() => { setShowSample(false); switchMode('signup'); }} />
         ) : showPreview ? (
           <PlanPreview
+            autoRun={deepLink}
             onSample={sampleRoadmap ? () => { setShowPreview(false); setShowSample(true); } : null}
             onSignUp={(choice) => {
               setShowPreview(false);

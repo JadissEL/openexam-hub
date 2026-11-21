@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PICKER_EXAMS, LEVELS, PLANNER_DAYS, DEFAULT_PICKER_EXAM, examLabel, parsePlannerQuery, parsePlannerDays, parsePlannerVariant, normalizeVariant } from '../lib/exams.js';
 import { API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { track } from './analytics.js';
@@ -51,7 +51,7 @@ export function rememberChoice({ exam, variant, level, days }) {
 const selectCls =
   'mt-1 w-full min-h-[48px] rounded-xl border border-black/15 bg-white px-3 text-[16px] focus:outline-none focus:ring-2 focus:ring-[#C2410C]';
 
-export default function PlanPreview({ onSignUp, onSample }) {
+export default function PlanPreview({ onSignUp, onSample, autoRun = false }) {
   const [choice, setChoice] = useState(initialChoice);
   const [state, setState] = useState({ status: 'idle', roadmap: null });
   const set = (k) => (e) => {
@@ -68,7 +68,7 @@ export default function PlanPreview({ onSignUp, onSample }) {
   const label = `${choiceName(choice)} ${choice.level} · ${choice.days} days`;
 
   const preview = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     rememberChoice(choice);
     if (!SERVER_ENABLED) return setState({ status: 'miss', roadmap: null });
     setState({ status: 'loading', roadmap: null });
@@ -87,6 +87,16 @@ export default function PlanPreview({ onSignUp, onSample }) {
       setState({ status: 'error', roadmap: null });
     }
   };
+
+  // Deep link (?exam&level&days all valid): fetch the preview straight away, exactly once
+  // (the ref also guards against React StrictMode running mount effects twice in dev).
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (!autoRun || autoRan.current) return;
+    autoRan.current = true;
+    preview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRun]);
 
   const save = () => {
     rememberChoice(choice);

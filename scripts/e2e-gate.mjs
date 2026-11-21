@@ -116,12 +116,24 @@ async function signedOutChecks(browser, base) {
       await page.screenshot({ path: path.join(SHOTS, `${vp}-app-ielts-gate.png`), fullPage: true });
     });
 
-    await check(`${vp}: /app?exam=TCF_CANADA names TCF Canada and the preview keeps it`, async () => {
+    await check(`${vp}: /app?exam=TCF_CANADA&level=B2&days=30 opens the preview on TCF Canada with one plan request`, async () => {
+      const planReqs = [];
+      const onReq = (r) => { if (/\/api\/plan\?/.test(r.url())) planReqs.push(r.url()); };
+      page.on('request', onReq);
       await page.goto(`${base}/app?exam=TCF_CANADA&level=B2&days=30`, { waitUntil: 'domcontentloaded' });
-      await page.getByText(/planner for TCF Canada/).waitFor({ timeout: 15000 });
-      await page.getByTestId('open-plan-preview').click();
+      await page.getByTestId('plan-preview').waitFor({ timeout: 15000 });
       assert.equal(await page.locator('[data-testid="plan-preview"] select').first().inputValue(), 'TCF:canada');
+      await page.locator('[data-testid="plan-preview-result"], [data-testid="plan-preview-miss"]').first().waitFor({ timeout: 20000 });
+      await page.waitForTimeout(500);
+      page.off('request', onReq);
+      if (!/127\.0\.0\.1|localhost/.test(base) || planReqs.length) {
+        assert.equal(planReqs.length, 1, `expected one /api/plan request, saw ${planReqs.length}`);
+        assert.match(planReqs[0], /exam=TCF&level=B2&days=30&variant=canada/);
+      }
+      await assertNoDashboard(page);
+      await page.screenshot({ path: path.join(SHOTS, `${vp}-app-deeplink-preview.png`), fullPage: true });
       await page.getByRole('button', { name: 'Back to sign up' }).click();
+      await page.getByText(/planner for TCF Canada/).waitFor({ timeout: 15000 });
     });
 
     await check(`${vp}: /app#transparency signed out goes to /funding`, async () => {

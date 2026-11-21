@@ -15,7 +15,10 @@ export function track(name, params = {}) {
  */
 export function count(name) {
   try {
-    if (typeof window !== 'undefined' && window.oeh && window.oeh.count) window.oeh.count(name);
+    if (typeof window === 'undefined') return;
+    if (window.oeh && window.oeh.count) window.oeh.count(name);
+    // On first paint the deferred counter script may not have run yet: count once it has.
+    else window.addEventListener('load', () => window.oeh?.count?.(name), { once: true });
   } catch {
     /* ignore */
   }
