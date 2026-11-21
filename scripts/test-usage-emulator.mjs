@@ -117,11 +117,22 @@ try {
     baseUrl: 'https://api.groq.com/openai/v1'
   });
 
+  await recordTokenUsage({
+    agent: 'PLANNER',
+    usage: { prompt_tokens: 50, completion_tokens: 20 },
+    model: 'openai/gpt-oss-120b',
+    baseUrl: 'https://api.groq.com/openai/v1'
+  });
+
   const snap = await monthRef.get();
   assert.equal(snap.exists, true);
-  assert.equal(snap.data().calls, 1);
-  assert.equal(snap.data().promptTokens, 250);
-  assert.equal(snap.data().completionTokens, 80);
+  assert.equal(snap.data().calls, 2);
+  assert.equal(snap.data().promptTokens, 300);
+  assert.equal(snap.data().completionTokens, 100);
+  // Real Firestore: set(merge) with nested maps accumulates per provider/model (no literal dotted keys).
+  assert.equal(snap.data().byProvider.groq.calls, 2);
+  assert.equal(snap.data().byModel['openai_gpt-oss-120b'].calls, 2);
+  assert.ok(!Object.keys(snap.data()).some((k) => k.includes('.')));
   const keys = Object.keys(snap.data());
   assert.ok(!keys.some((k) => /email|uid|user/i.test(k)));
 
@@ -133,11 +144,12 @@ try {
   await statsHandler({ method: 'GET', headers: {} }, res);
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.usage.month, '2026-11');
-  assert.equal(res.body.usage.calls, 1);
-  assert.equal(res.body.usage.promptTokens, 250);
-  assert.equal(res.body.usage.completionTokens, 80);
+  assert.equal(res.body.usage.calls, 2);
+  assert.equal(res.body.usage.promptTokens, 300);
+  assert.equal(res.body.usage.completionTokens, 100);
+  assert.equal(res.body.usage.byProvider.groq.calls, 2);
   assert.equal(res.body.usage.costEur, 0);
-  assert.equal(res.body.usageTotal.calls, 1);
+  assert.equal(res.body.usageTotal.calls, 2);
   assert.ok(res.body.treasury);
   console.log('emulator usage + /api/stats ok');
 } finally {

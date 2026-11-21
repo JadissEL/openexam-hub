@@ -102,10 +102,16 @@ function isServerTimestamp(v) {
   return Boolean(v && typeof v === 'object' && /ServerTimestamp/i.test(v.constructor?.name || ''));
 }
 
+// Mirrors Firestore set(data, { merge: true }): keys are literal (dots are NOT field paths) and
+// nested plain objects merge deeply, applying increments at every depth.
 function applyUpdate(prev, data) {
   const out = prev;
   for (const [k, v] of Object.entries(data)) {
-    const parts = k.split('.');
+    const parts = [k];
+    if (v && typeof v === 'object' && v.constructor === Object) {
+      out[k] = applyUpdate(out[k] && typeof out[k] === 'object' ? out[k] : {}, v);
+      continue;
+    }
     let cur = out;
     for (let i = 0; i < parts.length - 1; i++) {
       if (!cur[parts[i]] || typeof cur[parts[i]] !== 'object') cur[parts[i]] = {};
@@ -466,3 +472,27 @@ setUsageClockForTests(null);
 setCountRegisteredUsersForTests(null);
 console.log(`\n${tests.length - failed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
+
+test('presentUsage folds legacy dotted keys written by set(merge) into the breakdowns', () => {
+  const out = presentUsage({
+    month: '2026-11',
+    calls: 3,
+    'byProvider.groq.calls': 2,
+    'byProvider.groq.promptTokens': 10,
+    'byModel.openai_gpt-oss-120b.calls': 2,
+    'byModel.openai_gpt-oss-120b.id': 'openai/gpt-oss-120b',
+    byProvider: { gemini: { calls: 1, promptTokens: 5, completionTokens: 1, costMicroEur: 0 } }
+  });
+  assert.equal(out.byProvider.groq.calls, 2);
+  assert.equal(out.byProvider.groq.promptTokens, 10);
+  assert.equal(out.byProvider.gemini.calls, 1);
+  assert.equal(out.byModel['openai_gpt-oss-120b'].id, 'openai/gpt-oss-120b');
+});
+
+test('LLM_FALLBACK_MODEL accepts a comma-separated list tried in order', async () => {
+  const { fallbackTargets } = await import('../lib/llm.js');
+  const env = { LLM_FALLBACK_BASE_URL: 'https://g.example/v1', LLM_FALLBACK_API_KEY: 'k', LLM_FALLBACK_MODEL: 'gemini-3-flash-preview, gemini-3.1-flash-lite' };
+  assert.deepEqual(fallbackTargets(env).map((t) => t.model), ['gemini-3-flash-preview', 'gemini-3.1-flash-lite']);
+  assert.equal(fallbackTargets({}).length, 0);
+  assert.deepEqual(fallbackTargets({ LLM_FALLBACK_BASE_URL: 'x' }).map((t) => t.model), ['auto']);
+});
