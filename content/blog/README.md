@@ -63,9 +63,9 @@ Do not repeat the title as a # heading; the page already renders `title`.
 
 ### Known exam ids
 
-`TEF_CANADA`, `TEF`, `TCF`, `DELF`, `DALF`, `IELTS`, `CAMBRIDGE`, `TOEFL`, `GOETHE`, `TELC`, `TESTDAF`, `DELE`.
+`TEF_CANADA`, `TEF`, `TCF_CANADA`, `TCF`, `DELF`, `DALF`, `IELTS`, `CAMBRIDGE`, `TOEFL`, `GOETHE`, `TELC`, `TESTDAF`, `DELE`.
 
-Use `TEF_CANADA` (not “TEF Canada”) and `GOETHE` (not “Goethe-Zertifikat”). The site turns these into reader-facing labels.
+Use `TEF_CANADA` (not “TEF Canada”), `TCF_CANADA` for TCF Canada (not `TCF`, which is TCF tout public), and `GOETHE` (not “Goethe-Zertifikat”). The site turns these into reader-facing labels.
 
 ### Slugs
 
