@@ -99,6 +99,6 @@ IRCC requires results to be less than **two years old** when you complete your E
 
 ## Preview a study plan
 
-You can [preview a free TCF plan](https://openexamhub.org/app?exam=TCF&level=B2&days=30) on OpenExam Hub (B2 over 30 days). The link opens the planner with TCF, level B2 and 30 days selected; choose the **TCF Canada** variant in the exam picker (the URL cannot pre-select that variant). **Generating or saving a plan needs a free account** (email or Google).
+You can [preview a free TCF Canada plan](https://openexamhub.org/app?exam=TCF_CANADA&level=B2&days=30) on OpenExam Hub (B2 over 30 days). The link opens the planner with TCF Canada, level B2 and 30 days selected. **Generating or saving a plan needs a free account** (email or Google).
 
 A free 30-day practice path that uses official and public-broadcaster material is on the [TCF Canada official practice study path](/exams/tcf-canada/official-practice-study-path).

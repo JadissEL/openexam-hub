@@ -116,6 +116,6 @@ Do not reuse TEF numbers on a TCF file, or the other way around. The [full TCF C
 You can preview a free plan on OpenExam Hub, then generate and save one with a **free account** (email or Google):
 
 - [Preview a TEF Canada plan](https://openexamhub.org/app?exam=TEF_CANADA&level=B2&days=30) (B2 over 30 days).
-- [Preview a TCF plan](https://openexamhub.org/app?exam=TCF&level=B2&days=30) (B2 over 30 days). In the exam picker, choose the **TCF Canada** variant — the link cannot pre-select it.
+- [Preview a TCF Canada plan](https://openexamhub.org/app?exam=TCF_CANADA&level=B2&days=30) (B2 over 30 days).
 
 For short, official-material practice schedules, see the [TEF Canada 30-day study plan](/exams/tef-canada/30-day-study-plan) and the [TCF Canada official practice study path](/exams/tcf-canada/official-practice-study-path).
