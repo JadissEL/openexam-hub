@@ -116,6 +116,14 @@ async function signedOutChecks(browser, base) {
       await page.screenshot({ path: path.join(SHOTS, `${vp}-app-ielts-gate.png`), fullPage: true });
     });
 
+    await check(`${vp}: /app?exam=TCF_CANADA names TCF Canada and the preview keeps it`, async () => {
+      await page.goto(`${base}/app?exam=TCF_CANADA&level=B2&days=30`, { waitUntil: 'domcontentloaded' });
+      await page.getByText(/planner for TCF Canada/).waitFor({ timeout: 15000 });
+      await page.getByTestId('open-plan-preview').click();
+      assert.equal(await page.locator('[data-testid="plan-preview"] select').first().inputValue(), 'TCF:canada');
+      await page.getByRole('button', { name: 'Back to sign up' }).click();
+    });
+
     await check(`${vp}: /app#transparency signed out goes to /funding`, async () => {
       await page.goto(`${base}/app#transparency`);
       await page.waitForURL(/\/funding$/, { timeout: 15000 });

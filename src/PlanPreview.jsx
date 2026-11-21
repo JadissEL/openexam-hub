@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PICKER_EXAMS, LEVELS, PLANNER_DAYS, DEFAULT_PICKER_EXAM, examLabel, parsePlannerQuery, parsePlannerDays, normalizeVariant } from '../lib/exams.js';
+import { PICKER_EXAMS, LEVELS, PLANNER_DAYS, DEFAULT_PICKER_EXAM, examLabel, parsePlannerQuery, parsePlannerDays, parsePlannerVariant, normalizeVariant } from '../lib/exams.js';
 import { API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { track } from './analytics.js';
 
@@ -29,12 +29,7 @@ function initialChoice() {
   const search = typeof window !== 'undefined' ? window.location.search : '';
   const q = parsePlannerQuery(search);
   const exam = q.exam || DEFAULT_PICKER_EXAM;
-  let variant = null;
-  try {
-    variant = normalizeVariant(exam, new URLSearchParams(search).get('variant'));
-  } catch {
-    variant = null;
-  }
+  const variant = (q.exam && parsePlannerVariant(search)) || normalizeVariant(exam, null);
   return { exam, variant, level: q.level || 'B2', days: parsePlannerDays(search) || 30 };
 }
 

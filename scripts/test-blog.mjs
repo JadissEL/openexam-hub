@@ -18,7 +18,7 @@ import {
   CONTENT_DIR
 } from './blog-data.mjs';
 import { SITEMAP_PATHS, TAG_INDEX_MIN_POSTS, allExamTags } from './blog-data.mjs';
-import { parsePlannerQuery, parsePlannerDays, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
+import { parsePlannerQuery, parsePlannerDays, parsePlannerVariant, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
 import * as siteModule from '../src/seo/site.js';
 import { PLAN_PAGES, planPath } from '../src/seo/planPages.js';
 import { DONATION_COPY, DONATION_LINKS, DONATION_PLATFORMS } from '../src/donations.js';
@@ -229,6 +229,16 @@ test('study plan data: routes, sitemap paths and sources stay official and claim
     assert.doesNotMatch(all, /\d+\s?%|pass rate|success rate|guaranteed|we guarantee|students who|testimonial/i, `${p}: stat or promise wording`);
   }
   assert.equal(siteModule.routeMeta('/exams/ielts/not-a-plan'), null);
+});
+
+test('TCF Canada links: ?exam=TCF_CANADA or ?exam=TCF&variant=canada', () => {
+  assert.deepEqual(parsePlannerQuery('?exam=TCF_CANADA&level=B2'), { exam: 'TCF', level: 'B2' });
+  assert.equal(parsePlannerVariant('?exam=TCF_CANADA'), 'canada');
+  assert.equal(parsePlannerVariant('?exam=tcf-canada'), 'canada');
+  assert.equal(parsePlannerVariant('?exam=TCF&variant=canada'), 'canada');
+  assert.equal(parsePlannerVariant('?exam=TCF'), null);
+  assert.equal(parsePlannerVariant('?exam=TCF&variant=nope'), null);
+  assert.equal(parsePlannerVariant('?exam=IELTS&variant=canada'), null);
 });
 
 test('parsePlannerDays keeps only the planner lengths', () => {

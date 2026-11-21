@@ -7,7 +7,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup
 } from 'firebase/auth';
-import { examLabel } from '../lib/exams.js';
+import { examLabel, parsePlannerQuery, parsePlannerVariant } from '../lib/exams.js';
 import { trackAuth, track, count } from './analytics.js';
 import PlanPreview from './PlanPreview.jsx';
 
@@ -143,7 +143,9 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   const [inApp] = useState(() => (typeof navigator !== 'undefined' ? inAppBrowser(navigator.userAgent) : null));
 
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const wantedExam = params && params.get('exam') ? examLabel(params.get('exam').toUpperCase().replace(/[\s-]+/g, '_')) : null;
+  const wantedQuery = params ? parsePlannerQuery(window.location.search) : {};
+  const wantedVariant = params ? parsePlannerVariant(window.location.search) : null;
+  const wantedExam = wantedQuery.exam ? (wantedVariant === 'canada' ? 'TCF Canada' : examLabel(wantedQuery.exam)) : null;
 
   useEffect(() => {
     document.title = mode === 'login' ? 'Log in · OpenExam Hub' : 'Create your free account · OpenExam Hub';

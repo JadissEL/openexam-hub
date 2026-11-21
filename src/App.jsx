@@ -77,7 +77,7 @@ import { DONATION_LINKS, DONATION_PLATFORMS, donationCopy } from './donations.js
 import { FundProjectButton } from './FundProject.jsx';
 import { FIVE_YEAR_GOAL_EUR, FUNDING_PROMISE } from './funding.js';
 import { BooksPanel } from './BooksPanel.jsx';
-import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant, parsePlannerQuery, parsePlannerDays, IELTS_BANDS, ieltsBandLevel } from '../lib/exams.js';
+import { PICKER_EXAMS, DEFAULT_PICKER_EXAM, examLabel, pickerExam, normalizeVariant, defaultVariant, parsePlannerQuery, parsePlannerDays, parsePlannerVariant, IELTS_BANDS, ieltsBandLevel } from '../lib/exams.js';
 import StudyToday from './StudyToday.jsx';
 import DashboardAd from './DashboardAd.jsx';
 import AuthGate from './AuthGate.jsx';
@@ -870,13 +870,9 @@ function Dashboard({ initialUser }) {
 
   // Multi-Agent Generator Inputs
   const [selectedExam, setSelectedExam] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').exam || DEFAULT_PICKER_EXAM);
-  const [selectedTcfVariant, setSelectedTcfVariant] = useState(() => {
-    try {
-      return normalizeVariant('TCF', new URLSearchParams(window.location.search).get('variant')) || 'tout_public';
-    } catch {
-      return 'tout_public';
-    }
-  });
+  const [selectedTcfVariant, setSelectedTcfVariant] = useState(
+    () => (typeof window !== 'undefined' && parsePlannerVariant(window.location.search)) || 'tout_public'
+  );
   const [selectedLevel, setSelectedLevel] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').level || 'B2');
   // IELTS target band (e.g. '6.5'); null = not picked yet. The plan uses the mapped CEFR level.
   const [selectedBand, setSelectedBand] = useState(() => parsePlannerQuery(typeof window !== 'undefined' ? window.location.search : '').band || null);
