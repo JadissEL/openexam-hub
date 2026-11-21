@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PICKER_EXAMS, LEVELS, PLANNER_DAYS, DEFAULT_PICKER_EXAM, examLabel, parsePlannerQuery, parsePlannerDays } from '../lib/exams.js';
+import { PICKER_EXAMS, LEVELS, PLANNER_DAYS, DEFAULT_PICKER_EXAM, examLabel, parsePlannerQuery, parsePlannerDays, normalizeVariant } from '../lib/exams.js';
 import { API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { track } from './analytics.js';
 
@@ -16,16 +16,34 @@ const domainOf = (url) => {
   }
 };
 
+// One option per exam, and one per variant for exams that have them (TCF tout public / TCF Canada).
+const OPTIONS = PICKER_EXAMS.flatMap((x) =>
+  x.variants?.length
+    ? x.variants.map((v) => ({ value: `${x.id}:${v.id}`, exam: x.id, variant: v.id, label: `${v.label} (${v.short})` }))
+    : [{ value: x.id, exam: x.id, variant: null, label: `${x.label}${x.short ? ` (${x.short})` : ''}` }]
+);
+const optionValue = (c) => (c.variant ? `${c.exam}:${c.variant}` : c.exam);
+const choiceName = (c) => OPTIONS.find((o) => o.value === optionValue(c))?.label.replace(/ \(.*$/, '') || examLabel(c.exam);
+
 function initialChoice() {
   const search = typeof window !== 'undefined' ? window.location.search : '';
   const q = parsePlannerQuery(search);
-  return { exam: q.exam || DEFAULT_PICKER_EXAM, level: q.level || 'B2', days: parsePlannerDays(search) || 30 };
+  const exam = q.exam || DEFAULT_PICKER_EXAM;
+  let variant = null;
+  try {
+    variant = normalizeVariant(exam, new URLSearchParams(search).get('variant'));
+  } catch {
+    variant = null;
+  }
+  return { exam, variant, level: q.level || 'B2', days: parsePlannerDays(search) || 30 };
 }
 
-export function rememberChoice({ exam, level, days }) {
+export function rememberChoice({ exam, variant, level, days }) {
   try {
     const params = new URLSearchParams(window.location.search);
     params.set('exam', exam);
+    if (variant) params.set('variant', variant);
+    else params.delete('variant');
     params.set('level', level);
     params.set('days', String(days));
     params.delete('band');
@@ -42,10 +60,17 @@ export default function PlanPreview({ onSignUp, onSample }) {
   const [choice, setChoice] = useState(initialChoice);
   const [state, setState] = useState({ status: 'idle', roadmap: null });
   const set = (k) => (e) => {
-    setChoice((c) => ({ ...c, [k]: k === 'days' ? Number(e.target.value) : e.target.value }));
+    const v = e.target.value;
+    setChoice((c) => {
+      if (k === 'exam') {
+        const o = OPTIONS.find((x) => x.value === v);
+        return { ...c, exam: o ? o.exam : v, variant: o ? o.variant : null };
+      }
+      return { ...c, [k]: k === 'days' ? Number(v) : v };
+    });
     setState({ status: 'idle', roadmap: null });
   };
-  const label = `${examLabel(choice.exam)} ${choice.level} · ${choice.days} days`;
+  const label = `${choiceName(choice)} ${choice.level} · ${choice.days} days`;
 
   const preview = async (e) => {
     e.preventDefault();
@@ -53,7 +78,7 @@ export default function PlanPreview({ onSignUp, onSample }) {
     if (!SERVER_ENABLED) return setState({ status: 'miss', roadmap: null });
     setState({ status: 'loading', roadmap: null });
     try {
-      const qs = new URLSearchParams({ exam: choice.exam, level: choice.level, days: String(choice.days) });
+      const qs = new URLSearchParams({ exam: choice.exam, level: choice.level, days: String(choice.days), ...(choice.variant ? { variant: choice.variant } : {}) });
       const res = await fetch(`${API_BASE}/api/plan?${qs}`, { headers: { Accept: 'application/json' } });
       if (res.status === 404) {
         track('plan_preview', { exam: choice.exam, level: choice.level, days: choice.days, result: 'miss' });
@@ -88,11 +113,10 @@ export default function PlanPreview({ onSignUp, onSample }) {
       <form onSubmit={preview} className="mt-5 grid grid-cols-2 gap-3">
         <label className="block col-span-2">
           <span className="text-sm font-medium">Exam</span>
-          <select value={choice.exam} onChange={set('exam')} className={selectCls}>
-            {PICKER_EXAMS.map((x) => (
-              <option key={x.id} value={x.id}>
-                {x.label}
-                {x.short ? ` (${x.short})` : ''}
+          <select value={optionValue(choice)} onChange={set('exam')} className={selectCls}>
+            {OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
               </option>
             ))}
           </select>
@@ -183,7 +207,7 @@ export default function PlanPreview({ onSignUp, onSample }) {
             onClick={save}
             className="mt-4 w-full min-h-[52px] rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold text-[16px]"
           >
-            Build my {examLabel(choice.exam)} plan (free account)
+            Build my {choiceName(choice)} plan (free account)
           </button>
           {onSample && (
             <button type="button" onClick={onSample} className="mt-3 w-full text-sm text-[#C2410C] underline underline-offset-4">

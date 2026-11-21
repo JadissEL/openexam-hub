@@ -12,6 +12,8 @@
 //                             else is a real 404 (every public page is prerendered, so no soft 404s).
 // www.openexamhub.org -> apex 308 is a zone Redirect Rule; the host check below is a backup.
 
+import { sanitizeBeacon } from '../lib/analytics/hits.js';
+
 const APEX = 'openexamhub.org';
 // Client-side routes without their own prerendered file: the dashboard's tab deep links (/app/plan, ...).
 const APP_SHELL_ROUTE = /^\/app\/[^/]+$/;
@@ -60,6 +62,39 @@ async function proxyToApi(request, env, url, pathname) {
   return out;
 }
 
+/**
+ * POST /api/hit: the cookieless visit counter (lib/analytics/hits.js). The browser beacon carries only
+ * {t, p, r, u, e}; here bots are dropped (Cloudflare verified bots + user-agent rules), the in-app
+ * browser name is derived from the user agent, and only the stripped record goes on to the API,
+ * signed with PROXY_SHARED_SECRET. No IP, user agent, cookie or ID leaves this function.
+ * Always answers 204 so the beacon never retries or shows errors.
+ */
+async function hitBeacon(request, env, ctx) {
+  const done = () => new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+  if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'POST' } });
+  const from = request.headers.get('origin');
+  if (from && from !== `https://${APEX}`) return done();
+  if (request.cf && request.cf.verifiedBotCategory) return done();
+  let body = null;
+  try {
+    const text = await request.text();
+    if (text.length <= 2048) body = JSON.parse(text);
+  } catch {
+    body = null;
+  }
+  const rec = sanitizeBeacon(body, request.headers.get('user-agent'));
+  const origin = String(env.API_ORIGIN || '').replace(/\/+$/, '');
+  if (!rec || !env.PROXY_SHARED_SECRET || !/^https:\/\//.test(origin)) return done();
+  const send = fetch(`${origin}/api/hit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-oeh-proxy-key': env.PROXY_SHARED_SECRET },
+    body: JSON.stringify(rec)
+  }).catch(() => {});
+  if (ctx && typeof ctx.waitUntil === 'function') ctx.waitUntil(send);
+  else await send;
+  return done();
+}
+
 const DEMO_HEADERS = { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' };
 
 function withHeaders(res, extra) {
@@ -102,7 +137,7 @@ async function demoAsset(request, env, url) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.hostname === `www.${APEX}`) {
       return Response.redirect(`https://${APEX}${url.pathname}${url.search}`, 308);
@@ -112,6 +147,7 @@ export default {
     if (pathname === '/transparency' || pathname === '/transparency/') {
       return Response.redirect(`https://${APEX}/funding${url.search}`, 301);
     }
+    if (pathname === '/api/hit') return hitBeacon(request, env, ctx);
     if (pathname.startsWith('/api/')) return proxyToApi(request, env, url, pathname);
     if (pathname === '/ads.txt') return proxyToApi(request, env, url, '/api/ads-txt');
 

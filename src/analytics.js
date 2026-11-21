@@ -9,6 +9,18 @@ export function track(name, params = {}) {
   }
 }
 
+/**
+ * Cookieless funnel counter (public/oeh-consent.js -> Worker /api/hit): aggregate daily counts only,
+ * no consent needed. name: 'preview_opened' | 'signup_started' | 'signup_completed'.
+ */
+export function count(name) {
+  try {
+    if (typeof window !== 'undefined' && window.oeh && window.oeh.count) window.oeh.count(name);
+  } catch {
+    /* ignore */
+  }
+}
+
 /** 'granted' | 'denied' | null (no choice yet). */
 export function consentChoice() {
   try {
@@ -30,4 +42,5 @@ export function requireConsent() {
 /** sign_up for a brand-new account, login otherwise. `isNew` comes from getAdditionalUserInfo. */
 export function trackAuth(method, isNew) {
   track(isNew ? 'sign_up' : 'login', { method });
+  if (isNew) count('signup_completed');
 }

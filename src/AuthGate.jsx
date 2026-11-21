@@ -8,7 +8,7 @@ import {
   signInWithPopup
 } from 'firebase/auth';
 import { examLabel } from '../lib/exams.js';
-import { trackAuth, track } from './analytics.js';
+import { trackAuth, track, count } from './analytics.js';
 import PlanPreview from './PlanPreview.jsx';
 
 // Sign-up / log-in page shown on /app to anyone who is not signed in with a real account.
@@ -170,6 +170,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
       } else if (!password) {
         setError('Please enter your password.');
       } else if (mode === 'signup') {
+        count('signup_started');
         await createUserWithEmailAndPassword(auth, em, password);
         trackAuth('email', true);
       } else {
@@ -187,6 +188,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
     if (!auth || busy) return;
     setBusy(true);
     setError(null);
+    if (mode === 'signup') count('signup_started');
     try {
       const cred = await signInWithPopup(auth, new GoogleAuthProvider());
       trackAuth('google', !!getAdditionalUserInfo(cred)?.isNewUser);
@@ -238,7 +240,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
               setShowPreview(false);
               switchMode('signup');
               if (choice) {
-                setNotice(`Create your free account to save your ${examLabel(choice.exam)} ${choice.level} · ${choice.days}-day plan. The planner opens with it selected.`);
+                setNotice(`Create your free account to save your ${choice.variant === 'canada' ? 'TCF Canada' : examLabel(choice.exam)} ${choice.level} · ${choice.days}-day plan. The planner opens with it selected.`);
               }
               window.scrollTo?.(0, 0);
             }}
@@ -265,7 +267,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
                 <button
                   type="button"
                   data-testid="open-plan-preview"
-                  onClick={() => { setShowPreview(true); setShowSample(false); track('plan_preview_open'); }}
+                  onClick={() => { setShowPreview(true); setShowSample(false); track('plan_preview_open'); count('preview_opened'); }}
                   className="font-semibold text-[#C2410C] underline underline-offset-4"
                 >
                   Not ready? Preview a plan first, no account needed →

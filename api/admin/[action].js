@@ -4,11 +4,13 @@ import { createDispatcher } from '../../lib/dispatch.js';
 import expand from '../../lib/routes/admin/expand.js';
 import approve from '../../lib/routes/admin/approve.js';
 import reviewProfile from '../../lib/routes/admin/review-profile.js';
+import analytics from '../../lib/routes/admin/analytics.js';
 
 export const ROUTES = {
   expand, // POST /api/admin/expand
   approve, // POST /api/admin/approve
-  'review-profile': reviewProfile // POST /api/admin/review-profile
+  'review-profile': reviewProfile, // POST /api/admin/review-profile
+  analytics // GET /api/admin/analytics?days=14[&format=text] (ADMIN_SECRET or OEH_OPS_SECRET)
 };
 
 export default createDispatcher(ROUTES, 'action');

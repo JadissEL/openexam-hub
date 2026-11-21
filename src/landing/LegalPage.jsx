@@ -2,7 +2,7 @@ import React from 'react';
 import { SiteHeader, SiteFooter } from './SiteChrome.jsx';
 import { APP_PATH, CONTACT_EMAIL, REPO_URL } from './content.js';
 
-const UPDATED = '20 November 2026';
+const UPDATED = '21 November 2026';
 const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 
 // Plain-language legal pages. Keep them matching what the code actually does.
@@ -32,6 +32,12 @@ const PAGES = {
               <strong>Analytics only if you say yes.</strong> With your consent we use Google Analytics to see which pages
               and features help learners. If you click “Reject”, or don’t choose, it never loads. AI requests contain your
               exam, level, timeline and progress, never your name or email.
+            </li>
+            <li>
+              <strong>A cookieless visit counter.</strong> Without any cookie, ID or stored IP address, each page view sends us
+              the page path, the site that linked to you (its domain only), the <code>utm_source</code> tag if the link had one,
+              whether you are in a social app’s built-in browser, and three steps of sign-up (opened the plan preview, started
+              sign-up, finished sign-up). We keep only daily totals, never anything about you, so it needs no consent.
             </li>
           </ul>
         )
@@ -74,6 +80,7 @@ const PAGES = {
           <ul>
             <li>No analytics without your consent, and no ads on the home page or on any information page.</li>
             <li>We don’t send your name, email or plan contents to Google Analytics.</li>
+            <li>Our own visit counter keeps daily totals only: no cookies, no IDs, no IP addresses.</li>
             <li>We don’t sell, rent or share your personal data for marketing.</li>
             <li>We don’t ask for your real name, phone number or payment details.</li>
           </ul>

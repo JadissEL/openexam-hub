@@ -92,9 +92,45 @@
     d.head.appendChild(s);
     pageView();
   }
+  // ---- Cookieless visit counter (no consent needed: nothing is stored on the device) ---------
+  // One small POST to /api/hit per page view and per funnel event. It carries only the page path,
+  // the referring page (for the first page of a visit), utm_source and the event name. The Worker
+  // drops bots and keeps aggregate daily counts; no cookie, ID, IP address or user agent is stored.
+  var lastCounted = null;
+  function automated() {
+    try {
+      return !!navigator.webdriver || /HeadlessChrome|bot|crawl|spider|Lighthouse/i.test(navigator.userAgent || '');
+    } catch (e) {
+      return true;
+    }
+  }
+  function beacon(obj) {
+    if (PROD_HOSTS.indexOf(location.hostname) === -1 || automated()) return;
+    try {
+      var body = JSON.stringify(obj);
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/hit', body)) return;
+      fetch('/api/hit', { method: 'POST', body: body, keepalive: true, credentials: 'omit' });
+    } catch (e) { /* counting must never break the page */ }
+  }
+  function countView() {
+    var path = location.pathname;
+    if (path === lastCounted) return;
+    var first = lastCounted === null;
+    lastCounted = path;
+    var utm = null;
+    try { utm = new URLSearchParams(location.search).get('utm_source'); } catch (e) { /* old browser */ }
+    var rec = { t: 'view', p: path, r: first ? d.referrer || '' : location.origin + '/' };
+    if (utm) rec.u = utm;
+    beacon(rec);
+  }
+  function countEvent(name) {
+    beacon({ t: 'event', e: String(name || '') });
+  }
+
   function routeChanged() {
     // Let the page update its <title> first.
     setTimeout(pageView, 60);
+    setTimeout(countView, 60);
   }
   ['pushState', 'replaceState'].forEach(function (m) {
     var orig = history[m];
@@ -295,8 +331,10 @@
     track: track,
     consent: function () { return state ? state.choice : null; },
     open: function () { whenReady(function () { show(true); }); },
-    require: requireConsent
+    require: requireConsent,
+    count: countEvent
   };
+  whenReady(countView);
 
   if (granted()) loadGa();
   else if (!state && required) whenReady(function () { show(false); });

@@ -11,6 +11,7 @@ import stats from '../lib/routes/stats.js';
 import events from '../lib/routes/events.js';
 import adsTxt from '../lib/routes/ads-txt.js';
 import account from '../lib/routes/account.js';
+import hit from '../lib/routes/hit.js';
 
 export const ROUTES = {
   'check-link': checkLink, // GET /api/check-link?url=
@@ -19,6 +20,7 @@ export const ROUTES = {
   stats, // GET /api/stats  (stats/public, live AI usage, treasury snapshot)
   events, // POST /api/events {type:'task_done', planKey, resourceId}
   'ads-txt': adsTxt, // GET /ads.txt -> /api/ads-txt (404 until ADSENSE_PUBLISHER_ID is set)
+  hit, // POST /api/hit (Worker-signed cookieless visit counter; see lib/routes/hit.js)
   account // POST /api/account {action:'delete', confirm:'DELETE'} with a Firebase ID token: delete own data + account
 };
 
