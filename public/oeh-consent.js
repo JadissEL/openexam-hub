@@ -207,21 +207,68 @@
     return path === '/app' || path.indexOf('/app/') === 0;
   }
   function bannerSpace() {
-    var h = banner ? banner.offsetHeight : 0;
-    return 'calc(' + (h + 16) + 'px + env(safe-area-inset-top, 0px))';
+    if (!banner) return '0px';
+    // Use the painted bottom edge so compact (flush-top, safe-area in padding) and
+    // the regular floating card share one reservation formula.
+    return Math.ceil(banner.getBoundingClientRect().bottom + 8) + 'px';
   }
   function applyBannerChrome() {
     if (!banner) return;
     var compact = isAppPath();
-    banner.style.padding = compact ? '8px 12px' : '12px 14px';
-    banner.style.borderRadius = compact ? '14px' : '18px';
     var title = banner.querySelector('#oeh-consent-title');
-    if (title) {
-      title.style.margin = compact ? '0 0 2px' : '0 0 4px';
-      title.style.font = compact ? '700 13px/1.3 Inter,system-ui,sans-serif' : '700 14px/1.3 Inter,system-ui,sans-serif';
-    }
     var p = banner.querySelector('p');
-    if (p) p.style.margin = compact ? '0 0 8px' : '0 0 10px';
+    var row = banner.querySelector('[data-oe-consent-actions]');
+    if (compact) {
+      // Slim full-width bar so the /app gate CTA stays above the fold without scrolling.
+      banner.style.top = '0';
+      banner.style.left = '0';
+      banner.style.right = '0';
+      banner.style.maxWidth = 'none';
+      banner.style.borderRadius = '0';
+      banner.style.padding = 'calc(8px + env(safe-area-inset-top, 0px)) 12px 8px';
+      banner.style.display = 'flex';
+      banner.style.flexWrap = 'wrap';
+      banner.style.alignItems = 'center';
+      banner.style.gap = '8px 12px';
+      banner.style.boxShadow = '0 8px 24px -16px rgba(26,23,20,.35)';
+      if (title) {
+        title.style.margin = '0';
+        title.style.font = '700 13px/1.3 Inter,system-ui,sans-serif';
+        title.style.flex = '1 1 12rem';
+      }
+      if (p) p.style.display = 'none';
+      if (row) {
+        row.style.flex = '0 1 auto';
+        row.style.marginLeft = 'auto';
+        row.style.minWidth = '220px';
+      }
+    } else {
+      banner.style.top = 'calc(8px + env(safe-area-inset-top, 0px))';
+      banner.style.left = '12px';
+      banner.style.right = '12px';
+      banner.style.maxWidth = '38rem';
+      banner.style.borderRadius = '18px';
+      banner.style.padding = '12px 14px';
+      banner.style.display = 'block';
+      banner.style.flexWrap = '';
+      banner.style.alignItems = '';
+      banner.style.gap = '';
+      banner.style.boxShadow = '0 18px 40px -18px rgba(26,23,20,.35)';
+      if (title) {
+        title.style.margin = '0 0 4px';
+        title.style.font = '700 14px/1.3 Inter,system-ui,sans-serif';
+        title.style.flex = '';
+      }
+      if (p) {
+        p.style.display = '';
+        p.style.margin = '0 0 10px';
+      }
+      if (row) {
+        row.style.flex = '';
+        row.style.marginLeft = '';
+        row.style.minWidth = '';
+      }
+    }
   }
   function reservePageSpace() {
     if (!banner || !d.body) return;
@@ -282,6 +329,7 @@
     a.style.cssText = 'color:#C2410C;text-decoration:underline';
     p.appendChild(a);
     var row = d.createElement('div');
+    row.setAttribute('data-oe-consent-actions', '');
     row.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap';
     var acc = d.createElement('button');
     btnStyle(acc);
@@ -304,6 +352,7 @@
     });
     d.body.appendChild(banner);
     reservePageSpace();
+    if (w.requestAnimationFrame) w.requestAnimationFrame(reservePageSpace);
     listenResize(true);
     if (focus) acc.focus();
   }

@@ -199,6 +199,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
     }
   };
   const [inApp] = useState(() => (typeof navigator !== 'undefined' ? inAppBrowser(navigator.userAgent) : null));
+  const [bannerUp, setBannerUp] = useState(() => (typeof document !== 'undefined' && !!document.getElementById('oeh-consent')));
 
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const wantedQuery = params ? parsePlannerQuery(window.location.search) : {};
@@ -208,6 +209,21 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   useEffect(() => {
     document.title = mode === 'login' ? 'Log in · OpenExam Hub' : 'Create your free account · OpenExam Hub';
   }, [mode]);
+
+  // The consent banner is a sibling on <body>. When it is visible the gate already has
+  // padding-top for --oeh-consent-space; tighten the remaining vertical rhythm so the
+  // sign-up CTA stays in the viewport without scrolling.
+  useEffect(() => {
+    const sync = () => setBannerUp(!!document.getElementById('oeh-consent'));
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(document.body, { childList: true });
+    window.addEventListener('oeh:consent', sync);
+    return () => {
+      mo.disconnect();
+      window.removeEventListener('oeh:consent', sync);
+    };
+  }, []);
 
   const switchMode = (m) => {
     setMode(m);
@@ -279,7 +295,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
       style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", paddingTop: 'var(--oeh-consent-space, 0px)' }}
       data-testid="auth-gate"
     >
-      <main className="mx-auto w-full max-w-md px-5 pt-8 pb-16 sm:pt-16">
+      <main className={`mx-auto w-full max-w-md px-5 ${bannerUp ? 'pt-3 pb-8' : 'pt-8 pb-16 sm:pt-16'}`}>
         <a href="/" className="inline-flex items-center gap-2.5 font-semibold tracking-tight">
           <img src="/brand/mark.svg" alt="" width="34" height="34" className="w-[34px] h-[34px]" />
           <span className="text-[18px]">OpenExam <span className="text-[#C2410C]">Hub</span></span>
@@ -301,23 +317,23 @@ export default function AuthGate({ auth, sampleRoadmap }) {
           />
         ) : (
           <>
-            <h1 className="mt-8 text-[28px] sm:text-3xl font-semibold tracking-tight leading-tight">
+            <h1 className={`${bannerUp ? 'mt-3' : 'mt-8'} text-[28px] sm:text-3xl font-semibold tracking-tight leading-tight`}>
               {mode === 'login' ? 'Welcome back' : mode === 'reset' ? 'Reset your password' : 'Create your free account'}
             </h1>
-            <p className="mt-3 text-[15px] leading-relaxed text-[#5C554C]">
+            <p className={`${bannerUp ? 'mt-2' : 'mt-3'} text-[15px] leading-relaxed text-[#5C554C]`}>
               {wantedExam && mode !== 'reset' ? `Then we’ll open the planner for ${wantedExam}. ` : ''}
               {WHY}
             </p>
 
             {mode === 'signup' && (
-              <ul className="mt-4 space-y-1 text-sm text-[#3B352F]" aria-label="What you get">
+              <ul className={`${bannerUp ? 'mt-2' : 'mt-4'} space-y-1 text-sm text-[#3B352F]`} aria-label="What you get">
                 <li>✓ A day-by-day plan built only from official, free pages</li>
                 <li>✓ Every link checked automatically</li>
                 <li>✓ Free forever. No payment details, no paid tier</li>
               </ul>
             )}
             {mode === 'signup' && (
-              <p className="mt-4 text-sm">
+              <p className={`${bannerUp ? 'mt-2' : 'mt-4'} text-sm`}>
                 <button
                   type="button"
                   data-testid="open-plan-preview"
@@ -330,7 +346,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
             )}
 
             {mode !== 'reset' && (
-              <div role="tablist" aria-label="Account" className="mt-6 flex gap-1 rounded-full bg-[#ECE7DF] p-1">
+              <div role="tablist" aria-label="Account" className={`${bannerUp ? 'mt-3' : 'mt-6'} flex gap-1 rounded-full bg-[#ECE7DF] p-1`}>
                 {tab('signup', 'Create account')}
                 {tab('login', 'Log in')}
               </div>
@@ -343,12 +359,12 @@ export default function AuthGate({ auth, sampleRoadmap }) {
                   type="button"
                   onClick={google}
                   disabled={busy}
-                  className="mt-5 w-full min-h-[48px] rounded-full border border-black/10 bg-white font-semibold text-[15px] inline-flex items-center justify-center gap-2.5 disabled:opacity-60"
+                  className={`${bannerUp ? 'mt-3' : 'mt-5'} w-full min-h-[48px] rounded-full border border-black/10 bg-white font-semibold text-[15px] inline-flex items-center justify-center gap-2.5 disabled:opacity-60`}
                 >
                   <GoogleIcon />
                   Continue with Google
                 </button>
-                <div className="my-5 flex items-center gap-3 text-xs text-[#6B635A]">
+                <div className={`${bannerUp ? 'my-3' : 'my-5'} flex items-center gap-3 text-xs text-[#6B635A]`}>
                   <span className="h-px flex-1 bg-black/10" />
                   or with email
                   <span className="h-px flex-1 bg-black/10" />

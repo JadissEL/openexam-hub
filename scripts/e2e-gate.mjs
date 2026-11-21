@@ -213,11 +213,13 @@ async function freshCookieBannerChecks(base) {
               const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
               const onCta = !!(el && (el === ctaEl || ctaEl.contains(el)));
               const overlaps = !(r.bottom <= b.top || r.top >= b.bottom || r.right <= b.left || r.left >= b.right);
+              const inView = r.top >= 0 && r.bottom <= window.innerHeight;
               return {
-                ok: onCta && !overlaps && window.scrollY === 0,
+                ok: onCta && !overlaps && inView && window.scrollY === 0,
                 scrollY: window.scrollY,
                 onCta,
                 overlaps,
+                inView,
                 hitId: el && el.id,
                 hitText: el && (el.innerText || '').replace(/\s+/g, ' ').slice(0, 80),
                 cta: { top: Math.round(r.top), bottom: Math.round(r.bottom) },
