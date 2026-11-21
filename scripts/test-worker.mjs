@@ -60,6 +60,27 @@ test('unknown paths stay 404', async () => {
   assert.equal(res.status, 404);
 });
 
+test('www host 308-redirects to the apex over https', async () => {
+  const request = new Request('https://www.openexamhub.org/app?exam=TCF', { method: 'GET' });
+  const res = await worker.fetch(request, env());
+  assert.equal(res.status, 308);
+  assert.equal(res.headers.get('location'), 'https://openexamhub.org/app?exam=TCF');
+});
+
+test('http on the apex 301-redirects to https', async () => {
+  const request = new Request('http://openexamhub.org/app?exam=TCF', { method: 'GET' });
+  const res = await worker.fetch(request, env());
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), 'https://openexamhub.org/app?exam=TCF');
+});
+
+test('http on www 308-redirects to the https apex in one hop', async () => {
+  const request = new Request('http://www.openexamhub.org/faq', { method: 'GET' });
+  const res = await worker.fetch(request, env());
+  assert.equal(res.status, 308);
+  assert.equal(res.headers.get('location'), 'https://openexamhub.org/faq');
+});
+
 let failed = 0;
 for (const { name, fn } of tests) {
   try {

@@ -27,7 +27,8 @@ const PROJECT = 'demo-openexam';
 
 const VIEWPORTS = {
   mobile: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
-  desktop: { viewport: { width: 1366, height: 900 } }
+  android: { viewport: { width: 412, height: 915 }, deviceScaleFactor: 2.6, isMobile: true, hasTouch: true },
+  desktop: { viewport: { width: 1440, height: 900 } }
 };
 
 let passed = 0;
@@ -76,6 +77,17 @@ async function signedOutChecks(browser, base) {
     });
 
     await check(`${vp}: cookie banner never blocks the sign-up button`, async () => {
+      await page.evaluate(() => { try { localStorage.removeItem('oeh_consent_v1'); } catch {} if (window.oeh) window.oeh.open(); });
+      await page.locator('#oeh-consent').waitFor({ timeout: 5000 });
+      await page.waitForTimeout(200);
+      const hit = await page.evaluate(() => {
+        const cta = [...document.querySelectorAll('button')].find((b) => /Create free account/.test(b.textContent || ''));
+        if (!cta) return { ok: false, reason: 'no cta' };
+        const r = cta.getBoundingClientRect();
+        const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return { ok: !!(el && (el === cta || cta.contains(el))), tag: el && el.tagName, text: el && (el.innerText || '').slice(0, 80), id: el && el.id };
+      });
+      assert.equal(hit.ok, true, `elementFromPoint hit ${hit.id || hit.tag}: ${(hit.text || '').replace(/\s+/g, ' ')}`);
       await page.getByRole('button', { name: 'Create free account' }).click({ trial: true, timeout: 5000 });
     });
 
@@ -136,6 +148,18 @@ async function signedOutChecks(browser, base) {
       await page.getByText(/planner for TCF Canada/).waitFor({ timeout: 15000 });
     });
 
+    await check(`${vp}: TCF Canada official sources use the TCF Canada exam page`, async () => {
+      await page.goto(`${base}/app?exam=TCF_CANADA&level=B2&days=30`, { waitUntil: 'domcontentloaded' });
+      await page.getByTestId('plan-preview').waitFor({ timeout: 15000 });
+      const result = page.locator('[data-testid="plan-preview-result"]');
+      await result.or(page.getByTestId('plan-preview-miss')).first().waitFor({ timeout: 20000 });
+      if (await result.count()) {
+        const html = await result.innerHTML();
+        assert.match(html, /tcf-canada|france-education-international\.fr/, 'official TCF Canada host should appear');
+        assert.doesNotMatch(html, /tcf-tout-public/);
+      }
+    });
+
     await check(`${vp}: /app#transparency signed out goes to /funding`, async () => {
       await page.goto(`${base}/app#transparency`);
       await page.waitForURL(/\/funding$/, { timeout: 15000 });
@@ -147,6 +171,18 @@ async function signedOutChecks(browser, base) {
       await page.getByTestId('auth-gate').waitFor({ timeout: 15000 });
       await assertNoDashboard(page);
       await page.screenshot({ path: path.join(SHOTS, `${vp}-landing-cta-gate.png`), fullPage: true });
+    });
+
+    await check(`${vp}: browser Back from the plan preview returns to the sign-up form`, async () => {
+      await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' });
+      await page.locator('a:visible', { hasText: 'Build my free plan' }).first().click();
+      await page.getByTestId('auth-gate').waitFor({ timeout: 15000 });
+      await page.getByTestId('open-plan-preview').click();
+      await page.getByTestId('plan-preview').waitFor();
+      await page.goBack();
+      await page.getByRole('heading', { name: 'Create your free account' }).waitFor({ timeout: 10000 });
+      assert.match(page.url(), /\/app/);
+      await assertNoDashboard(page);
     });
 
     await ctx.close();

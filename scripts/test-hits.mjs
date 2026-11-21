@@ -33,6 +33,9 @@ test('paths and referrers are normalised and bounded', () => {
   assert.equal(refHost('android-app://com.linkedin.android/'), 'linkedin.com');
   assert.equal(refHost('not a url'), '(other)');
   assert.equal(inAppName('Mozilla/5.0 (Linux; Android 14; wv) [FBAN/FB4A;FBAV/1]'), 'facebook');
+  assert.equal(inAppName('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Gmail/6.0.241031'), 'gmail');
+  assert.equal(inAppName('Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.0.0 Mobile Safari/537.36 Gmail/2024.10.27'), 'gmail');
+  assert.equal(inAppName('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/323.0 Mobile/15E148 Safari/604.1'), 'gmail');
 });
 
 test('events: only the three funnel events', () => {

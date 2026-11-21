@@ -142,6 +142,10 @@ export default {
     if (url.hostname === `www.${APEX}`) {
       return Response.redirect(`https://${APEX}${url.pathname}${url.search}`, 308);
     }
+    // Backup if the zone "Always Use HTTPS" setting does not run (Worker custom domains).
+    if (url.protocol === 'http:') {
+      return Response.redirect(`https://${url.host}${url.pathname}${url.search}`, 301);
+    }
     const { pathname } = url;
     // Public books used to be advertised at /transparency; they now live at /funding.
     if (pathname === '/transparency' || pathname === '/transparency/') {

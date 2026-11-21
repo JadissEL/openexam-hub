@@ -463,11 +463,13 @@ DNS records before the cutover (all DNS-only, TTL auto), zone `7e685b3f9438eaf3f
 
 Never touch the MX, SPF, DKIM (`cf2024-1._domainkey`) or `google-site-verification` TXT records.
 
-1. `routes` in `wrangler.jsonc` lists the apex + www custom domains. Delete the three records above
+1. `routes` in `wrangler.jsonc` lists the apex custom domain. Delete the three records above
    (a Workers custom domain cannot sit on a hostname that already has an A/CNAME record), then run
-   `npx --yes wrangler@4.166.0 deploy`. Expect a brief certificate issuance window for the hostnames.
-2. Add a zone Single Redirect rule: `http.host eq "www.openexamhub.org"` -> `concat("https://openexamhub.org", http.request.uri.path)`, 308, preserve query string.
-3. Zone setting **Always Use HTTPS** must be on (Vercel used to do the http -> https redirect).
+   `npx --yes wrangler@4.166.0 deploy`. Expect a brief certificate issuance window for the hostname.
+2. For www, add proxied originless DNS (AAAA `100::` and A `192.0.2.0`) and a zone Single Redirect:
+   `http.host eq "www.openexamhub.org"` -> `concat("https://openexamhub.org", http.request.uri.path)`, 308, preserve query string. www is not a Worker custom domain.
+3. Zone setting **Always Use HTTPS** must be on, and a backup Single Redirect `not ssl` ->
+   `concat("https://", http.host, http.request.uri.path)` (301, preserve query string) covers HTTP on every host. The Worker also 301s `http://` to `https://` if a request ever reaches it.
 4. Re-run the route parity check and `BASE_URL=https://openexamhub.org npm run e2e:gate`.
 
 ### Rollback (one step)

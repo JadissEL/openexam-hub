@@ -19,7 +19,7 @@ import {
   BLOG_EXAMS
 } from './blog-data.mjs';
 import { SITEMAP_PATHS, TAG_INDEX_MIN_POSTS, allExamTags } from './blog-data.mjs';
-import { parsePlannerQuery, parsePlannerDays, parsePlannerVariant, DEFAULT_PICKER_EXAM } from '../lib/exams.js';
+import { parsePlannerQuery, parsePlannerDays, parsePlannerVariant, DEFAULT_PICKER_EXAM, resolvePlannerExam, resourceVariantScore, preferVariantResources, withOfficialSource, officialProfile } from '../lib/exams.js';
 import * as siteModule from '../src/seo/site.js';
 import { PLAN_PAGES, planPath } from '../src/seo/planPages.js';
 import { DONATION_COPY, DONATION_LINKS, DONATION_PLATFORMS } from '../src/donations.js';
@@ -286,6 +286,21 @@ test('TCF Canada links: ?exam=TCF_CANADA or ?exam=TCF&variant=canada', () => {
   assert.equal(parsePlannerVariant('?exam=TCF'), null);
   assert.equal(parsePlannerVariant('?exam=TCF&variant=nope'), null);
   assert.equal(parsePlannerVariant('?exam=IELTS&variant=canada'), null);
+  assert.deepEqual(resolvePlannerExam('TCF_CANADA'), { exam: 'TCF', variant: 'canada' });
+  assert.deepEqual(resolvePlannerExam('TCF', 'canada'), { exam: 'TCF', variant: 'canada' });
+  assert.deepEqual(resolvePlannerExam('TCF'), { exam: 'TCF', variant: 'tout_public' });
+  assert.equal(officialProfile('TCF', { variant: 'canada' }).sourceUrl, 'https://www.france-education-international.fr/test/tcf-canada');
+  assert.equal(officialProfile('TCF', { variant: 'tout_public' }).sourceUrl, 'https://www.france-education-international.fr/test/tcf-tout-public');
+  const mixed = [
+    { id: 'tp', title: 'France Éducation international TCF page', url: 'https://www.france-education-international.fr/test/tcf-tout-public' },
+    { id: 'rfi', title: 'RFI Français facile', url: 'https://francaisfacile.rfi.fr/fr' },
+    { id: 'ca', title: 'Official TCF Canada exam page', url: 'https://www.france-education-international.fr/test/tcf-canada' }
+  ];
+  assert.ok(resourceVariantScore(mixed[0], 'TCF', 'canada') < resourceVariantScore(mixed[2], 'TCF', 'canada'));
+  assert.equal(preferVariantResources(mixed, 'TCF', 'canada')[0].id, 'ca');
+  const fixed = withOfficialSource(mixed, 'TCF', 'canada');
+  assert.ok(fixed.every((r) => !/tcf-tout-public/.test(r.url)));
+  assert.equal(fixed[0].url, 'https://www.france-education-international.fr/test/tcf-canada');
 });
 
 test('parsePlannerDays keeps only the planner lengths', () => {

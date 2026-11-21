@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { PICKER_EXAMS, LEVELS, PLANNER_DAYS, DEFAULT_PICKER_EXAM, examLabel, parsePlannerQuery, parsePlannerDays, parsePlannerVariant, normalizeVariant } from '../lib/exams.js';
+import { PICKER_EXAMS, LEVELS, PLANNER_DAYS, DEFAULT_PICKER_EXAM, examLabel, parsePlannerQuery, parsePlannerDays, parsePlannerVariant, normalizeVariant, withOfficialSource } from '../lib/exams.js';
 import { API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { track } from './analytics.js';
 
@@ -105,7 +105,7 @@ export default function PlanPreview({ onSignUp, onSample, autoRun = false }) {
   };
 
   const rm = state.roadmap;
-  const resources = (rm?.verifiedResources || []).slice(0, 4);
+  const resources = withOfficialSource(rm?.verifiedResources || [], choice.exam, choice.variant, choice.level).slice(0, 4);
 
   return (
     <div className="mt-6" data-testid="plan-preview">
@@ -165,7 +165,12 @@ export default function PlanPreview({ onSignUp, onSample, autoRun = false }) {
               <ul className="mt-2 space-y-1.5 text-sm text-[#3B352F]">
                 {resources.map((r) => (
                   <li key={r.id || r.url}>
-                    {r.title} <span className="text-[#6B635A]">· {domainOf(r.url)}</span>
+                    {r.url ? (
+                      <a href={r.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                        {r.title}
+                      </a>
+                    ) : r.title}{' '}
+                    <span className="text-[#6B635A]">· {domainOf(r.url)}</span>
                     {r.linkStatus === 'ok' && <span className="ml-1 text-emerald-700">· link checked</span>}
                   </li>
                 ))}

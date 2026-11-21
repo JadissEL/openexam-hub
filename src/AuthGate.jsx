@@ -17,6 +17,14 @@ import PlanPreview from './PlanPreview.jsx';
 
 const WHY = 'A free account saves your plan and progress across devices and keeps the AI free for everyone by preventing repeated requests.';
 
+function previewSearch(on, href) {
+  const url = new URL(href || (typeof window !== 'undefined' ? window.location.href : 'https://openexamhub.org/app'));
+  if (on) url.searchParams.set('preview', '1');
+  else url.searchParams.delete('preview');
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+
 function friendlyAuthError(err) {
   const code = (err && err.code) || '';
   if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found'))
@@ -48,6 +56,7 @@ export function inAppBrowser(ua) {
   if (/Snapchat/.test(s)) return 'Snapchat';
   if (/MicroMessenger/.test(s)) return 'WeChat';
   if (/ Line\//.test(s)) return 'LINE';
+  if (/\bGSA\/|\bGmail\//i.test(s)) return 'Gmail';
   if (/Android[^)]*; wv\)/.test(s)) return 'this app';
   return null;
 }
@@ -139,18 +148,56 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [showSample, setShowSample] = useState(false);
-  // A full deep link (/app?exam=..&level=..&days=..) opens the no-account preview and loads the plan.
+  // A full deep link (/app?exam=..&level=..&days=..) or ?preview=1 opens the no-account preview.
   const [deepLink] = useState(() => {
     if (typeof window === 'undefined') return false;
     const p = new URLSearchParams(window.location.search);
     return !accountDeleted && p.get('mode') !== 'login' && isPlannerDeepLink(window.location.search);
   });
-  const [showPreview, setShowPreview] = useState(deepLink);
+  const [showPreview, setShowPreview] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const p = new URLSearchParams(window.location.search);
+    const deep = !accountDeleted && p.get('mode') !== 'login' && isPlannerDeepLink(window.location.search);
+    return deep || p.get('preview') === '1';
+  });
   useEffect(() => {
     if (!deepLink) return;
     track('plan_preview_open', { auto: true });
     count('preview_opened');
   }, [deepLink]);
+  // Push a history entry when the preview opens so the browser Back button returns to the sign-up form.
+  useEffect(() => {
+    if (!showPreview || typeof window === 'undefined') return;
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('preview') === '1') {
+      if (window.history.state?.oehPreview === 1) return;
+      window.history.replaceState({ oehPreview: 0 }, '', previewSearch(false));
+      window.history.pushState({ oehPreview: 1 }, '', previewSearch(true));
+      return;
+    }
+    window.history.pushState({ oehPreview: 1 }, '', previewSearch(true));
+  }, [showPreview]);
+  useEffect(() => {
+    const onPop = () => {
+      const p = new URLSearchParams(window.location.search);
+      setShowPreview(p.get('preview') === '1');
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+  const closePreview = (choice) => {
+    setShowPreview(false);
+    switchMode('signup');
+    if (choice) {
+      setNotice(`Create your free account to save your ${choice.variant === 'canada' ? 'TCF Canada' : examLabel(choice.exam)} ${choice.level} · ${choice.days}-day plan. The planner opens with it selected.`);
+    }
+    window.scrollTo?.(0, 0);
+    const p = new URLSearchParams(window.location.search);
+    if (p.get('preview') === '1') {
+      if (window.history.state?.oehPreview === 1) window.history.back();
+      else window.history.replaceState(window.history.state, '', previewSearch(false));
+    }
+  };
   const [inApp] = useState(() => (typeof navigator !== 'undefined' ? inAppBrowser(navigator.userAgent) : null));
 
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -229,7 +276,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   return (
     <div
       className="min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased"
-      style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" }}
+      style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", paddingBottom: 'var(--oeh-consent-space, 0px)' }}
       data-testid="auth-gate"
     >
       <main className="mx-auto w-full max-w-md px-5 pt-8 pb-16 sm:pt-16">
@@ -250,14 +297,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
           <PlanPreview
             autoRun={deepLink}
             onSample={sampleRoadmap ? () => { setShowPreview(false); setShowSample(true); } : null}
-            onSignUp={(choice) => {
-              setShowPreview(false);
-              switchMode('signup');
-              if (choice) {
-                setNotice(`Create your free account to save your ${choice.variant === 'canada' ? 'TCF Canada' : examLabel(choice.exam)} ${choice.level} · ${choice.days}-day plan. The planner opens with it selected.`);
-              }
-              window.scrollTo?.(0, 0);
-            }}
+            onSignUp={closePreview}
           />
         ) : (
           <>
