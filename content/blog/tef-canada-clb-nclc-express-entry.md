@@ -2,14 +2,18 @@
 title: "TEF Canada scores to CLB and NCLC for Express Entry"
 description: "How to read a TEF Canada certificate, which score column to enter in an Express Entry profile, and the official IRCC and CCI tables that convert those scores to NCLC."
 date: "2026-11-20"
-updated: "2026-11-20"
-lastVerified: "2026-11-20"
+updated: "2026-11-21"
+lastVerified: "2026-11-21"
 exams:
   - TEF_CANADA
 audience:
   - immigration
 lang: en
 draft: false
+cover:
+  src: "/blog/tef-canada-clb-nclc-express-entry/cover.webp"
+  alt: "Typographic diagram: TEF Canada old-scale scores convert to NCLC for Express Entry"
+  credit: "Diagram by OpenExam Hub. This is not an official form or certificate."
 sources:
   - title: "IRCC — Language test results (Express Entry)"
     url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html"
@@ -37,7 +41,7 @@ faq:
   - q: "Can I retake only one skill?"
     a: "No. For immigration, all four tests must be taken on the same day, and a retake is a full new sitting after the 20-day wait."
   - q: "Where is the TCF Canada conversion table?"
-    a: "A TCF Canada conversion guide is coming next. It uses a different scale; do not reuse the numbers here."
+    a: "See TCF Canada scores to CLB and NCLC for Express Entry (https://openexamhub.org/blog/tcf-canada-clb-nclc-express-entry). It uses a different scale; do not reuse the TEF numbers there."
 ---
 
 
@@ -52,7 +56,7 @@ For Express Entry, do not add up a TEF Canada total out of 699. Match each skill
 
 ## What TEF Canada is
 
-[TEF Canada](https://www.lefrancaisdesaffaires.fr/en/candidate/test-evaluation-francais/tef-canada/presentation/) (Test d’évaluation de français) is run by Le français des affaires of the CCI Paris Ile-de-France. The board says IRCC has recognised it since 2002. [IRCC lists it](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html) as an approved French test for Express Entry, alongside TCF Canada.
+[TEF Canada](https://www.lefrancaisdesaffaires.fr/en/candidate/test-evaluation-francais/tef-canada/presentation/) (Test d’évaluation de français) is run by Le français des affaires of the CCI Paris Ile-de-France. OpenExam Hub’s [TEF Canada exam guide](/exams/tef-canada) summarises the official format. The board says IRCC has recognised it since 2002. [IRCC lists it](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html) as an approved French test for Express Entry, alongside TCF Canada.
 
 For a Canadian **immigration** file, all four tests must be taken **on the same day**: reading (40 questions, 1 hour), listening (40 questions, 40 minutes), writing (two tasks, 1 hour) and speaking (two tasks, 15 minutes) on the [official presentation page](https://www.lefrancaisdesaffaires.fr/en/candidate/test-evaluation-francais/tef-canada/presentation/). Citizenship uses only listening and speaking, under different IRCC rules.
 
@@ -130,8 +134,12 @@ If you also need an English test, IRCC accepts IELTS **General Training** (not A
 
 IRCC requires results to be less than **two years old** when you complete your Express Entry profile **and** when you submit a permanent residence application; expired results at application lead to a refusal. The board says the [certificate is valid for two years from the date of issue](https://www.lefrancaisdesaffaires.fr/en/candidate/test-evaluation-francais/tef-canada/presentation/) (its sample issued on 8 October 2024 is valid until 7 October 2026) and stores files for 10 years — save your own copy. You may retake after a **20-day wait**. The board does not offer a re-mark: multiple-choice papers are scored automatically, and writing and speaking are already assessed twice.
 
-## Build a study plan
+For TCF Canada, which uses a different scale, see [TCF Canada scores to CLB and NCLC for Express Entry](/blog/tcf-canada-clb-nclc-express-entry). If you are specifically aiming at level 7, [NCLC 7 / CLB 7: the TEF and TCF scores you need](/blog/nclc-7-clb-7-express-entry-scores) puts both exams side by side.
 
-OpenExam Hub can build a day-by-day TEF Canada plan from official free resources at [openexamhub.org/app?exam=TEF_CANADA](https://openexamhub.org/app?exam=TEF_CANADA). A **free account** (email or Google) is required to generate a plan; a sample TEF Canada plan is available to preview first. A dedicated practice guide for official TEF Canada materials is coming.
+## Preview a study plan
+
+You can [preview a free TEF Canada plan](https://openexamhub.org/app?exam=TEF_CANADA&level=B2&days=30) on OpenExam Hub (B2 over 30 days). The link opens a plan preview when a matching cached plan exists. **Generating or saving a plan needs a free account** (email or Google).
+
+A free 30-day practice schedule that uses official TEF Canada materials is on the [TEF Canada 30-day study plan](/exams/tef-canada/30-day-study-plan).
 
 

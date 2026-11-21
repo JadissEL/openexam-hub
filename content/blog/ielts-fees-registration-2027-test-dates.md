@@ -2,7 +2,7 @@
 title: "IELTS fees, registration and 2027 test dates"
 description: "How to find official IELTS fees and 2027 dates for your country and centre, how to register, and which test Express Entry and universities actually accept."
 date: "2026-11-20"
-updated: "2026-11-20"
+updated: "2026-11-21"
 lastVerified: "2026-11-20"
 exams:
   - IELTS
@@ -11,6 +11,10 @@ audience:
   - immigration
 lang: en
 draft: false
+cover:
+  src: "/blog/ielts-fees-registration-2027-test-dates/cover.webp"
+  alt: "Typographic diagram of four steps to find an official IELTS fee and 2027 test dates: official finder, test type, city, then fee and dates"
+  credit: "Diagram by OpenExam Hub. This is not an official IELTS graphic."
 sources:
   - title: "IELTS — Booking your test"
     url: "https://ielts.org/take-a-test/booking-your-test"
@@ -125,7 +129,7 @@ On **validity**, [ielts.org recommends](https://ielts.org/take-a-test/your-resul
 
 ## Prepare, then book
 
-OpenExam Hub can build a day-by-day IELTS plan from official free resources at [openexamhub.org/app?exam=IELTS](https://openexamhub.org/app?exam=IELTS). A **free account** (email or Google) is required to generate a plan.
+You can [preview a free IELTS plan](https://openexamhub.org/app?exam=IELTS&level=B2&days=30) on OpenExam Hub (B2 over 30 days). The link opens a plan preview when a matching cached plan exists. **Generating or saving a plan needs a free account** (email or Google).
 
-A dedicated OpenExam Hub guide to official IELTS practice tests, and an 8-week study-plan page, are coming.
+For format, official practice pointers and an eight-week schedule, see the [IELTS exam guide](/exams/ielts) and the [IELTS 8-week study plan](/exams/ielts/8-week-study-plan).
 
