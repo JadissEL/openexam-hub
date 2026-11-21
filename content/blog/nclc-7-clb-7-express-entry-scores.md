@@ -6,7 +6,7 @@ updated: "2026-11-21"
 lastVerified: "2026-11-21"
 exams:
   - TEF_CANADA
-  - TCF
+  - TCF_CANADA
 audience:
   - immigration
 lang: en

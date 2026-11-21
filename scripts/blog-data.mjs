@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import matter from 'gray-matter';
 import MarkdownIt from 'markdown-it';
 import markdownItAnchor from 'markdown-it-anchor';
-import { KNOWN_EXAMS } from '../lib/exams.js';
+import { KNOWN_EXAMS, PLANNER_ALIASES } from '../lib/exams.js';
 import { indexablePaths, ORG_ID, examPagesForTag } from '../src/seo/site.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -18,10 +18,14 @@ export const SITE_ORIGIN = 'https://openexamhub.org';
 
 export const AUDIENCES = ['students', 'professionals', 'immigration'];
 
+/** Frontmatter exam tags: planner exams plus aliases such as TCF_CANADA. */
+export const BLOG_EXAMS = [...new Set([...KNOWN_EXAMS, ...Object.keys(PLANNER_ALIASES)])];
+
 export const EXAM_LABELS = {
   TCF: 'TCF',
   TEF: 'TEF',
   TEF_CANADA: 'TEF Canada',
+  TCF_CANADA: 'TCF Canada',
   DELF: 'DELF',
   DALF: 'DALF',
   IELTS: 'IELTS',
@@ -305,7 +309,7 @@ export function parsePost(filename, raw) {
     throw new Error(`${label}: "lang" must be a language code such as en or fr`);
   }
 
-  const exams = normalizeList(data.exams, 'exams', KNOWN_EXAMS, label);
+  const exams = normalizeList(data.exams, 'exams', BLOG_EXAMS, label);
   const audience = normalizeList(data.audience, 'audience', AUDIENCES, label);
   const sources = normalizeSources(data.sources, label);
   const faq = normalizeFaq(data.faq, label);
