@@ -28,3 +28,11 @@ coverage/
 e2e-shots/
 dist-e2e/
 .wrangler/
+
+# local Cursor agent memory (do not publish)
+.cursor_memory/
+.cursor/
+
+# temp generator scratch
+scripts/_tmp-*
+docs/growth/_tmp-*

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenExam Hub — Free backlink tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1714;
+      --muted: #5c554c;
+      --soft: #8a8176;
+      --paper: #f7f3ec;
+      --paper-2: #efe8dc;
+      --line: #e7e1d7;
+      --terracotta: #9a3412;
+      --terracotta-soft: #c2410c;
+      --live: #166534;
+      --live-bg: #dcfce7;
+      --submitted: #1d4ed8;
+      --submitted-bg: #dbeafe;
+      --progress: #a16207;
+      --progress-bg: #fef3c7;
+      --skipped: #6b7280;
+      --skipped-bg: #f3f4f6;
+      --todo-bg: #fff;
+      --shadow: 0 18px 50px -28px rgba(26, 23, 20, 0.45);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(154, 52, 18, 0.12), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(26, 23, 20, 0.08), transparent 50%),
+        linear-gradient(180deg, #fbf8f2 0%, var(--paper) 42%, #f1ede5 100%);
+    }
+
+    .shell {
+      width: min(1280px, calc(100% - 2.5rem));
+      margin: 0 auto;
+      padding: 2rem 0 4rem;
+    }
+
+    header.hero {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr;
+      gap: 1.5rem;
+      align-items: stretch;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .shell { width: min(100% - 1.25rem, 1280px); }
+      header.hero { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-copy {
+      padding: 1.75rem 1.9rem 1.6rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-copy::after {
+      content: "";
+      position: absolute;
+      inset: auto -20% -40% 40%;
+      height: 220px;
+      background: radial-gradient(circle, rgba(154, 52, 18, 0.16), transparent 70%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--terracotta);
+      margin: 0 0 0.75rem;
+    }
+
+    h1 {
+      font-family: Fraunces, Georgia, serif;
+      font-weight: 550;
+      font-size: clamp(2rem, 3.4vw, 3rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin: 0 0 0.75rem;
+      max-width: 16ch;
+    }
+
+    .lede {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 46ch;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    button, .btn {
+      appearance: none;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fff;
+      border-radius: 999px;
+      padding: 0.65rem 1rem;
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+    button:hover, .btn:hover { transform: translateY(-1px); }
+    button.secondary, .btn.secondary {
+      background: transparent;
+      color: var(--ink);
+    }
+    button.ghost {
+      background: transparent;
+      border-color: transparent;
+      color: var(--muted);
+      padding-inline: 0.5rem;
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .ring-panel {
+      padding: 1.5rem;
+      display: grid;
+      place-items: center;
+      gap: 0.75rem;
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 168px;
+      height: 168px;
+    }
+    .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-track { fill: none; stroke: var(--paper-2); stroke-width: 12; }
+    .ring-value {
+      fill: none;
+      stroke: var(--terracotta);
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-dasharray: 440;
+      stroke-dashoffset: 440;
+      transition: stroke-dashoffset 0.6s ease;
+    }
+    .ring-label {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      text-align: center;
+    }
+    .ring-label strong {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 2.2rem;
+      letter-spacing: -0.04em;
+      display: block;
+      line-height: 1;
+    }
+    .ring-label span { color: var(--muted); font-size: 0.85rem; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stats .stat:last-child { grid-column: 1 / -1; }
+    }
+
+    .stat {
+      padding: 1rem 1.1rem;
+      min-height: 96px;
+    }
+    .stat .k {
+      color: var(--soft);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .stat .v {
+      font-family: Fraunces, Georgia, serif;
+      font-size: 2rem;
+      letter-spacing: -0.03em;
+      margin-top: 0.35rem;
+    }
+    .stat .s { color: var(--muted); font-size: 0.85rem; margin-top: 0.15rem; }
+
+    .priority-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 700px) { .priority-row { grid-template-columns: 1fr; } }
+
+    .prio {
+      padding: 1rem 1.1rem 1.15rem;
+    }
+    .prio-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.65rem;
+    }
+    .prio-top strong { font-family: Fraunces, Georgia, serif; font-size: 1.25rem; }
+    .prio-top span { color: var(--muted); font-size: 0.85rem; }
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: var(--paper-2);
+      overflow: hidden;
+    }
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--terracotta), #c2410c);
+      transition: width 0.45s ease;
+    }
+
+    .toolbar {
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: 1.4fr auto auto auto;
+      gap: 0.65rem;
+      align-items: center;
+      margin-bottom: 0.85rem;
+      position: sticky;
+      top: 0.75rem;
+      z-index: 20;
+    }
+    @media (max-width: 900px) {
+      .toolbar { grid-template-columns: 1fr 1fr; }
+      .toolbar .search { grid-column: 1 / -1; }
+    }
+
+    .search, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 14px;
+      padding: 0.7rem 0.85rem;
+      font: inherit;
+      color: var(--ink);
+    }
+    .search:focus, select:focus {
+      outline: 2px solid rgba(154, 52, 18, 0.25);
+      border-color: rgba(154, 52, 18, 0.45);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+    }
+    .chip {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.7);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .chip.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #fff;
+    }
+
+    .list {
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.9rem;
+      align-items: start;
+      padding: 1rem 1.1rem;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .card:hover { border-color: rgba(26, 23, 20, 0.22); transform: translateY(-1px); }
+    @media (max-width: 720px) {
+      .card { grid-template-columns: 1fr; }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      background: var(--paper-2);
+      color: var(--ink);
+    }
+    .badge.P0 { background: #ffedd5; color: var(--terracotta); }
+    .badge.P1 { background: #fef3c7; color: #92400e; }
+    .badge.P2 { background: #eef2ff; color: #3730a3; }
+
+    .card h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      line-height: 1.35;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem 0.7rem;
+      margin-top: 0.4rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .meta a { color: var(--terracotta-soft); text-decoration: none; font-weight: 600; }
+    .meta a:hover { text-decoration: underline; }
+    .notes {
+      margin-top: 0.55rem;
+      color: var(--soft);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .status-wrap { display: grid; gap: 0.45rem; min-width: 150px; }
+    .status-wrap select { font-size: 0.85rem; font-weight: 600; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      width: fit-content;
+    }
+    .pill.todo { background: var(--todo-bg); border: 1px solid var(--line); color: var(--muted); }
+    .pill.in_progress { background: var(--progress-bg); color: var(--progress); }
+    .pill.submitted { background: var(--submitted-bg); color: var(--submitted); }
+    .pill.live { background: var(--live-bg); color: var(--live); }
+    .pill.skipped { background: var(--skipped-bg); color: var(--skipped); }
+
+    .empty, .banner {
+      padding: 1.25rem 1.4rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .banner {
+      margin-bottom: 1rem;
+      border-style: dashed;
+    }
+    .banner strong { color: var(--ink); }
+
+    footer.foot {
+      margin-top: 1.5rem;
+      color: var(--soft);
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    footer.foot a { color: var(--terracotta); }
+
+    .hidden-input { display: none; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div class="panel hero-copy">
+        <p class="eyebrow">OpenExam Hub · Growth</p>
+        <h1>Free backlink &amp; article tracker</h1>
+        <p class="lede">Internal repo tool — not on the live site. Track the 1000 free places we can list OpenExam Hub and publish free articles. Progress is saved in this browser.</p>
+        <div class="hero-actions">
+          <button type="button" id="btnReload">Reload CSV</button>
+          <button type="button" class="secondary" id="btnImport">Import CSV</button>
+          <button type="button" class="secondary" id="btnExport">Export progress</button>
+          <button type="button" class="ghost" id="btnReset">Reset local progress</button>
+          <input class="hidden-input" id="fileInput" type="file" accept=".csv,text/csv" />
+        </div>
+      </div>
+      <div class="panel ring-panel">
+        <div class="ring-wrap" aria-hidden="true">
+          <svg viewBox="0 0 160 160">
+            <circle class="ring-track" cx="80" cy="80" r="70"></circle>
+            <circle class="ring-value" id="ringValue" cx="80" cy="80" r="70"></circle>
+          </svg>
+          <div class="ring-label">
+            <strong id="pctLabel">0%</strong>
+            <span>done-ish</span>
+          </div>
+        </div>
+        <div style="text-align:center;color:var(--muted);font-size:0.9rem">
+          <span id="doneLabel">0</span> submitted/live of <span id="totalLabel">0</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="stats" aria-label="Status totals">
+      <div class="panel stat"><div class="k">Todo</div><div class="v" id="statTodo">0</div><div class="s">not started</div></div>
+      <div class="panel stat"><div class="k">In progress</div><div class="v" id="statProgress">0</div><div class="s">drafting / applying</div></div>
+      <div class="panel stat"><div class="k">Submitted</div><div class="v" id="statSubmitted">0</div><div class="s">waiting on review</div></div>
+      <div class="panel stat"><div class="k">Live</div><div class="v" id="statLive">0</div><div class="s">link or article live</div></div>
+      <div class="panel stat"><div class="k">Skipped</div><div class="v" id="statSkipped">0</div><div class="s">not a fit / paid</div></div>
+    </section>
+
+    <section class="priority-row" aria-label="Priority progress">
+      <div class="panel prio" data-pri="P0"><div class="prio-top"><strong>P0</strong><span class="prio-meta">0 / 0</span></div><div class="bar"><i></i></div></div>
+      <div class="panel prio" data-pri="P1"><div class="prio-top"><strong>P1</strong><span class="prio-meta">0 / 0</span></div><div class="bar"><i></i></div></div>
+      <div class="panel prio" data-pri="P2"><div class="prio-top"><strong>P2</strong><span class="prio-meta">0 / 0</span></div><div class="bar"><i></i></div></div>
+    </section>
+
+    <div class="panel banner" id="loadBanner">
+      Loading <strong>free-backlink-targets-1000.csv</strong>…
+      If this stays empty, open the folder with a tiny local server
+      (<code>npx --yes serve docs/growth</code>) or use <strong>Import CSV</strong>.
+    </div>
+
+    <div class="panel toolbar">
+      <input class="search" id="search" type="search" placeholder="Search name, domain, notes…" />
+      <select id="filterPriority" aria-label="Priority">
+        <option value="">All priorities</option>
+        <option value="P0">P0</option>
+        <option value="P1">P1</option>
+        <option value="P2">P2</option>
+      </select>
+      <select id="filterStatus" aria-label="Status">
+        <option value="">All statuses</option>
+        <option value="todo">Todo</option>
+        <option value="in_progress">In progress</option>
+        <option value="submitted">Submitted</option>
+        <option value="live">Live</option>
+        <option value="skipped">Skipped</option>
+      </select>
+      <select id="filterCategory" aria-label="Category">
+        <option value="">All categories</option>
+      </select>
+    </div>
+
+    <div class="chips" id="quickFilters" aria-label="Quick filters"></div>
+    <div class="list" id="list"></div>
+
+    <footer class="foot">
+      <span>OpenExam Hub · free outreach only · no fake stats</span>
+      <span><a href="https://openexamhub.org" target="_blank" rel="noreferrer">openexamhub.org</a> · progress key: <code>oeh-growth-v1</code></span>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'oeh-growth-v1';
+    const STATUSES = ['todo', 'in_progress', 'submitted', 'live', 'skipped'];
+    const DONE = new Set(['submitted', 'live']);
+    const SEED_IN_PROGRESS = [
+      /open source europe/i,
+      /open collective/i,
+      /^ko-fi$/i,
+      /google search console/i,
+      /bing webmaster/i,
+      /linkedin company page/i,
+    ];
+
+    const state = {
+      rows: [],
+      overrides: loadOverrides(),
+      filters: { q: '', priority: '', status: '', category: '' },
+    };
+
+    function loadOverrides() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; }
+      catch { return {}; }
+    }
+    function saveOverrides() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides));
+    }
+
+    function parseCsv(text) {
+      const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim().length);
+      if (!lines.length) return [];
+      const header = splitCsvLine(lines[0]);
+      return lines.slice(1).map((line) => {
+        const cols = splitCsvLine(line);
+        const obj = {};
+        header.forEach((h, i) => { obj[h] = cols[i] ?? ''; });
+        return obj;
+      });
+    }
+
+    function splitCsvLine(line) {
+      const out = [];
+      let cur = '';
+      let q = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (q && line[i + 1] === '"') { cur += '"'; i++; }
+          else q = !q;
+        } else if (ch === ',' && !q) { out.push(cur); cur = ''; }
+        else cur += ch;
+      }
+      out.push(cur);
+      return out;
+    }
+
+    function effectiveStatus(row) {
+      const id = String(row.id);
+      if (state.overrides[id]?.status) return state.overrides[id].status;
+      const csv = (row.status || 'todo').trim() || 'todo';
+      if (csv !== 'todo') return csv;
+      if (SEED_IN_PROGRESS.some((re) => re.test(row.name || ''))) return 'in_progress';
+      return 'todo';
+    }
+
+    function setStatus(id, status) {
+      state.overrides[String(id)] = {
+        ...(state.overrides[String(id)] || {}),
+        status,
+        updatedAt: new Date().toISOString(),
+      };
+      saveOverrides();
+      render();
+    }
+
+    function pct(n, d) { return d ? Math.round((n / d) * 100) : 0; }
+
+    function summarize(rows) {
+      const byStatus = Object.fromEntries(STATUSES.map((s) => [s, 0]));
+      const byPri = { P0: { total: 0, done: 0 }, P1: { total: 0, done: 0 }, P2: { total: 0, done: 0 } };
+      for (const r of rows) {
+        const st = effectiveStatus(r);
+        byStatus[st] = (byStatus[st] || 0) + 1;
+        const p = r.priority || 'P2';
+        if (!byPri[p]) byPri[p] = { total: 0, done: 0 };
+        byPri[p].total += 1;
+        if (DONE.has(st)) byPri[p].done += 1;
+      }
+      const done = (byStatus.submitted || 0) + (byStatus.live || 0);
+      return { byStatus, byPri, done, total: rows.length, percent: pct(done, rows.length) };
+    }
+
+    function filteredRows() {
+      const q = state.filters.q.trim().toLowerCase();
+      return state.rows.filter((r) => {
+        if (state.filters.priority && r.priority !== state.filters.priority) return false;
+        if (state.filters.category && r.category !== state.filters.category) return false;
+        const st = effectiveStatus(r);
+        if (state.filters.status && st !== state.filters.status) return false;
+        if (!q) return true;
+        const hay = [r.name, r.domain, r.notes, r.category, r.action, r.url_hint].join(' ').toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    function renderStats() {
+      const s = summarize(state.rows);
+      document.getElementById('statTodo').textContent = s.byStatus.todo || 0;
+      document.getElementById('statProgress').textContent = s.byStatus.in_progress || 0;
+      document.getElementById('statSubmitted').textContent = s.byStatus.submitted || 0;
+      document.getElementById('statLive').textContent = s.byStatus.live || 0;
+      document.getElementById('statSkipped').textContent = s.byStatus.skipped || 0;
+      document.getElementById('pctLabel').textContent = `${s.percent}%`;
+      document.getElementById('doneLabel').textContent = String(s.done);
+      document.getElementById('totalLabel').textContent = String(s.total);
+      const circ = 2 * Math.PI * 70;
+      const offset = circ * (1 - s.percent / 100);
+      const ring = document.getElementById('ringValue');
+      ring.style.strokeDasharray = String(circ);
+      ring.style.strokeDashoffset = String(offset);
+
+      for (const el of document.querySelectorAll('.prio')) {
+        const key = el.dataset.pri;
+        const info = s.byPri[key] || { total: 0, done: 0 };
+        el.querySelector('.prio-meta').textContent = `${info.done} / ${info.total} · ${pct(info.done, info.total)}%`;
+        el.querySelector('.bar > i').style.width = `${pct(info.done, info.total)}%`;
+      }
+    }
+
+    function renderFilters() {
+      const catSel = document.getElementById('filterCategory');
+      const current = state.filters.category;
+      const cats = [...new Set(state.rows.map((r) => r.category).filter(Boolean))].sort();
+      catSel.innerHTML = '<option value="">All categories</option>' + cats.map((c) =>
+        `<option value="${escapeAttr(c)}"${c === current ? ' selected' : ''}>${escapeHtml(c)}</option>`
+      ).join('');
+
+      const quick = document.getElementById('quickFilters');
+      const chips = [
+        { label: 'P0 only', key: 'priority', value: 'P0' },
+        { label: 'Articles', key: 'category', value: 'free_article_brief' },
+        { label: 'In progress', key: 'status', value: 'in_progress' },
+        { label: 'Submitted', key: 'status', value: 'submitted' },
+        { label: 'Communities', key: 'category', value: 'community_post' },
+        { label: 'Clear', key: 'clear', value: '' },
+      ];
+      quick.innerHTML = chips.map((c) => {
+        const active =
+          c.key === 'clear' ? false :
+          state.filters[c.key] === c.value;
+        return `<button type="button" class="chip${active ? ' active' : ''}" data-k="${c.key}" data-v="${escapeAttr(c.value)}">${escapeHtml(c.label)}</button>`;
+      }).join('');
+    }
+
+    function renderList() {
+      const list = document.getElementById('list');
+      const rows = filteredRows();
+      if (!state.rows.length) {
+        list.innerHTML = '';
+        return;
+      }
+      if (!rows.length) {
+        list.innerHTML = `<div class="panel empty">No targets match these filters.</div>`;
+        return;
+      }
+      const show = rows.slice(0, 120);
+      list.innerHTML = show.map((r) => {
+        const st = effectiveStatus(r);
+        const url = r.url_hint || (r.domain ? `https://${r.domain}` : '');
+        return `
+          <article class="panel card" data-id="${escapeAttr(r.id)}">
+            <div class="badge ${escapeAttr(r.priority || 'P2')}">${escapeHtml(r.priority || 'P2')}</div>
+            <div>
+              <h3>${escapeHtml(r.name || 'Untitled')}</h3>
+              <div class="meta">
+                <span class="pill ${st}">${labelStatus(st)}</span>
+                <span>${escapeHtml(r.category || '—')}</span>
+                <span>${escapeHtml(r.action || '—')}</span>
+                ${url ? `<a href="${escapeAttr(url)}" target="_blank" rel="noreferrer">${escapeHtml(r.domain || 'open')}</a>` : ''}
+              </div>
+              ${r.notes ? `<p class="notes">${escapeHtml(r.notes)}</p>` : ''}
+            </div>
+            <div class="status-wrap">
+              <label class="k" style="font-size:0.72rem;color:var(--soft);font-weight:700;letter-spacing:0.04em;text-transform:uppercase">Status</label>
+              <select data-status-for="${escapeAttr(r.id)}" aria-label="Status for ${escapeAttr(r.name || r.id)}">
+                ${STATUSES.map((s) => `<option value="${s}"${s === st ? ' selected' : ''}>${labelStatus(s)}</option>`).join('')}
+              </select>
+            </div>
+          </article>
+        `;
+      }).join('') + (rows.length > show.length
+        ? `<div class="panel empty">Showing ${show.length} of ${rows.length} matches. Narrow search to browse the rest.</div>`
+        : '');
+    }
+
+    function labelStatus(s) {
+      return ({
+        todo: 'Todo',
+        in_progress: 'In progress',
+        submitted: 'Submitted',
+        live: 'Live',
+        skipped: 'Skipped',
+      })[s] || s;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+    function escapeAttr(s) { return escapeHtml(s).replace(/'/g, '&#39;'); }
+
+    function render() {
+      renderStats();
+      renderFilters();
+      renderList();
+      const banner = document.getElementById('loadBanner');
+      if (state.rows.length) {
+        banner.innerHTML = `<strong>${state.rows.length}</strong> targets loaded. Local overrides: <strong>${Object.keys(state.overrides).length}</strong>. Tip: start with P0 articles and directories.`;
+      }
+    }
+
+    function ingest(rows) {
+      state.rows = rows.map((r) => ({
+        ...r,
+        id: String(r.id || ''),
+        priority: r.priority || 'P2',
+        status: r.status || 'todo',
+      })).filter((r) => r.id && r.name);
+      render();
+    }
+
+    async function loadDefaultCsv() {
+      const banner = document.getElementById('loadBanner');
+      try {
+        const res = await fetch('./free-backlink-targets-1000.csv', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const text = await res.text();
+        ingest(parseCsv(text));
+      } catch (err) {
+        banner.innerHTML = `Could not auto-load the CSV (<code>${escapeHtml(err.message)}</code>). Use <strong>Import CSV</strong> or run <code>npx --yes serve docs/growth</code> then open <code>/tracker.html</code>.`;
+      }
+    }
+
+    function exportProgress() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        overrides: state.overrides,
+        summary: summarize(state.rows),
+        rows: state.rows.map((r) => ({
+          id: r.id,
+          name: r.name,
+          priority: r.priority,
+          category: r.category,
+          status: effectiveStatus(r),
+          domain: r.domain,
+          url_hint: r.url_hint,
+        })),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `openexam-growth-progress-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    document.getElementById('list').addEventListener('change', (e) => {
+      const sel = e.target.closest('select[data-status-for]');
+      if (!sel) return;
+      setStatus(sel.getAttribute('data-status-for'), sel.value);
+    });
+
+    document.getElementById('quickFilters').addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      const key = btn.dataset.k;
+      const value = btn.dataset.v;
+      if (key === 'clear') {
+        state.filters = { q: '', priority: '', status: '', category: '' };
+        document.getElementById('search').value = '';
+        document.getElementById('filterPriority').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterCategory').value = '';
+      } else {
+        state.filters[key] = state.filters[key] === value ? '' : value;
+        if (key === 'priority') document.getElementById('filterPriority').value = state.filters.priority;
+        if (key === 'status') document.getElementById('filterStatus').value = state.filters.status;
+        if (key === 'category') document.getElementById('filterCategory').value = state.filters.category;
+      }
+      render();
+    });
+
+    document.getElementById('search').addEventListener('input', (e) => {
+      state.filters.q = e.target.value;
+      renderList();
+    });
+    document.getElementById('filterPriority').addEventListener('change', (e) => {
+      state.filters.priority = e.target.value;
+      render();
+    });
+    document.getElementById('filterStatus').addEventListener('change', (e) => {
+      state.filters.status = e.target.value;
+      render();
+    });
+    document.getElementById('filterCategory').addEventListener('change', (e) => {
+      state.filters.category = e.target.value;
+      render();
+    });
+
+    document.getElementById('btnReload').addEventListener('click', loadDefaultCsv);
+    document.getElementById('btnExport').addEventListener('click', exportProgress);
+    document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      ingest(parseCsv(await file.text()));
+      e.target.value = '';
+    });
+    document.getElementById('btnReset').addEventListener('click', () => {
+      if (!confirm('Clear all local status overrides in this browser?')) return;
+      state.overrides = {};
+      saveOverrides();
+      render();
+    });
+
+    loadDefaultCsv();
+  </script>
+</body>
+</html>
