@@ -11,6 +11,7 @@ const loaders = {
   info: () => import('./landing/InfoPage.jsx'),
   blog: () => import('./blog/BlogClient.jsx'),
   exams: () => import('./seo/ExamRoute.jsx'),
+  tools: () => import('./tools/ClbConverter.jsx'),
   app: () => import('./App.jsx')
 };
 
@@ -28,6 +29,7 @@ function resolveRoute(pathname) {
   if (p === '/faq') return { key: 'info', props: { kind: 'faq' } };
   if (p === '/funding') return { key: 'info', props: { kind: 'funding' } };
   if (p === '/exams' || /^\/exams\/[a-z0-9-]+(\/[a-z0-9-]+)?$/.test(p)) return { key: 'exams', props: { pathname: p } };
+  if (p === '/tools/clb-converter') return { key: 'tools', props: {} };
   if (isBlogPath(p) && p !== '/blog/rss.xml') return { key: 'blog', props: {} };
   return { key: 'app', props: {} }; // /app and any other path open the study app
 }

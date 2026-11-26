@@ -38,8 +38,9 @@ test('paths and referrers are normalised and bounded', () => {
   assert.equal(inAppName('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/323.0 Mobile/15E148 Safari/604.1'), 'gmail');
 });
 
-test('events: only the three funnel events', () => {
+test('events: only the known funnel and tool events', () => {
   assert.deepEqual(sanitizeBeacon({ t: 'event', e: 'signup_started' }, CHROME), { t: 'event', e: 'signup_started', a: null });
+  assert.deepEqual(sanitizeBeacon({ t: 'event', e: 'clb_tool_used' }, CHROME), { t: 'event', e: 'clb_tool_used', a: null });
   assert.equal(sanitizeBeacon({ t: 'event', e: 'anything' }, CHROME), null);
   assert.equal(validRecord({ t: 'event', e: 'nope' }), null);
 });

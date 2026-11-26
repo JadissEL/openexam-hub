@@ -166,6 +166,28 @@ function Resources({ groups, lastChecked }) {
   );
 }
 
+const TOOL_GUIDES = ['tef-canada', 'tcf-canada'];
+
+/** Free-tool card on the TEF Canada and TCF Canada guides (links to /tools/clb-converter). */
+function RelatedTool({ guide }) {
+  if (!TOOL_GUIDES.includes(guide)) return null;
+  const name = guide === 'tcf-canada' ? 'TCF Canada' : 'TEF Canada';
+  return (
+    <section aria-labelledby="related-tool-title" className="mt-14 rounded-2xl border border-[#E7C9B4] bg-[#FBF1E9] p-6">
+      <p className={eyebrow}>Free tool</p>
+      <h2 id="related-tool-title" className={`mt-2 font-display ${ink} text-[24px] sm:text-[28px] tracking-[-0.02em] font-medium`}>
+        Convert your {name} scores to NCLC
+      </h2>
+      <p className={`mt-3 text-[16px] leading-[1.65] ${muted} max-w-2xl`}>
+        Enter your four scores and see your NCLC (CLB) level per skill, whether you meet NCLC 7 or 9, and your CRS language points, using IRCC’s official tables. No account needed.
+      </p>
+      <a href="/tools/clb-converter" className="mt-4 inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
+        Open the NCLC score converter <ArrowRight className="w-4 h-4" aria-hidden="true" />
+      </a>
+    </section>
+  );
+}
+
 function Faq({ faq }) {
   if (!faq?.length) return null;
   return (
@@ -425,6 +447,11 @@ export function PlanPage({ guide, slug, posts = [] }) {
               <li>
                 <a href={`/exams/${plan.guide}`} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{guidePage ? guidePage.label : plan.guide} guide</a>
               </li>
+              {TOOL_GUIDES.includes(plan.guide) ? (
+                <li>
+                  <a href="/tools/clb-converter" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">NCLC score converter (free tool)</a>
+                </li>
+              ) : null}
               {related.map((r) => (
                 <li key={r.href}>
                   <a href={r.href} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{r.label}</a>
@@ -469,6 +496,7 @@ export function ExamPage({ slug, posts = [] }) {
         </section>
 
         <StudyPlans guide={slug} />
+        <RelatedTool guide={slug} />
         <FormatTable format={c.format} />
         <DeleLevels rows={c.deleLevels} scoring={c.scoring} />
         <Resources groups={c.resources} lastChecked={c.lastChecked} />

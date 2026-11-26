@@ -11,7 +11,7 @@ export function track(name, params = {}) {
 
 /**
  * Cookieless funnel counter (public/oeh-consent.js -> Worker /api/hit): aggregate daily counts only,
- * no consent needed. name: 'preview_opened' | 'signup_started' | 'signup_completed'.
+ * no consent needed. name: 'preview_opened' | 'signup_started' | 'signup_completed' | 'clb_tool_used'.
  */
 export function count(name) {
   try {

@@ -112,6 +112,35 @@ export async function prerenderPages(distDir, template, { applyHead, injectRoot,
     written.push(p);
   }
 
+  // /tools/clb-converter: interactive, so the module script stays and React takes over on load.
+  {
+    const p = ssr.TOOL_PATH;
+    const url = `${SITE_ORIGIN}${p}`;
+    const toolLd = [
+      breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'NCLC score converter', path: p }]),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        '@id': `${url}#webapp`,
+        name: ssr.TOOL_H1,
+        url,
+        description: ssr.TOOL_DESCRIPTION,
+        applicationCategory: 'EducationalApplication',
+        operatingSystem: 'Any',
+        browserRequirements: 'Requires JavaScript',
+        inLanguage: 'en',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: 0, priceCurrency: 'EUR', category: 'Free' },
+        dateModified: ssr.TOOL_LAST_VERIFIED,
+        isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+        publisher: { '@id': `${SITE_ORIGIN}/#organization` }
+      },
+      faqPageJsonLd(ssr.TOOL_FAQ)
+    ];
+    writePage(distDir, p, injectRoot(headFor(p, toolLd), ssr.renderPage(p, posts)));
+    written.push(p);
+  }
+
   writePage(distDir, '/app', headFor('/app'));
   written.push('/app');
 

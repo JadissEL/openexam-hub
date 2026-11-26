@@ -12,6 +12,9 @@
 - [Goethe-Zertifikat](https://openexamhub.org/exams/goethe): free official practice tests A1–C2
 - [DELE](https://openexamhub.org/exams/dele): exam format by level and official resources
 
+## Free tools
+- [TEF Canada and TCF Canada to CLB (NCLC) score converter](https://openexamhub.org/tools/clb-converter): level per skill, NCLC 7 and 9 check and CRS language points from IRCC's official tables
+
 ## Study plans
 - [TCF Canada official practice and 30-day study path](https://openexamhub.org/exams/tcf-canada/official-practice-study-path)
 - [TEF Canada 30-day study plan](https://openexamhub.org/exams/tef-canada/30-day-study-plan)

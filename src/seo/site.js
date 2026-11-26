@@ -131,7 +131,12 @@ export const PAGE_META = {
     title: 'Terms of use · OpenExam Hub',
     description: 'The terms for using OpenExam Hub, a free and independent study planner for language exams.'
   },
-  '/exams': EXAMS_INDEX
+  '/exams': EXAMS_INDEX,
+  '/tools/clb-converter': {
+    title: 'TEF Canada & TCF Canada to CLB (NCLC) score converter · OpenExam Hub',
+    description:
+      'Free converter from TEF Canada and TCF Canada scores to NCLC (CLB) levels, using IRCC’s official tables. See your level per skill, whether you meet NCLC 7 or 9, and your CRS language points.'
+  }
 };
 
 export function normalizePath(pathname) {

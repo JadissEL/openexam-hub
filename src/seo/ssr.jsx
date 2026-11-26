@@ -7,6 +7,8 @@ import { ExamPage, ExamsIndex, PlanPage } from './ExamPages.jsx';
 import { PLAN_PAGES, planPath } from './planPages.js';
 import { examContent } from './examContent.js';
 import { FAQ } from '../landing/content.js';
+import ClbConverter from '../tools/ClbConverter.jsx';
+import { TOOL_FAQ, TOOL_H1, TOOL_DESCRIPTION, TOOL_LAST_VERIFIED, TOOL_PATH } from '../tools/clbContent.js';
 
 /** Build-time HTML for marketing and exam-guide routes (see scripts/prerender-pages.mjs). */
 export function renderPage(pathname, posts = []) {
@@ -17,6 +19,7 @@ export function renderPage(pathname, posts = []) {
   if (p === '/funding') return renderToString(<InfoPage kind="funding" />);
   if (p === '/privacy') return renderToString(<LegalPage kind="privacy" />);
   if (p === '/terms') return renderToString(<LegalPage kind="terms" />);
+  if (p === '/tools/clb-converter') return renderToString(<ClbConverter />);
   if (p === '/exams') return renderToString(<ExamsIndex posts={posts} />);
   const m = p.match(/^\/exams\/([a-z0-9-]+)$/);
   if (m) return renderToString(<ExamPage slug={m[1]} posts={posts} />);
@@ -25,4 +28,4 @@ export function renderPage(pathname, posts = []) {
   return null;
 }
 
-export { examContent, FAQ, PLAN_PAGES, planPath };
+export { examContent, FAQ, PLAN_PAGES, planPath, TOOL_FAQ, TOOL_H1, TOOL_DESCRIPTION, TOOL_LAST_VERIFIED, TOOL_PATH };
