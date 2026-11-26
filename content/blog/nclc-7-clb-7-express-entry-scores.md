@@ -2,7 +2,7 @@
 title: "NCLC 7 / CLB 7: what TEF Canada and TCF Canada scores you need"
 description: "The exact TEF Canada (old-scale and /699) and TCF Canada scores that correspond to NCLC 7, and why CLB/NCLC 7 is the Express Entry threshold on IRCC’s pages."
 date: "2026-11-21"
-updated: "2026-11-21"
+updated: "2026-11-26"
 lastVerified: "2026-11-21"
 exams:
   - TEF_CANADA
@@ -110,6 +110,8 @@ From 11 December 2023, reading and listening share a /699 range; writing and spe
 | Writing | 10–11 /20 |
 
 Do not reuse TEF numbers on a TCF file, or the other way around. The [full TCF Canada NCLC table](/blog/tcf-canada-clb-nclc-express-entry) also has levels 4 to 10, and notes that listening NCLC 9 starts at 523 while reading starts at 524. The [TCF Canada exam guide](/exams/tcf-canada) covers the official format. IRCC lists **TCF Canada**, not TCF tout public.
+
+To run all four TEF Canada or TCF Canada scores through those official tables at once — including whether you meet NCLC 7 or 9, and the first-official-language CRS points they earn — use the [TEF Canada and TCF Canada to NCLC converter](/tools/clb-converter). Confirm your result on IRCC.
 
 ## Preview a study plan
 

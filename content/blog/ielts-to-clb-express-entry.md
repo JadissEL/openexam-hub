@@ -97,6 +97,6 @@ On the same language-test page, your results “must be less than 2 years old”
 
 ## French tests, and a study-plan preview
 
-If you are also proving French, use the official TEF Canada and TCF Canada tables on the same IRCC page. OpenExam Hub’s readings of those tables are [TEF Canada scores to CLB and NCLC](/blog/tef-canada-clb-nclc-express-entry) and [TCF Canada scores to CLB and NCLC](/blog/tcf-canada-clb-nclc-express-entry).
+If you are also proving French, use the official TEF Canada and TCF Canada tables on the same IRCC page. OpenExam Hub’s readings of those tables are [TEF Canada scores to CLB and NCLC](/blog/tef-canada-clb-nclc-express-entry) and [TCF Canada scores to CLB and NCLC](/blog/tcf-canada-clb-nclc-express-entry). For those two French tests only — not IELTS — you can also use the [TEF Canada and TCF Canada to NCLC converter](/tools/clb-converter), which maps each skill to an NCLC level, flags NCLC 7 or 9, and shows first-official-language CRS points from IRCC’s tables.
 
 You can [preview a free IELTS plan](https://openexamhub.org/app?exam=IELTS&level=B2&days=30) on OpenExam Hub, set to CEFR **B2** over **30 days**. On official IELTS CEFR guidance, a requirement of 5.5–6.5 is treated as B2 — the band range that includes the 6.0 IRCC lists for CLB 7. The link opens a plan preview when a matching cached plan exists. **Generating or saving a plan needs a free account** (email or Google).

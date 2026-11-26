@@ -2,7 +2,7 @@
 title: "TCF Canada scores to CLB and NCLC for Express Entry"
 description: "Official IRCC tables that convert TCF Canada speaking, listening, reading and writing scores to NCLC, plus programme minimums, result validity and the CRS French bonus."
 date: "2026-11-21"
-updated: "2026-11-21"
+updated: "2026-11-26"
 lastVerified: "2026-11-21"
 exams:
   - TCF_CANADA
@@ -90,6 +90,8 @@ Meeting a minimum only makes you eligible. [CRS points](https://www.canada.ca/en
 *Chart by OpenExam Hub. Source: IRCC language test results and CRS criteria pages, checked 21 November 2026.*
 
 For a closer look at why level 7 is the figure people search for, and for the matching TEF Canada bands, see [NCLC 7 / CLB 7: the TEF and TCF scores you need](/blog/nclc-7-clb-7-express-entry-scores).
+
+You can also enter your four TCF Canada scores in the [TEF Canada and TCF Canada to NCLC converter](/tools/clb-converter). It maps each skill to an NCLC level, shows whether you meet NCLC 7 or 9, and adds first-official-language CRS points from IRCC’s tables. Confirm the figures on IRCC before you submit.
 
 If you also need an English test, IRCC accepts IELTS **General Training** (not Academic, and not One Skill Retake) among other English tests. See [IELTS fees, registration and 2027 dates](/blog/ielts-fees-registration-2027-test-dates).
 

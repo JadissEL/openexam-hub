@@ -65,7 +65,7 @@ On the pages we checked on 26 November 2026, **both tests are listed for all thr
 
 IRCC also says results must be **less than two years old** when you complete your profile and when you submit your application. Expired results at application lead to refusal.
 
-If you want the conversion tables, we have one guide for each test: [TEF Canada scores to CLB and NCLC](/blog/tef-canada-clb-nclc-express-entry) and [TCF Canada scores to CLB and NCLC](/blog/tcf-canada-clb-nclc-express-entry). For the most common target, see [NCLC 7 / CLB 7: the TEF Canada and TCF Canada scores you need](/blog/nclc-7-clb-7-express-entry-scores).
+If you want the conversion tables, we have one guide for each test: [TEF Canada scores to CLB and NCLC](/blog/tef-canada-clb-nclc-express-entry) and [TCF Canada scores to CLB and NCLC](/blog/tcf-canada-clb-nclc-express-entry). For the most common target, see [NCLC 7 / CLB 7: the TEF Canada and TCF Canada scores you need](/blog/nclc-7-clb-7-express-entry-scores). There is also a [TEF Canada and TCF Canada to NCLC converter](/tools/clb-converter) that applies those official tables to your four scores, shows whether you meet NCLC 7 or 9, and lists first-official-language CRS points.
 
 ## Quebec
 
