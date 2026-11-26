@@ -86,7 +86,7 @@ IRCC’s [help centre answer](https://ircc.canada.ca/english/helpcentre/answer.a
 
 Results must be less than **two years old** when you complete your Express Entry profile **and** when you submit your permanent residence application. If you apply with expired results, IRCC says it will refuse the application.
 
-IRCC converts General Training scores to **CLB** levels and publishes the official bands on the same [language test results](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html) page. This article does not repeat that table.
+IRCC converts General Training scores to **CLB** levels and publishes the official bands on the same [language test results](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html) page. This article does not repeat that table. The official table, including the IELTS scores for CLB 7, is in [IELTS to CLB for Express Entry](/blog/ielts-to-clb-express-entry).
 
 ## When Academic is the test you need
 
