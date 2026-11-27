@@ -222,10 +222,23 @@ Body text is here.
   assert.equal(articleJsonLd(tcfCanada).about[0].url, 'https://openexamhub.org/exams/tcf-canada');
 });
 
+test('CELPIP is a valid blog tag and maps only to the CELPIP guide', () => {
+  assert.ok(BLOG_EXAMS.includes('CELPIP'));
+  assert.deepEqual(siteModule.examPagesForTag('CELPIP').map((p) => p.slug), ['celpip']);
+  assert.deepEqual(siteModule.EXAM_PAGES.find((p) => p.slug === 'celpip').tags, ['CELPIP']);
+  const posts = loadBlogPosts({ includeDrafts: false });
+  const celpip = posts.find((p) => p.slug === 'celpip-to-clb-express-entry');
+  assert.ok(celpip, 'expected published CELPIP post');
+  assert.deepEqual(celpip.exams, ['CELPIP']);
+  assert.equal(articleJsonLd(celpip).about[0].url, 'https://openexamhub.org/exams/celpip');
+  assert.equal(articleJsonLd(celpip).about[0].name, 'CELPIP');
+});
+
 test('sitemap includes static pages, skips drafts in production, includes posts otherwise', () => {
   const prodXml = buildSitemapXml([]);
   assert.match(prodXml, /https:\/\/openexamhub\.org\/<\/loc>/);
   assert.match(prodXml, /https:\/\/openexamhub\.org\/blog<\/loc>/);
+  assert.match(prodXml, /https:\/\/openexamhub\.org\/exams\/celpip<\/loc>/);
   assert.doesNotMatch(prodXml, /example-when-to-start-preparing/);
 
   const previewXml = buildSitemapXml([example]);
@@ -433,6 +446,9 @@ test('every published post is listed in public/llms.txt and has a unique title a
   }
   const drafts = loadBlogPosts({ includeDrafts: true }).filter((p) => p.draft);
   for (const d of drafts) assert.ok(!llms.includes(`/blog/${d.slug}`), `llms.txt must not list the draft /blog/${d.slug}`);
+  for (const page of siteModule.EXAM_PAGES) {
+    assert.ok(llms.includes(`](https://openexamhub.org/exams/${page.slug})`), `llms.txt must list /exams/${page.slug}`);
+  }
   for (const key of ['title', 'description']) {
     const seen = new Map();
     for (const p of posts) {
@@ -708,6 +724,14 @@ if (process.argv.includes('--built')) {
       'https://openexamhub.org/exams/tef-canada',
       'https://openexamhub.org/exams/tcf-canada'
     ]);
+
+    const celpipPost = read('blog/celpip-to-clb-express-entry/index.html');
+    assert.deepEqual(chipHrefs(celpipPost), ['/exams/celpip']);
+    assert.deepEqual(aboutUrls(celpipPost), ['https://openexamhub.org/exams/celpip']);
+    const celpipGuide = read('exams/celpip/index.html');
+    assert.ok(celpipGuide.includes('href="/blog/celpip-to-clb-express-entry"'), 'CELPIP guide From the blog lists the CELPIP post');
+    const ieltsCompare = read('exams/ielts/index.html').split('aria-label="Comparing tests"')[1] || '';
+    assert.ok(ieltsCompare.includes('href="/exams/celpip"'), 'IELTS comparing-tests note links to /exams/celpip');
   });
 
   test('info pages are prerendered with their own title and canonical; FAQ has FAQPage JSON-LD', () => {
