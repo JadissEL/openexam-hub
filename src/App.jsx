@@ -138,7 +138,9 @@ const OFFICIAL_DOMAIN_ALLOWLIST = [
   'testdaf.de',
   'ambafrance-ca.org',
   'celpip.ca',
-  'paragontesting.ca'
+  'paragontesting.ca',
+  'youtube.com',
+  'youtu.be'
 ];
 
 /**
