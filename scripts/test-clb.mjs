@@ -10,7 +10,7 @@ import {
   plannerHref, recommendedLevel, levelLabel, formatScore, LAST_VERIFIED, ENGLISH_LAST_VERIFIED, EE_LANGUAGE_MODIFIED,
   EE_LANGUAGE_URL, START_UP_URL, CRS_URL
 } from '../src/tools/clbData.js';
-import { TOOL_FAQ, TOOL_PATH } from '../src/tools/clbContent.js';
+import { TOOL_FAQ, TOOL_PATH, DEFAULT_TOOL_MODE, TOOL_TABS, modeFromTabParam, modeFromSearch, tabFromMode, toolPathForTab, searchWithTab } from '../src/tools/clbContent.js';
 import { isPlannerDeepLink, parsePlannerQuery, parsePlannerDays, parsePlannerVariant } from '../lib/exams.js';
 import { HIT_EVENTS, normPath, sanitizeBeacon, validRecord } from '../lib/analytics/hits.js';
 import { SITEMAP_PATHS } from './blog-data.mjs';
@@ -346,6 +346,37 @@ test('route, meta, sitemap and cookieless counter are wired', () => {
   assert.deepEqual(validRecord({ t: 'event', e: 'clb_tool_used' }), { t: 'event', e: 'clb_tool_used', a: null });
 });
 
+test('?tab= deep-links select a converter test and ignore invalid values', () => {
+  assert.equal(DEFAULT_TOOL_MODE, 'TEF_EXPRESS_ENTRY');
+  assert.equal(TOOL_TABS.tcf, 'TCF_CANADA');
+  assert.equal(modeFromTabParam('tcf'), 'TCF_CANADA');
+  assert.equal(modeFromTabParam('TCF'), 'TCF_CANADA');
+  assert.equal(modeFromTabParam(' tcf '), 'TCF_CANADA');
+  assert.equal(modeFromTabParam('tef'), 'TEF_EXPRESS_ENTRY');
+  assert.equal(modeFromTabParam('ielts'), 'IELTS_GT');
+  assert.equal(modeFromTabParam('celpip'), 'CELPIP_G');
+  for (const bad of [undefined, null, '', 'foo', 'TCF_CANADA', 'tef-canada', 'tcf-canada', '1']) {
+    assert.equal(modeFromTabParam(bad), DEFAULT_TOOL_MODE, `invalid tab ${JSON.stringify(bad)} falls back to TEF`);
+  }
+  assert.equal(modeFromSearch(''), DEFAULT_TOOL_MODE);
+  assert.equal(modeFromSearch('?tab=tcf'), 'TCF_CANADA');
+  assert.equal(modeFromSearch('tab=tcf'), 'TCF_CANADA');
+  assert.equal(modeFromSearch('?utm=1&tab=ielts'), 'IELTS_GT');
+  assert.equal(modeFromSearch('?tab=nope&x=1'), DEFAULT_TOOL_MODE);
+  assert.equal(tabFromMode('TCF_CANADA'), 'tcf');
+  assert.equal(tabFromMode('TEF_NEW_699'), 'tef');
+  assert.equal(tabFromMode('TEF_EXPRESS_ENTRY'), 'tef');
+  assert.equal(toolPathForTab('tcf'), '/tools/clb-converter?tab=tcf');
+  assert.equal(toolPathForTab('tef'), TOOL_PATH);
+  assert.equal(toolPathForTab('nope'), TOOL_PATH);
+  assert.equal(searchWithTab('', 'TCF_CANADA'), '?tab=tcf');
+  assert.equal(searchWithTab('?tab=tcf', 'TEF_EXPRESS_ENTRY'), '');
+  assert.equal(searchWithTab('?utm=1&tab=tcf', 'IELTS_GT'), '?utm=1&tab=ielts');
+  assert.equal(searchWithTab('?utm=1', 'TEF_EXPRESS_ENTRY'), '?utm=1');
+  assert.equal(routeMeta('/tools/clb-converter?tab=tcf').canonical, 'https://openexamhub.org/tools/clb-converter');
+  assert.equal(routeMeta(toolPathForTab('tcf')).canonical, 'https://openexamhub.org/tools/clb-converter');
+});
+
 test('Clarity project id has one default and honors an explicit override', () => {
   assert.equal(CLARITY_PROJECT_ID_DEFAULT, 'zk5viik44t');
   assert.equal(clarityProjectId('production', { VITE_CLARITY_PROJECT_ID: 'zk5viik44t' }), 'zk5viik44t');
@@ -398,6 +429,8 @@ if (process.argv.includes('--built')) {
     const html = read(rel);
     const url = 'https://openexamhub.org/tools/clb-converter';
     assert.match(html, new RegExp(`<link rel="canonical" href="${url}"`));
+    assert.doesNotMatch(html, /rel="canonical" href="[^"]*\?/, 'canonical has no query string');
+
     assert.match(html, new RegExp(`<meta property="og:url" content="${url}"`));
     assert.doesNotMatch(html, /name="robots"[^>]*noindex/);
     assert.match(html, /<title>IELTS, CELPIP, TEF &amp; TCF to CLB \(NCLC\) converter · OpenExam Hub<\/title>/);

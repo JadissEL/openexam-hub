@@ -275,7 +275,7 @@ const COMPARE = {
   tcf: [
     {
       lead: 'TCF tout public is not the test IRCC lists for Express Entry. For Canadian economic immigration you need TCF Canada. Convert TCF Canada scores with the',
-      href: '/tools/clb-converter',
+      href: '/tools/clb-converter?tab=tcf',
       anchor: 'CLB / NCLC score converter',
       tail: 'It uses IRCC’s official tables and does not convert TCF tout public scores.'
     }

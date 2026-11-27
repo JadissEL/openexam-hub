@@ -545,13 +545,14 @@ if (process.argv.includes('--built')) {
 
   test('TCF, DELF and the TCF B2 plan link to the CLB converter in context', () => {
     const tcf = read('exams/tcf/index.html').split('aria-label="Comparing tests"')[1] || '';
-    assert.ok(tcf.includes('href="/tools/clb-converter"'), 'TCF tout public comparing-tests note links to the CLB converter');
+    assert.ok(tcf.includes('href="/tools/clb-converter?tab=tcf"'), 'TCF tout public comparing-tests note deep-links to the converter TCF tab');
     assert.ok(tcf.includes('CLB / NCLC score converter'), 'TCF note uses the converter as anchor text');
     assert.ok(tcf.includes('TCF tout public is not the test IRCC lists for Express Entry'), 'TCF note states the Express Entry list fact');
     assert.ok(tcf.includes('does not convert TCF tout public scores'), 'TCF note says the converter is not for TCF tout public');
 
     const delf = read('exams/delf/index.html').split('aria-label="Comparing tests"')[1] || '';
     assert.ok(delf.includes('href="/tools/clb-converter"'), 'DELF comparing-tests note links to the CLB converter');
+    assert.ok(!delf.includes('?tab='), 'DELF note stays on the default converter URL (TEF and TCF are both named)');
     assert.ok(delf.includes('CLB / NCLC score converter'), 'DELF note uses the converter as anchor text');
     assert.ok(
       delf.includes('not on IRCC') && delf.includes('Express Entry language-test list'),
@@ -567,7 +568,7 @@ if (process.argv.includes('--built')) {
     const idx = plan.indexOf(marker);
     assert.ok(idx !== -1, 'TCF B2 plan has the converter note');
     const around = plan.slice(idx, idx + 400);
-    assert.ok(around.includes('href="/tools/clb-converter"'), 'TCF B2 plan note links to the CLB converter');
+    assert.ok(around.includes('href="/tools/clb-converter?tab=tcf"'), 'TCF B2 plan note deep-links to the converter TCF tab');
     assert.ok(around.includes('CLB / NCLC score converter'), 'TCF B2 plan uses the converter as anchor text');
     assert.ok(plan.includes('does not convert TCF tout public scores'), 'TCF B2 plan says the converter is not for TCF tout public');
   });

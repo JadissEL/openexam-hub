@@ -390,7 +390,7 @@ export const PLAN_PAGES = [
     ],
     toolNote: {
       lead: 'If you are applying through Express Entry, use the TCF Canada study path rather than this TCF tout public plan. Convert TCF Canada scores with the',
-      href: '/tools/clb-converter',
+      href: '/tools/clb-converter?tab=tcf',
       anchor: 'CLB / NCLC score converter',
       tail: 'It uses IRCC’s official tables and does not convert TCF tout public scores.'
     },
