@@ -271,6 +271,22 @@ const COMPARE = {
       anchor: 'IELTS format and free official practice guide',
       tail: 'Check which tests your university or immigration programme accepts before you book.'
     }
+  ],
+  tcf: [
+    {
+      lead: 'TCF tout public is not the test IRCC lists for Express Entry. For Canadian economic immigration you need TCF Canada. Convert TCF Canada scores with the',
+      href: '/tools/clb-converter',
+      anchor: 'CLB / NCLC score converter',
+      tail: 'It uses IRCC’s official tables and does not convert TCF tout public scores.'
+    }
+  ],
+  delf: [
+    {
+      lead: 'DELF and DALF are not on IRCC’s Express Entry language-test list; IRCC names TEF Canada and TCF Canada for that programme. Convert TEF Canada or TCF Canada scores with the',
+      href: '/tools/clb-converter',
+      anchor: 'CLB / NCLC score converter',
+      tail: 'It uses IRCC’s official tables. For Canadian citizenship, IRCC’s language-proof page accepts a DELF at B1 or higher and any DALF result; always confirm on canada.ca.'
+    }
   ]
 };
 
@@ -342,11 +358,14 @@ function CompareNote({ guide, posts = [] }) {
   if (!compares.length && !notes.length) return null;
   return (
     <section aria-label="Comparing tests" className="mt-10 max-w-3xl space-y-3">
-      {compares.map((c) => (
-        <p key={c.slug} className={`text-[16px] leading-[1.7] ${muted}`}>
-          {c.lead} <a href={`/exams/${c.slug}`} className="text-[#C2410C] underline underline-offset-4">{c.anchor}</a>. {c.tail}
-        </p>
-      ))}
+      {compares.map((c) => {
+        const href = c.href || `/exams/${c.slug}`;
+        return (
+          <p key={href} className={`text-[16px] leading-[1.7] ${muted}`}>
+            {c.lead} <a href={href} className="text-[#C2410C] underline underline-offset-4">{c.anchor}</a>. {c.tail}
+          </p>
+        );
+      })}
       {notes.map((n) => (
         <p key={n.slug} className={`text-[16px] leading-[1.7] ${muted}`}>
           {n.lead} <a href={n.post.url} className="text-[#C2410C] underline underline-offset-4">{n.anchor}</a> {n.tail}
@@ -480,6 +499,11 @@ export function PlanPage({ guide, slug, posts = [] }) {
           <ul className={`mt-4 list-disc pl-5 space-y-2 text-[17px] leading-[1.7] ${muted}`}>
             {plan.whoFor.map((t) => <li key={t.slice(0, 40)}>{t}</li>)}
           </ul>
+          {plan.toolNote ? (
+            <p className={`mt-4 text-[16px] leading-[1.7] ${muted}`}>
+              {plan.toolNote.lead} <a href={plan.toolNote.href} className="text-[#C2410C] underline underline-offset-4">{plan.toolNote.anchor}</a>. {plan.toolNote.tail}
+            </p>
+          ) : null}
         </section>
 
         <section aria-labelledby="facts-title" className="mt-14 max-w-4xl">

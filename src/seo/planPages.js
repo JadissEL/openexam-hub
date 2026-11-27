@@ -388,6 +388,12 @@ export const PLAN_PAGES = [
       'If you are applying to IRCC, you need TCF Canada instead: see the TCF Canada study path.',
       'Plan on roughly an hour a day.'
     ],
+    toolNote: {
+      lead: 'If you are applying through Express Entry, use the TCF Canada study path rather than this TCF tout public plan. Convert TCF Canada scores with the',
+      href: '/tools/clb-converter',
+      anchor: 'CLB / NCLC score converter',
+      tail: 'It uses IRCC’s official tables and does not convert TCF tout public scores.'
+    },
     facts: [
       ['Compulsory papers', 'Listening 25 min (29 questions), language structures 15 min (18 questions), reading 45 min (29 questions): 1 h 25 min in total'],
       ['Optional papers', 'Writing 60 min (3 tasks), speaking 12 min (3 tasks), face-to-face'],
