@@ -62,12 +62,17 @@ function SectionTitle({ id, children }) {
   );
 }
 
-function FormatTable({ format }) {
+function FormatTable({ format, label }) {
   if (!format?.sections?.length) return null;
   return (
     <section aria-labelledby="format-title" className="mt-14">
       <SectionTitle id="format-title">Official format</SectionTitle>
-      <div className="mt-5 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70">
+      <div
+        className="mt-5 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714] focus-visible:ring-offset-2"
+        tabIndex={0}
+        role="region"
+        aria-label={`${label} official format table`}
+      >
         <table className="w-full text-left text-[15px] leading-snug">
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
             <tr>
@@ -105,7 +110,12 @@ function DeleLevels({ rows, scoring }) {
   return (
     <section aria-labelledby="levels-title" className="mt-14">
       <SectionTitle id="levels-title">Papers and timings by level</SectionTitle>
-      <div className="mt-5 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70">
+      <div
+        className="mt-5 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714] focus-visible:ring-offset-2"
+        tabIndex={0}
+        role="region"
+        aria-label="DELE papers and timings by level table"
+      >
         <table className="w-full text-left text-[15px] leading-snug">
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
             <tr>
@@ -600,7 +610,7 @@ export function ExamPage({ slug, posts = [] }) {
         <StudyPlans guide={slug} />
         <RelatedTool guide={slug} />
         <CompareNote guide={slug} posts={posts} />
-        <FormatTable format={c.format} />
+        <FormatTable format={c.format} label={c.label} />
         <DeleLevels rows={c.deleLevels} scoring={c.scoring} />
         <Resources groups={c.resources} lastChecked={c.lastChecked} />
         <PlannerCta planner={c.planner} label={c.label} relatedPlanner={c.relatedPlanner} />
