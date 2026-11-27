@@ -79,7 +79,7 @@ const PAGES = {
         h: 'What we don’t do',
         body: (
           <ul>
-            <li>No analytics without your consent, and no ads on the home page or on any information page.</li>
+            <li>No analytics without your consent, and no ads on the home page, on any information page, or in the Android app outside the signed-in study planner.</li>
             <li>We don’t send your name, email or plan contents to Google Analytics or Microsoft Clarity.</li>
             <li>Our own visit counter keeps daily totals only: no cookies, no IDs, no IP addresses.</li>
             <li>We don’t sell, rent or share your personal data for marketing.</li>
@@ -163,6 +163,46 @@ const PAGES = {
         )
       },
       {
+        h: 'The Android app',
+        body: (
+          <>
+            <p>
+              The OpenExam Hub app for Android (package name <code>org.openexamhub.app</code>) shows the same exam
+              guides, comparisons, calculators and study plans as this website. It uses the same Firebase project, so a
+              plan saved on the web is the plan in the app.
+            </p>
+            <ul className="mt-4">
+              <li>
+                <strong>Where ads can appear.</strong> Exam guides, study roadmaps, comparison pages and the score
+                tools never show an ad. A banner can appear only in the signed-in study planner, the same place as the
+                website’s dashboard (<code>/app</code>), and only after you have answered the consent question.
+              </li>
+              <li>
+                <strong>Who serves those ads.</strong> Planner banners use Google AdMob, on the same Google advertising
+                account as the website. If you reject cookies, any ad is non-personalised. Before an ad is requested,
+                Google’s User Messaging Platform message also runs where it applies, including in the EU. The app does
+                not use AdSense and does not show ads on the guides.
+              </li>
+              <li>
+                <strong>Analytics and recordings, only if you accept.</strong> Accepting starts Google Analytics for
+                Firebase (screen views, and the same kinds of actions as the website: signing in, choosing an exam,
+                generating a plan) and Microsoft Clarity for heatmaps and session replay. Password and email fields are
+                masked in those recordings. Microsoft processes that data. Rejecting starts neither.
+              </li>
+              <li>
+                <strong>On the phone.</strong> Guides, comparisons and the calculators are part of the app and work
+                offline. The resource list is cached on the device after you open it. That cache is not an account and
+                is not sent as a profile.
+              </li>
+              <li>
+                <strong>Deleting your account.</strong> The app has the same control as the website: type DELETE to
+                remove the Firebase sign-in and everything stored under it. You can also email {mail}.
+              </li>
+            </ul>
+          </>
+        )
+      },
+      {
         h: 'Services we rely on',
         body: (
           <ul>
@@ -170,7 +210,9 @@ const PAGES = {
             <li><strong>Google Firebase</strong> provides sign-in and the database.</li>
             <li><strong>Google Analytics</strong> (only if you accept cookies) measures visits and the actions listed above.</li>
             <li><strong>Microsoft Clarity</strong> (only if you accept cookies) records heatmaps and session replay. Microsoft processes that data.</li>
-            <li><strong>Google AdSense</strong> (only on the signed-in dashboard, once ads are switched on) shows ads and runs the consent message described above.</li>
+            <li><strong>Google AdSense</strong> (only on the signed-in website dashboard, once ads are switched on) shows ads and runs the consent message described above.</li>
+            <li><strong>Google AdMob</strong> (only in the signed-in Android study planner, once an ad unit is configured) shows the app banner described above. It does not run on exam, roadmap, compare or tool screens.</li>
+            <li><strong>Google Analytics for Firebase</strong> (Android app, only if you accept) records screen views and the actions listed above.</li>
             <li><strong>Google Fonts</strong> serves the typefaces, so your browser contacts Google’s font servers.</li>
             <li>
               <strong>AI model providers</strong>, reached through our own gateway, may help write plan tasks, practice items and coaching

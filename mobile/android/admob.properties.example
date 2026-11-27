@@ -1,0 +1,14 @@
+# Copy to admob.properties (gitignored) or export the same names in the environment.
+# Create the Android app in AdMob, linked to the site's AdSense account, then paste the ids.
+# Leave these placeholders in place until then. Debug builds ignore them and use Google's sample ads.
+# A release build will not request an ad until both values are real AdMob ids.
+
+ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+ADMOB_BANNER_UNIT_ID=ca-app-pub-XXXXXXXXXXXXXXXX/ZZZZZZZZZZ
+
+# Same Clarity project as the website. Override only if you create a separate app project.
+CLARITY_PROJECT_ID=zk5viik44t
+
+# Set to true on a local build when you want the UMP form to appear as if the device were in the EEA.
+# Leave false for store screenshots and normal debug installs.
+UMP_DEBUG_EEA=false

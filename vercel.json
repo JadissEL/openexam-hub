@@ -83,6 +83,10 @@
       "destination": "/api/ads-txt"
     },
     {
+      "source": "/app-ads.txt",
+      "destination": "/api/ads-txt"
+    },
+    {
       "source": "/blog",
       "destination": "/blog/index.html"
     },
@@ -91,7 +95,7 @@
       "destination": "/blog/index.html"
     },
     {
-      "source": "/((?!api/|blog(?:/|$)|demo(?:/|$)|sitemap\\.xml|robots\\.txt).*)",
+      "source": "/((?!api/|blog(?:/|$)|demo(?:/|$)|sitemap\\.xml|robots\\.txt|app-ads\\.txt|\\.well-known(?:/|$)).*)",
       "destination": "/app/index.html"
     }
   ],

@@ -32,6 +32,10 @@ writeFileSync(
 
 /site.webmanifest
   Content-Type: application/manifest+json; charset=utf-8
+
+/.well-known/assetlinks.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: public, max-age=3600
 `
 );
 console.log('cf-build: wrote dist/_headers');

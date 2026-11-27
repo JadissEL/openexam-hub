@@ -1,0 +1,34 @@
+{
+  "name": "openexam-hub-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "OpenExam Hub Android app. Shares exam data and calculators with the website.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "icons": "node scripts/make-brand.mjs",
+    "cap:sync": "npm run build && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.6.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/browser": "8.0.5",
+    "@capacitor/core": "8.6.3",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/keyboard": "8.0.6",
+    "@capacitor/status-bar": "8.0.4",
+    "@fontsource/fraunces": "^5.2.9",
+    "@fontsource/inter": "^5.2.8",
+    "firebase": "^13.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "sharp": "^0.34.5",
+    "vite": "^6.4.1"
+  }
+}
