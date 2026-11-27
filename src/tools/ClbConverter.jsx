@@ -305,7 +305,7 @@ function Converter() {
       <div className="mt-6 border-t border-[#E7E1D7] pt-6" aria-live="polite">
         {!result.complete ? (
           <p className={`text-[16px] ${muted}`}>
-            {anyEntered ? 'Add the remaining scores to see your lowest level and the {scheme} 7 and 9 check.' : 'Your level for each skill, and your lowest level overall, will show here as you type.'}
+            {anyEntered ? `Add the remaining scores to see your lowest level and the ${scheme} 7 and 9 check.` : 'Your level for each skill, and your lowest level overall, will show here as you type.'}
           </p>
         ) : (
           <div>
