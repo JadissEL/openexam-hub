@@ -219,6 +219,17 @@ export function BlogIndex({ posts, exam = null }) {
           </a>
         </div>
         {exam ? <ExamGuideLinks tags={[exam]} className="mt-6" /> : null}
+        {exam === 'IELTS' ? (
+          <p className={`mt-3 text-[15px] ${muted}`}>
+            Comparing English tests? See the{' '}
+            <a href="/exams/toefl" className="text-[#C2410C] underline underline-offset-4">TOEFL iBT 2026 format guide and free ETS practice</a>.
+          </p>
+        ) : null}
+        {!exam ? (
+          <p className={`mt-3 text-[15px] ${muted}`}>
+            Questions about how OpenExam Hub works? <a href="/faq" className="text-[#C2410C] underline underline-offset-4">Read the FAQ</a>.
+          </p>
+        ) : null}
         {exam && !knownExam ? (
           <p className={`mt-8 ${muted}`}>There is no exam called “{exam}” on OpenExam Hub.</p>
         ) : null}
@@ -336,6 +347,9 @@ export function BlogPost({ post }) {
             ))}
           </ul>
           <ExamGuideLinks tags={post.exams} className="mt-5" />
+          <p className={`mt-2 text-[15px] ${muted}`}>
+            Questions about OpenExam Hub? <a href="/faq" className="text-[#C2410C] underline underline-offset-4">Read the FAQ</a>.
+          </p>
         </header>
 
         {post.cover ? (
