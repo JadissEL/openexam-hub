@@ -394,6 +394,8 @@ if (process.argv.includes('--built')) {
     for (const u of [EE_LANGUAGE_URL, START_UP_URL, CRS_URL]) assert.ok(html.includes(u), `source link ${u}`);
     assert.match(html, /<time dateTime="2026-10-16">|<time datetime="2026-10-16">/, 'IRCC page modified date is marked up');
     assert.ok(html.includes('href="/exams/ielts"'), 'converter links to the IELTS guide');
+    assert.ok(html.includes('href="/exams/celpip"'), 'converter links to the CELPIP guide');
+    assert.ok(text.includes('For test format and official practice, see the CELPIP guide'), 'What to enter points at the CELPIP guide');
     for (const label of [
       'IRCC TEF Canada table',
       'IRCC TEF Canada Score /699 table',

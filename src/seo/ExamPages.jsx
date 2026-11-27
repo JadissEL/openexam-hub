@@ -238,20 +238,30 @@ function PlannerCta({ planner, label, relatedPlanner }) {
   );
 }
 
-/** Short "comparing tests" pointer between the two English-language guides. */
+/** Short "comparing tests" pointers between related exam guides. */
 const COMPARE = {
-  ielts: {
-    lead: 'Some universities and employers accept the TOEFL iBT as well as IELTS. ETS changed the TOEFL iBT format on 21 January 2026; see the',
-    slug: 'toefl',
-    anchor: 'TOEFL iBT 2026 format guide and free ETS practice',
-    tail: 'Always check which tests your university or immigration programme accepts.'
-  },
-  toefl: {
-    lead: 'Not sure which English test to take? Compare with the',
-    slug: 'ielts',
-    anchor: 'IELTS format and free official practice guide',
-    tail: 'Check which tests your university or immigration programme accepts before you book.'
-  }
+  ielts: [
+    {
+      lead: 'Some universities and employers accept the TOEFL iBT as well as IELTS. ETS changed the TOEFL iBT format on 21 January 2026; see the',
+      slug: 'toefl',
+      anchor: 'TOEFL iBT 2026 format guide and free ETS practice',
+      tail: 'Always check which tests your university or immigration programme accepts.'
+    },
+    {
+      lead: 'Applying to Canada through Express Entry? IRCC also accepts the CELPIP-General test. See the',
+      slug: 'celpip',
+      anchor: 'CELPIP guide: test format, CLB scores and free official practice',
+      tail: 'Confirm which tests your programme accepts on canada.ca.'
+    }
+  ],
+  toefl: [
+    {
+      lead: 'Not sure which English test to take? Compare with the',
+      slug: 'ielts',
+      anchor: 'IELTS format and free official practice guide',
+      tail: 'Check which tests your university or immigration programme accepts before you book.'
+    }
+  ]
 };
 
 /**
@@ -308,19 +318,25 @@ const POST_NOTES = {
   ]
 };
 
+function compareNotesFor(guide) {
+  const raw = COMPARE[guide];
+  if (!raw) return [];
+  return Array.isArray(raw) ? raw : [raw];
+}
+
 function CompareNote({ guide, posts = [] }) {
-  const c = COMPARE[guide];
+  const compares = compareNotesFor(guide);
   const notes = (POST_NOTES[guide] || [])
     .map((n) => ({ ...n, post: posts.find((p) => p.slug === n.slug && !p.draft) }))
     .filter((n) => n.post);
-  if (!c && !notes.length) return null;
+  if (!compares.length && !notes.length) return null;
   return (
     <section aria-label="Comparing tests" className="mt-10 max-w-3xl space-y-3">
-      {c ? (
-        <p className={`text-[16px] leading-[1.7] ${muted}`}>
+      {compares.map((c) => (
+        <p key={c.slug} className={`text-[16px] leading-[1.7] ${muted}`}>
           {c.lead} <a href={`/exams/${c.slug}`} className="text-[#C2410C] underline underline-offset-4">{c.anchor}</a>. {c.tail}
         </p>
-      ) : null}
+      ))}
       {notes.map((n) => (
         <p key={n.slug} className={`text-[16px] leading-[1.7] ${muted}`}>
           {n.lead} <a href={n.post.url} className="text-[#C2410C] underline underline-offset-4">{n.anchor}</a> {n.tail}

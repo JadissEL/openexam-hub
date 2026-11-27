@@ -236,7 +236,16 @@ function Converter() {
           }}
         />
         {table.notice ? (
-          <p className="mt-1 rounded-2xl border border-[#E7C9B4] bg-[#FBF1E9] px-4 py-3 text-[15px] leading-snug text-[#3B352F]">{table.notice}</p>
+          <p className="mt-1 rounded-2xl border border-[#E7C9B4] bg-[#FBF1E9] px-4 py-3 text-[15px] leading-snug text-[#3B352F]">
+            {table.notice}
+            {table.id === 'CELPIP_G' ? (
+              <>
+                {' '}See the{' '}
+                <a href="/exams/celpip" className="text-[#C2410C] underline underline-offset-4">CELPIP guide</a>
+                {' '}for test format and official practice.
+              </>
+            ) : null}
+          </p>
         ) : null}
         {activeTab === 'TEF_EXPRESS_ENTRY' ? (
           <div className="mt-1">
@@ -430,7 +439,7 @@ export default function ClbConverter() {
             <SectionTitle id="how-title">What to enter</SectionTitle>
             <ul className={`mt-4 list-disc pl-5 space-y-2 text-[17px] leading-[1.7] ${muted}`}>
               <li><strong className={ink}>IELTS:</strong> your General Training band for each skill, in steps of 0.5 (for example 6.0 or 6.5). Express Entry accepts IELTS General Training only, not IELTS Academic.</li>
-              <li><strong className={ink}>CELPIP:</strong> your CELPIP-General level for each skill, a whole number. Express Entry accepts the CELPIP-General test.</li>
+              <li><strong className={ink}>CELPIP:</strong> your CELPIP-General level for each skill, a whole number. Express Entry accepts the CELPIP-General test. For test format and official practice, see the <a href="/exams/celpip" className="text-[#C2410C] underline underline-offset-4">CELPIP guide</a>.</li>
               <li><strong className={ink}>TEF Canada, for Express Entry:</strong> the numbers in the “Équivalence ancien score” column of your attestation de résultats. Don’t use the “Score / 699” column.</li>
               <li><strong className={ink}>TCF Canada:</strong> reading and listening are out of 699; speaking and writing are out of 20.</li>
               <li>CLB or NCLC 10 is the top level on IRCC’s tables, so any score from its lower limit up counts as level 10.</li>
