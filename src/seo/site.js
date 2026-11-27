@@ -161,7 +161,7 @@ export function normalizePath(pathname) {
 
 /** Head tags for a non-blog route, or null when the route is unknown. */
 import { PLAN_PAGES, planPage, planPath } from './planPages.js';
-import { COMPARE_PAGES, comparePageBySlug, comparePath } from '../compare/comparePages.js';
+import { COMPARE_PAGES, comparePageBySlug, comparePath, CLB_TABLE_PAGE, COMPARE_HUB } from '../compare/comparePages.js';
 
 export function routeMeta(pathname) {
   const p = normalizePath(pathname);
@@ -172,6 +172,10 @@ export function routeMeta(pathname) {
   const page = m && examPageBySlug(m[1]);
   if (page) {
     return { title: `${page.title} · OpenExam Hub`, description: page.description, canonical: `${SITE_ORIGIN}${p}` };
+  }
+  if (p === COMPARE_HUB.path || p === CLB_TABLE_PAGE.path) {
+    const c = p === COMPARE_HUB.path ? COMPARE_HUB : CLB_TABLE_PAGE;
+    return { title: c.title, description: c.description, canonical: `${SITE_ORIGIN}${p}` };
   }
   const cm = p.match(/^\/compare\/([a-z0-9-]+)$/);
   const cmp = cm && comparePageBySlug(cm[1]);
@@ -189,6 +193,8 @@ export function indexablePaths() {
   return [
     ...Object.keys(PAGE_META),
     ...EXAM_PAGES.flatMap((g) => [`/exams/${g.slug}`, ...PLAN_PAGES.filter((p) => p.guide === g.slug).map(planPath)]),
+    COMPARE_HUB.path,
+    CLB_TABLE_PAGE.path,
     ...COMPARE_PAGES.map(comparePath)
   ];
 }

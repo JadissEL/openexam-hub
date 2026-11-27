@@ -93,6 +93,7 @@ const FOOTER_COLS = [
     links: [
       { href: '/exams', label: 'All exams' },
       { href: '/tools/clb-converter', label: 'CLB score converter' },
+      { href: '/compare', label: 'Compare tests' },
       { href: LIBRARY_PATH, label: 'Library' },
       { href: APP_PATH, label: 'Dashboard' }
     ]

@@ -24,7 +24,15 @@ export {
   bandText,
   formatScore
 } from '../tools/clbData.js';
-import { TABLES, EE_LANGUAGE_URL, PTE_CORE_SCORING_URL, bandText } from '../tools/clbData.js';
+import {
+  TABLES,
+  EE_LANGUAGE_URL,
+  PTE_CORE_SCORING_URL,
+  bandText,
+  LAST_VERIFIED as FRENCH_LAST_VERIFIED,
+  ENGLISH_LAST_VERIFIED as ENGLISH_VERIFIED,
+  PTE_LAST_VERIFIED as PTE_VERIFIED
+} from '../tools/clbData.js';
 
 /** Every board page below was read on this date. */
 export const COMPARE_LAST_VERIFIED = '2026-11-27';
@@ -177,4 +185,52 @@ export function clbRows(tableIds, skill) {
 
 function bandTextFor(id, r) {
   return bandText(TABLES[id], r);
+}
+
+// ---------------------------------------------------------------- CLB / NCLC equivalency table (PR 2)
+
+/** The five tests IRCC accepts for Express Entry, in the order the table shows them. TEF Canada uses the
+ *  Express Entry scale (“Équivalence ancien score”), the one IRCC says to enter in a profile. */
+export const EQUIVALENCY_TESTS = ['IELTS_GT', 'CELPIP_G', 'PTE_CORE', 'TEF_EXPRESS_ENTRY', 'TCF_CANADA'];
+
+/** Date each IRCC table was last transcribed and re-checked on canada.ca. */
+export function tableVerified(id) {
+  if (TABLES[id].language === 'fr') return FRENCH_LAST_VERIFIED;
+  return id === 'PTE_CORE' ? PTE_VERIFIED : ENGLISH_VERIFIED;
+}
+
+/** How IRCC prints the cells: one listed score per level (IELTS, CELPIP) or a score range (PTE, TEF, TCF). */
+export function cellKind(id) {
+  return TABLES[id].listed ? 'minimum score listed by IRCC' : 'score range listed by IRCC';
+}
+
+export const CSV_PATH = '/compare/clb-equivalency-table.csv';
+
+function csvCell(v) {
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/** CSV of every cell on the equivalency table: one row per test, skill and level, with its source and date. */
+export function clbCsv() {
+  const head = ['test', 'scale', 'skill', 'level', 'score', 'cell_type', 'source_url', 'last_verified'];
+  const rows = [head];
+  for (const id of EQUIVALENCY_TESTS) {
+    const t = TABLES[id];
+    for (const skill of ['speaking', 'listening', 'reading', 'writing']) {
+      for (const level of [10, 9, 8, 7, 6, 5, 4]) {
+        const r = t.bands[skill].find((b) => b.level === level);
+        rows.push([t.label, t.scheme, skill, level === 10 ? `${t.scheme} 10+` : `${t.scheme} ${level}`, bandText(t, r), cellKind(id), t.sourceUrl, tableVerified(id)]);
+      }
+    }
+  }
+  return rows.map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
+}
+
+/** "6.0 in speaking, 6.0 in listening, …" for one test at one level, straight from the table. */
+export function levelSentence(id, level) {
+  const t = TABLES[id];
+  return ['speaking', 'listening', 'reading', 'writing']
+    .map((skill) => `${bandText(t, t.bands[skill].find((b) => b.level === level))} in ${skill}`)
+    .join(', ');
 }
