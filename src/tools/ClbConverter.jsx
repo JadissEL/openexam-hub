@@ -561,6 +561,7 @@ export default function ClbConverter() {
               <li><a href="/exams/celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CELPIP guide: test format, CLB scores and free official practice</a></li>
               <li><a href="/exams/tef-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TEF Canada guide: format, NCLC scores and free official practice</a></li>
               <li><a href="/exams/tcf-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TCF Canada guide: format, timings and free official practice</a></li>
+              <li><a href="/tools/cefr-converter" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS, CELPIP, PTE Academic and TCF to CEFR level</a></li>
               <li><a href="/tools/crs-language-points" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CRS points for your first and second official language</a></li>
               <li><a href="/compare/ielts-vs-celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS vs CELPIP: CLB scores and test format side by side</a></li>
               <li><a href="/compare/ielts-vs-pte" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS vs PTE Core: CLB scores and test format side by side</a></li>

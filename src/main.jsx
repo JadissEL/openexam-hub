@@ -13,6 +13,7 @@ const loaders = {
   exams: () => import('./seo/ExamRoute.jsx'),
   tools: () => import('./tools/ClbConverter.jsx'),
   crs: () => import('./tools/CrsLanguagePoints.jsx'),
+  cefr: () => import('./tools/CefrConverter.jsx'),
   compare: () => import('./compare/CompareRoute.jsx'),
   app: () => import('./App.jsx')
 };
@@ -33,6 +34,7 @@ function resolveRoute(pathname) {
   if (p === '/exams' || /^\/exams\/[a-z0-9-]+(\/[a-z0-9-]+)?$/.test(p)) return { key: 'exams', props: { pathname: p } };
   if (p === '/tools/clb-converter') return { key: 'tools', props: {} };
   if (p === '/tools/crs-language-points') return { key: 'crs', props: {} };
+  if (p === '/tools/cefr-converter') return { key: 'cefr', props: {} };
   if (p === '/compare') return { key: 'compare', props: {} };
   const cm = p.match(/^\/compare\/([a-z0-9-]+)$/);
   if (cm) return { key: 'compare', props: { slug: cm[1] } };
