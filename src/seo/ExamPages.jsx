@@ -2,15 +2,19 @@ import React from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { SiteHeader, SiteFooter } from '../landing/SiteChrome.jsx';
 import { ink, muted, eyebrow, lead, pageFont } from '../landing/theme.js';
-import { EXAM_PAGES, EXAMS_INDEX, indefiniteArticle } from './site.js';
-import { examContent } from './examContent.js';
+import { EXAM_PAGES, indefiniteArticle } from './site.js';
 import { planPage, planPath, plansForGuide } from './planPages.js';
 import { toolPathForGuide } from '../tools/clbContent.js';
+import { useHref, useLocale, useT, useUnit } from '../i18n/LocaleContext.jsx';
+import { isPagePublished, localizedUnit } from '../i18n/publish.js';
+import { localeMeta } from '../i18n/locales.js';
 
-function formatDate(iso) {
+const arrow = 'w-4 h-4 rtl:-scale-x-100';
+
+function formatDate(iso, locale) {
   const [y, m, d] = String(iso || '').split('-').map(Number);
   if (!y || !m || !d) return null;
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(localeMeta(locale || 'en').dateLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 function Shell({ children }) {
@@ -24,6 +28,7 @@ function Shell({ children }) {
 }
 
 export function Breadcrumbs({ items }) {
+  const href = useHref();
   return (
     <nav aria-label="Breadcrumb" className="text-[14px] text-[#6B635A]">
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -33,7 +38,7 @@ export function Breadcrumbs({ items }) {
             {i === items.length - 1 ? (
               <span aria-current="page">{item.name}</span>
             ) : (
-              <a href={item.path} className="text-[#C2410C] underline underline-offset-4">{item.name}</a>
+              <a href={href(item.path)} className="text-[#C2410C] underline underline-offset-4">{item.name}</a>
             )}
           </li>
         ))}
@@ -42,10 +47,10 @@ export function Breadcrumbs({ items }) {
   );
 }
 
-export function examBreadcrumbs(page) {
+export function examBreadcrumbs(page, names = {}) {
   const items = [
-    { name: 'Home', path: '/' },
-    { name: 'Exams', path: '/exams' }
+    { name: names.home || 'Home', path: '/' },
+    { name: names.exams || 'Exams', path: '/exams' }
   ];
   if (page) items.push({ name: page.label, path: `/exams/${page.slug}` });
   return items;
@@ -64,23 +69,24 @@ function SectionTitle({ id, children }) {
 }
 
 function FormatTable({ format, label }) {
+  const t = useT();
   if (!format?.sections?.length) return null;
   return (
     <section aria-labelledby="format-title" className="mt-14">
-      <SectionTitle id="format-title">Official format</SectionTitle>
+      <SectionTitle id="format-title">{t('section.format')}</SectionTitle>
       <div
         className="mt-5 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714] focus-visible:ring-offset-2"
         tabIndex={0}
         role="region"
-        aria-label={`${label} official format table`}
+        aria-label={t('exam.formatRegion', { label })}
       >
         <table className="w-full text-left text-[15px] leading-snug">
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">Paper</th>
-              <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">Time</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Items</th>
-              <th scope="col" className="px-4 py-3 font-semibold">What it involves</th>
+              <th scope="col" className="px-4 py-3 font-semibold">{t('exam.paper')}</th>
+              <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">{t('exam.time')}</th>
+              <th scope="col" className="px-4 py-3 font-semibold">{t('exam.items')}</th>
+              <th scope="col" className="px-4 py-3 font-semibold">{t('exam.involves')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E7E1D7]">
@@ -95,11 +101,11 @@ function FormatTable({ format, label }) {
           </tbody>
         </table>
       </div>
-      {format.scoring ? <p className={`mt-5 text-[16px] leading-[1.7] ${muted} max-w-3xl`}><strong className={ink}>Scoring.</strong> {format.scoring}</p> : null}
+      {format.scoring ? <p className={`mt-5 text-[16px] leading-[1.7] ${muted} max-w-3xl`}><strong className={ink}>{t('exam.scoring')}</strong> {format.scoring}</p> : null}
       {format.notes ? <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>{format.notes}</p> : null}
       {format.sourceUrl ? (
         <p className="mt-3 text-[14px] text-[#6B635A]">
-          Source: <a href={format.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-[#C2410C] underline underline-offset-4 break-all">{format.sourceUrl}</a>
+          {t('exam.source')} <a href={format.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-[#C2410C] underline underline-offset-4 break-all">{format.sourceUrl}</a>
         </p>
       ) : null}
     </section>
@@ -107,22 +113,23 @@ function FormatTable({ format, label }) {
 }
 
 function DeleLevels({ rows, scoring }) {
+  const t = useT();
   if (!rows?.length) return null;
   return (
     <section aria-labelledby="levels-title" className="mt-14">
-      <SectionTitle id="levels-title">Papers and timings by level</SectionTitle>
+      <SectionTitle id="levels-title">{t('section.levels')}</SectionTitle>
       <div
         className="mt-5 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714] focus-visible:ring-offset-2"
         tabIndex={0}
         role="region"
-        aria-label="DELE papers and timings by level table"
+        aria-label={t('exam.deleTable')}
       >
         <table className="w-full text-left text-[15px] leading-snug">
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">Level</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Papers</th>
-              <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">Exam time</th>
+              <th scope="col" className="px-4 py-3 font-semibold">{t('exam.level')}</th>
+              <th scope="col" className="px-4 py-3 font-semibold">{t('exam.papers')}</th>
+              <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">{t('exam.examTime')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E7E1D7]">
@@ -137,22 +144,24 @@ function DeleLevels({ rows, scoring }) {
         </table>
       </div>
       <p className={`mt-3 text-[14px] text-[#6B635A] max-w-3xl`}>
-        Exam time adds up the papers and does not include the preparation time before the oral test.
+        {t('exam.deleNote')}
       </p>
-      {scoring ? <p className={`mt-5 text-[16px] leading-[1.7] ${muted} max-w-3xl`}><strong className={ink}>Result.</strong> {scoring}</p> : null}
+      {scoring ? <p className={`mt-5 text-[16px] leading-[1.7] ${muted} max-w-3xl`}><strong className={ink}>{t('exam.result')}</strong> {scoring}</p> : null}
     </section>
   );
 }
 
 function Resources({ groups, lastChecked }) {
+  const t = useT();
+  const locale = useLocale();
   if (!groups?.length) return null;
-  const checked = formatDate(lastChecked);
+  const checked = formatDate(lastChecked, locale);
   return (
     <section aria-labelledby="resources-title" className="mt-14">
-      <SectionTitle id="resources-title">Free official material</SectionTitle>
+      <SectionTitle id="resources-title">{t('section.resources')}</SectionTitle>
       <p className={`mt-3 text-[16px] ${muted} max-w-3xl`}>
-        Every link goes to the exam body, a public broadcaster or another official source. We don’t host or copy any of it.
-        {checked ? ` Links last checked ${checked}.` : ''}
+        {t('exam.resourcesLead')}
+        {checked ? ` ${t('exam.linksChecked', { date: checked })}` : ''}
       </p>
       <div className="mt-6 grid gap-8 md:grid-cols-2">
         {groups.map((g) => (
@@ -223,18 +232,20 @@ const GUIDE_TOOL_LINKS = {
 };
 
 function GuideToolLinks({ guide }) {
+  const t = useT();
+  const href = useHref();
   const links = GUIDE_TOOL_LINKS[guide];
   if (!links) return null;
   return (
     <section aria-labelledby="guide-tools-title" className="mt-14 rounded-2xl border border-[#E7E1D7] bg-white/70 p-6 max-w-3xl">
-      <p className={eyebrow}>Compare and free tools</p>
+      <p className={eyebrow}>{t('section.compare')}</p>
       <h2 id="guide-tools-title" className={`mt-2 font-display ${ink} text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium`}>
-        Side by side, from official sources
+        {t('section.sideBySide')}
       </h2>
       <ul className="mt-4 space-y-2 text-[16px] leading-snug">
         {links.map((l) => (
           <li key={l.href}>
-            <a href={l.href} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{l.label}</a>
+            <a href={href(l.href)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{l.label}</a>
           </li>
         ))}
       </ul>
@@ -243,26 +254,28 @@ function GuideToolLinks({ guide }) {
 }
 
 function RelatedTool({ guide }) {
+  const t = useT();
+  const href = useHref();
   if (!TOOL_GUIDES.includes(guide)) return null;
   const name = { 'tcf-canada': 'TCF Canada', ielts: 'IELTS', celpip: 'CELPIP' }[guide] || 'TEF Canada';
   const scheme = (guide === 'ielts' || guide === 'celpip') ? 'CLB' : 'NCLC';
   return (
     <section aria-labelledby="related-tool-title" className="mt-14 rounded-2xl border border-[#E7C9B4] bg-[#FBF1E9] p-6">
-      <p className={eyebrow}>Free tool</p>
+      <p className={eyebrow}>{t('section.freeTool')}</p>
       <h2 id="related-tool-title" className={`mt-2 font-display ${ink} text-[24px] sm:text-[28px] tracking-[-0.02em] font-medium`}>
         Convert your {name} scores to {scheme}
       </h2>
       <p className={`mt-3 text-[16px] leading-[1.65] ${muted} max-w-2xl`}>
         Enter your four scores and see your CLB (NCLC) level per skill, whether you meet level 7 or 9, and your CRS language points, using IRCC’s official tables.{guide === 'ielts' ? ' Express Entry accepts IELTS General Training only, not Academic.' : guide === 'celpip' ? ' Express Entry accepts the CELPIP-General test.' : ''} No score guarantees, no account needed.
       </p>
-      <a href={toolPathForGuide(guide)} className="mt-4 inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
-        Open the CLB / NCLC score converter <ArrowRight className="w-4 h-4" aria-hidden="true" />
+      <a href={href(toolPathForGuide(guide))} className="mt-4 inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
+        Open the CLB / NCLC score converter <ArrowRight className={arrow} aria-hidden="true" />
       </a>
       {GUIDE_COMPARE_LINKS[guide] ? (
         <ul className="mt-4 space-y-2 text-[16px] leading-snug">
           {GUIDE_COMPARE_LINKS[guide].map((l) => (
             <li key={l.href}>
-              <a href={l.href} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{l.label}</a>
+              <a href={href(l.href)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{l.label}</a>
             </li>
           ))}
         </ul>
@@ -272,10 +285,12 @@ function RelatedTool({ guide }) {
 }
 
 function Faq({ faq }) {
+  const t = useT();
+  const href = useHref();
   if (!faq?.length) return null;
   return (
     <section aria-labelledby="exam-faq-title" className="mt-14">
-      <SectionTitle id="exam-faq-title">Questions people ask</SectionTitle>
+      <SectionTitle id="exam-faq-title">{t('section.faq')}</SectionTitle>
       <div className="mt-4 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7] max-w-3xl">
         {faq.map((item) => (
           <details key={item.q} className="group py-5">
@@ -288,13 +303,15 @@ function Faq({ faq }) {
         ))}
       </div>
       <p className={`mt-4 text-[16px] ${muted}`}>
-        More answers about how OpenExam Hub works: <a href="/faq" className="text-[#C2410C] underline underline-offset-4">read the full FAQ</a>.
+        {t('tool.moreFaq')} <a href={href('/faq')} className="text-[#C2410C] underline underline-offset-4">{t('tool.fullFaq')}</a>.
       </p>
     </section>
   );
 }
 
 function PlannerCta({ planner, label, relatedPlanner }) {
+  const t = useT();
+  const href = useHref();
   const cta = planner || relatedPlanner;
   return (
     <section aria-labelledby="plan-title" className="mt-14 rounded-3xl bg-[#1A1714] text-white px-6 sm:px-8 py-8 sm:py-10">
@@ -311,10 +328,10 @@ function PlannerCta({ planner, label, relatedPlanner }) {
             : `The planner doesn’t cover ${label} yet. The official material above is free to use now.`}
       </p>
       <a
-        href={cta ? `/app?exam=${encodeURIComponent(cta.exam)}` : '/app'}
+        href={href(cta ? `/app?exam=${encodeURIComponent(cta.exam)}` : '/app')}
         className="mt-6 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold"
       >
-        {planner ? `Build a free ${planner.label} plan` : relatedPlanner ? `Build a free ${relatedPlanner.label} plan` : 'Open the planner'} <ArrowRight className="w-4 h-4" aria-hidden="true" />
+        {planner ? t('exam.buildPlan', { label: planner.label }) : relatedPlanner ? t('exam.buildPlan', { label: relatedPlanner.label }) : t('exam.openPlanner')} <ArrowRight className={arrow} aria-hidden="true" />
       </a>
     </section>
   );
@@ -499,13 +516,14 @@ function planPostNotesFor(plan, posts = []) {
 }
 
 function PlanPostNotes({ plan, posts = [] }) {
+  const href = useHref();
   const notes = planPostNotesFor(plan, posts);
   if (!notes.length) return null;
   return (
     <div className="mt-4 space-y-3">
       {notes.map((n) => (
         <p key={n.slug} className={`text-[16px] leading-[1.7] ${muted}`}>
-          {n.lead} <a href={n.post.url} className="text-[#C2410C] underline underline-offset-4">{n.anchor}</a>. {n.tail}
+          {n.lead} <a href={href(n.post.url)} className="text-[#C2410C] underline underline-offset-4">{n.anchor}</a>. {n.tail}
         </p>
       ))}
     </div>
@@ -519,24 +537,26 @@ function compareNotesFor(guide) {
 }
 
 function CompareNote({ guide, posts = [] }) {
+  const t = useT();
+  const href = useHref();
   const compares = compareNotesFor(guide);
   const notes = (POST_NOTES[guide] || [])
     .map((n) => ({ ...n, post: posts.find((p) => p.slug === n.slug && !p.draft) }))
     .filter((n) => n.post);
   if (!compares.length && !notes.length) return null;
   return (
-    <section aria-label="Comparing tests" className="mt-10 max-w-3xl space-y-3">
+    <section aria-label={t('exam.comparing')} className="mt-10 max-w-3xl space-y-3">
       {compares.map((c) => {
-        const href = c.href || `/exams/${c.slug}`;
+        const to = c.href || `/exams/${c.slug}`;
         return (
-          <p key={href} className={`text-[16px] leading-[1.7] ${muted}`}>
-            {c.lead} <a href={href} className="text-[#C2410C] underline underline-offset-4">{c.anchor}</a>. {c.tail}
+          <p key={to} className={`text-[16px] leading-[1.7] ${muted}`}>
+            {c.lead} <a href={href(to)} className="text-[#C2410C] underline underline-offset-4">{c.anchor}</a>. {c.tail}
           </p>
         );
       })}
       {notes.map((n) => (
         <p key={n.slug} className={`text-[16px] leading-[1.7] ${muted}`}>
-          {n.lead} <a href={n.post.url} className="text-[#C2410C] underline underline-offset-4">{n.anchor}</a> {n.tail}
+          {n.lead} <a href={href(n.post.url)} className="text-[#C2410C] underline underline-offset-4">{n.anchor}</a> {n.tail}
         </p>
       ))}
     </section>
@@ -544,37 +564,43 @@ function CompareNote({ guide, posts = [] }) {
 }
 
 function RelatedReading({ posts, related }) {
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
   return (
     <section aria-labelledby="related-title" className="mt-14 grid gap-10 md:grid-cols-2">
       <div>
-        <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>From the blog</h2>
+        <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>{t('section.fromBlog')}</h2>
         {posts.length ? (
           <ul className="mt-4 space-y-3 text-[16px] leading-snug">
             {posts.map((p) => (
               <li key={p.slug}>
-                <a href={p.url} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{p.title}</a>
+                <a href={href(p.url)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{p.title}</a>
               </li>
             ))}
             <li>
-              <a href="/blog" className="text-[#C2410C] underline underline-offset-4">All OpenExam Hub blog articles</a>
+              <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">{t('exam.allArticles')}</a>
             </li>
           </ul>
         ) : (
           <p className={`mt-4 text-[16px] ${muted}`}>
-            No articles on this exam yet. <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Browse the OpenExam Hub blog</a>.
+            {t('exam.noArticles')} <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">{t('exam.browseBlog')}</a>.
           </p>
         )}
       </div>
       <div>
-        <h2 className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Related exam guides</h2>
+        <h2 className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>{t('section.relatedExams')}</h2>
         <ul className="mt-4 space-y-3 text-[16px] leading-snug">
-          {related.map((r) => (
-            <li key={r.slug}>
-              <a href={`/exams/${r.slug}`} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{r.label} guide</a>
-            </li>
-          ))}
+          {related.filter((r) => isPagePublished(locale, `/exams/${r.slug}`)).map((r) => {
+            const label = localizedUnit(locale, `exam:${r.slug}`)?.label || r.label;
+            return (
+              <li key={r.slug}>
+                <a href={href(`/exams/${r.slug}`)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{t('exam.guideLink', { label })}</a>
+              </li>
+            );
+          })}
           <li>
-            <a href="/exams" className="text-[#C2410C] underline underline-offset-4">All exam guides</a>
+            <a href={href('/exams')} className="text-[#C2410C] underline underline-offset-4">{t('exam.allGuides')}</a>
           </li>
         </ul>
       </div>
@@ -583,49 +609,60 @@ function RelatedReading({ posts, related }) {
 }
 
 function StudyPlans({ guide }) {
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
   const plans = plansForGuide(guide);
   if (!plans.length) return null;
   return (
     <section aria-labelledby="study-plans-title" className="mt-14">
-      <SectionTitle id="study-plans-title">Free study plans</SectionTitle>
+      <SectionTitle id="study-plans-title">{t('section.studyPlans')}</SectionTitle>
       <ul className="mt-5 grid gap-5 sm:grid-cols-2">
-        {plans.map((p) => (
-          <li key={p.slug} className="rounded-2xl border border-[#E7E1D7] bg-white/70 p-6">
-            <h3 className={`font-display ${ink} text-[22px] tracking-[-0.02em] font-medium`}>
-              <a href={planPath(p)} className="hover:text-[#C2410C]">{p.label}</a>
-            </h3>
-            <p className={`mt-2 text-[16px] leading-[1.6] ${muted}`}>{p.description}</p>
-            <p className="mt-4 text-[15px]">
-              <a href={planPath(p)} className="inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
-                Open the {p.duration} plan <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </a>
-            </p>
-          </li>
-        ))}
+        {plans.map((p) => {
+          const unit = localizedUnit(locale, `plan:${p.guide}/${p.slug}`) || p;
+          const to = planPath(p);
+          return (
+            <li key={p.slug} className="rounded-2xl border border-[#E7E1D7] bg-white/70 p-6">
+              <h3 className={`font-display ${ink} text-[22px] tracking-[-0.02em] font-medium`}>
+                <a href={href(to)} className="hover:text-[#C2410C]">{unit.label}</a>
+              </h3>
+              <p className={`mt-2 text-[16px] leading-[1.6] ${muted}`}>{unit.description}</p>
+              <p className="mt-4 text-[15px]">
+                <a href={href(to)} className="inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
+                  {t('exam.openPlan', { duration: unit.duration })} <ArrowRight className={arrow} aria-hidden="true" />
+                </a>
+              </p>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
 }
 
-export function planBreadcrumbs(plan) {
+export function planBreadcrumbs(plan, names = {}) {
   const guide = EXAM_PAGES.find((g) => g.slug === plan.guide);
   return [
-    { name: 'Home', path: '/' },
-    { name: 'Exams', path: '/exams' },
-    { name: guide ? guide.label : plan.guide, path: `/exams/${plan.guide}` },
+    { name: names.home || 'Home', path: '/' },
+    { name: names.exams || 'Exams', path: '/exams' },
+    { name: names.guide || (guide ? guide.label : plan.guide), path: `/exams/${plan.guide}` },
     { name: plan.breadcrumb, path: planPath(plan) }
   ];
 }
 
-function relatedLinks(plan) {
+function relatedLinks(plan, locale, guideLink) {
   return (plan.related || [])
     .map((r) => {
       if (r.type === 'plan') {
         const p = planPage(r.guide, r.slug);
-        return p ? { href: planPath(p), label: p.label } : null;
+        if (!p) return null;
+        const unit = localizedUnit(locale, `plan:${p.guide}/${p.slug}`) || p;
+        return { href: planPath(p), label: unit.label };
       }
       const g = EXAM_PAGES.find((x) => x.slug === r.guide);
-      return g ? { href: `/exams/${g.slug}`, label: `${g.label} guide` } : null;
+      if (!g || !isPagePublished(locale, `/exams/${g.slug}`)) return null;
+      const label = localizedUnit(locale, `exam:${g.slug}`)?.label || g.label;
+      return { href: `/exams/${g.slug}`, label: guideLink(label) };
     })
     .filter(Boolean);
 }
@@ -645,38 +682,42 @@ function LinkList({ links }) {
 }
 
 export function PlanPage({ guide, slug, posts = [] }) {
-  const plan = planPage(guide, slug);
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
+  const plan = useUnit(`plan:${guide}/${slug}`);
   if (!plan) return null;
-  const guidePage = EXAM_PAGES.find((g) => g.slug === plan.guide);
+  const guidePage = localizedUnit(locale, `exam:${plan.guide}`);
   const blogPosts = relatedPosts(posts, plan.tags);
-  const checked = formatDate(plan.lastChecked);
-  const related = relatedLinks(plan);
+  const checked = formatDate(plan.lastChecked, locale);
+  const related = relatedLinks(plan, locale, (label) => t('exam.guideLink', { label }));
+  const guideLabel = guidePage?.label || EXAM_PAGES.find((g) => g.slug === plan.guide)?.label || plan.guide;
   return (
     <Shell>
       <article className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
-        <Breadcrumbs items={planBreadcrumbs(plan)} />
+        <Breadcrumbs items={planBreadcrumbs(plan, { home: t('crumb.home'), exams: t('crumb.exams'), guide: guideLabel })} />
         <header className="mt-6 max-w-3xl">
-          <p className={eyebrow}>Study plan · {plan.duration} · {plan.level}</p>
+          <p className={eyebrow}>{t('exam.studyPlan', { duration: plan.duration, level: plan.level })}</p>
           <h1 className={`mt-4 font-display ${ink} text-[38px] sm:text-5xl lg:text-6xl tracking-[-0.03em] font-medium leading-[1.05]`}>{plan.h1}</h1>
           <p className={`mt-6 ${lead}`}>{plan.subhead}</p>
-          {checked ? <p className="mt-4 text-[14px] text-[#6B635A]">Last checked against the official sources: <time dateTime={plan.lastChecked}>{checked}</time></p> : null}
+          {checked ? <p className="mt-4 text-[14px] text-[#6B635A]">{t('exam.lastChecked')} <time dateTime={plan.lastChecked}>{checked}</time></p> : null}
         </header>
 
         <section aria-labelledby="who-title" className="mt-12 max-w-3xl">
-          <SectionTitle id="who-title">Who this plan is for</SectionTitle>
+          <SectionTitle id="who-title">{t('exam.who')}</SectionTitle>
           <ul className={`mt-4 list-disc pl-5 space-y-2 text-[17px] leading-[1.7] ${muted}`}>
             {plan.whoFor.map((t) => <li key={t.slice(0, 40)}>{t}</li>)}
           </ul>
           {plan.toolNote ? (
             <p className={`mt-4 text-[16px] leading-[1.7] ${muted}`}>
-              {plan.toolNote.lead} <a href={plan.toolNote.href} className="text-[#C2410C] underline underline-offset-4">{plan.toolNote.anchor}</a>. {plan.toolNote.tail}
+              {plan.toolNote.lead} <a href={href(plan.toolNote.href)} className="text-[#C2410C] underline underline-offset-4">{plan.toolNote.anchor}</a>. {plan.toolNote.tail}
             </p>
           ) : null}
           <PlanPostNotes plan={plan} posts={posts} />
         </section>
 
         <section aria-labelledby="facts-title" className="mt-14 max-w-4xl">
-          <SectionTitle id="facts-title">The exam at a glance</SectionTitle>
+          <SectionTitle id="facts-title">{t('exam.facts')}</SectionTitle>
           <dl className="mt-4 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]">
             {plan.facts.map(([k, v]) => (
               <div key={k} className="py-4 grid sm:grid-cols-[14rem_1fr] gap-1 sm:gap-6">
@@ -685,11 +726,18 @@ export function PlanPage({ guide, slug, posts = [] }) {
               </div>
             ))}
           </dl>
-          <p className="mt-3 text-[14px] text-[#6B635A]">{plan.factsNote} Full details in the <a href={`/exams/${plan.guide}`} className="text-[#C2410C] underline underline-offset-4">{guidePage ? guidePage.label : plan.guide} guide</a>.</p>
+          <p className="mt-3 text-[14px] text-[#6B635A]">{plan.factsNote} {(() => {
+            const linkText = t('exam.guideLink', { label: guideLabel });
+            const more = t('exam.factsMore', { label: guideLabel });
+            const at = more.lastIndexOf(linkText);
+            const before = at >= 0 ? more.slice(0, at) : more;
+            const after = at >= 0 ? more.slice(at + linkText.length) : '';
+            return <>{before}<a href={href(`/exams/${plan.guide}`)} className="text-[#C2410C] underline underline-offset-4">{linkText}</a>{after}</>;
+          })()}</p>
         </section>
 
         <section aria-labelledby="schedule-title" className="mt-14 max-w-4xl">
-          <SectionTitle id="schedule-title">The plan</SectionTitle>
+          <SectionTitle id="schedule-title">{t('exam.plan')}</SectionTitle>
           <ol className="mt-6 space-y-10">
             {plan.phases.map((ph, i) => (
               <li key={ph.title}>
@@ -713,8 +761,8 @@ export function PlanPage({ guide, slug, posts = [] }) {
         </section>
 
         <section aria-labelledby="materials-title" className="mt-14 max-w-3xl">
-          <SectionTitle id="materials-title">Free material used in this plan</SectionTitle>
-          <p className={`mt-3 text-[16px] ${muted}`}>Every link goes to the exam body, a public broadcaster or a government site. We don’t host or copy any of it.</p>
+          <SectionTitle id="materials-title">{t('exam.materials')}</SectionTitle>
+          <p className={`mt-3 text-[16px] ${muted}`}>{t('exam.materialsLead')}</p>
           <ul className="mt-4 space-y-3 text-[16px] leading-snug">
             {plan.materials.map((m) => (
               <li key={m.url}>
@@ -727,7 +775,7 @@ export function PlanPage({ guide, slug, posts = [] }) {
         <Faq faq={plan.faq} />
 
         <section aria-labelledby="sources-title" className="mt-14 pt-10 border-t border-[#E7E1D7] max-w-3xl">
-          <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Sources</h2>
+          <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>{t('section.sources')}</h2>
           <ol className="mt-4 space-y-2 text-[16px] leading-snug">
             {plan.sources.map((s) => (
               <li key={s.url}>
@@ -738,48 +786,48 @@ export function PlanPage({ guide, slug, posts = [] }) {
             ))}
           </ol>
           <p className="mt-4 text-[14px] text-[#6B635A]">
-            {checked ? `Last checked ${checked}. ` : ''}Exam rules, score tables, fees and dates change. Always confirm on the official site before you book or apply. OpenExam Hub is independent and not affiliated with any exam body or government.
+            {checked ? `${t('exam.lastCheckedShort', { date: checked })} ` : ''}{t('exam.planDisclaimer')}
           </p>
         </section>
 
         <section aria-labelledby="related-title" className="mt-14 grid gap-10 md:grid-cols-2">
           <div>
-            <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>From the blog</h2>
+            <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>{t('section.fromBlog')}</h2>
             {blogPosts.length ? (
               <ul className="mt-4 space-y-3 text-[16px] leading-snug">
                 {blogPosts.map((p) => (
                   <li key={p.slug}>
-                    <a href={p.url} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{p.title}</a>
+                    <a href={href(p.url)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{p.title}</a>
                   </li>
                 ))}
                 <li>
-                  <a href="/blog" className="text-[#C2410C] underline underline-offset-4">All OpenExam Hub blog articles</a>
+                  <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">{t('exam.allArticles')}</a>
                 </li>
               </ul>
             ) : (
               <p className={`mt-4 text-[16px] ${muted}`}>
-                No articles on this exam yet. <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Browse the OpenExam Hub blog</a>.
+                {t('exam.noArticles')} <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">{t('exam.browseBlog')}</a>.
               </p>
             )}
           </div>
           <div>
-            <h2 className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Related guides and plans</h2>
+            <h2 className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>{t('section.relatedPlans')}</h2>
             <ul className="mt-4 space-y-3 text-[16px] leading-snug">
               <li>
-                <a href={`/exams/${plan.guide}`} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{guidePage ? guidePage.label : plan.guide} guide</a>
+                <a href={href(`/exams/${plan.guide}`)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{t('exam.guideLink', { label: guideLabel })}</a>
               </li>
               {TOOL_GUIDES.includes(plan.guide) ? (
                 <li>
-                  <a href={toolPathForGuide(plan.guide)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CLB / NCLC score converter (free tool)</a>
+                  <a href={href(toolPathForGuide(plan.guide))} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{t('exam.clbTool')}</a>
                 </li>
               ) : null}
               {related.map((r) => (
                 <li key={r.href}>
-                  <a href={r.href} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{r.label}</a>
+                  <a href={href(r.href)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{r.label}</a>
                 </li>
               ))}
               <li>
-                <a href="/exams" className="text-[#C2410C] underline underline-offset-4">All exam guides</a>
+                <a href={href('/exams')} className="text-[#C2410C] underline underline-offset-4">{t('exam.allGuides')}</a>
               </li>
             </ul>
           </div>
@@ -790,22 +838,23 @@ export function PlanPage({ guide, slug, posts = [] }) {
 }
 
 export function ExamPage({ slug, posts = [] }) {
-  const c = examContent(slug);
+  const t = useT();
+  const c = useUnit(`exam:${slug}`);
   if (!c) return null;
   const blogPosts = relatedPosts(posts, c.tags);
   return (
     <Shell>
       <article className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
-        <Breadcrumbs items={examBreadcrumbs(c)} />
+        <Breadcrumbs items={examBreadcrumbs(c, { home: t('crumb.home'), exams: t('crumb.exams') })} />
         <header className="mt-6 max-w-3xl">
-          <p className={eyebrow}>Exam guide</p>
+          <p className={eyebrow}>{t('exam.guide')}</p>
           <h1 className={`mt-4 font-display ${ink} text-[38px] sm:text-5xl lg:text-6xl tracking-[-0.03em] font-medium leading-[1.05]`}>{c.h1}</h1>
           {c.intro.map((p) => (
             <p key={p.slice(0, 32)} className={`mt-6 ${lead}`}>{p}</p>
           ))}
         </header>
 
-        <section aria-label="At a glance" className="mt-10 max-w-4xl">
+        <section aria-label={t('exam.glance')} className="mt-10 max-w-4xl">
           <dl className="divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]">
             {c.facts.map(([k, v]) => (
               <div key={k} className="py-4 grid sm:grid-cols-[12rem_1fr] gap-1 sm:gap-6">
@@ -827,7 +876,7 @@ export function ExamPage({ slug, posts = [] }) {
         <Faq faq={c.faq} />
 
         <section aria-labelledby="sources-title" className="mt-14 pt-10 border-t border-[#E7E1D7] max-w-3xl">
-          <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Sources</h2>
+          <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>{t('section.sources')}</h2>
           <ol className="mt-4 space-y-2 text-[16px] leading-snug">
             {c.sources.map((s) => (
               <li key={s.url}>
@@ -838,7 +887,7 @@ export function ExamPage({ slug, posts = [] }) {
             ))}
           </ol>
           <p className={`mt-4 text-[14px] text-[#6B635A]`}>
-            Exam rules, fees and dates change. Always confirm on the official site before you book. OpenExam Hub is independent and not affiliated with any exam body.
+            {t('exam.disclaimer')}
           </p>
         </section>
 
@@ -849,33 +898,39 @@ export function ExamPage({ slug, posts = [] }) {
 }
 
 export function ExamsIndex({ posts = [] }) {
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
+  const index = useUnit('site:exams');
+  const pages = EXAM_PAGES.filter((p) => isPagePublished(locale, `/exams/${p.slug}`));
   return (
     <Shell>
       <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
-        <Breadcrumbs items={examBreadcrumbs(null)} />
+        <Breadcrumbs items={examBreadcrumbs(null, { home: t('crumb.home'), exams: t('crumb.exams') })} />
         <header className="mt-6 max-w-3xl">
-          <p className={eyebrow}>Exam guides</p>
-          <h1 className={`mt-4 font-display ${ink} text-5xl sm:text-6xl tracking-[-0.03em] font-medium leading-[1.02]`}>Language exam guides</h1>
-          <p className={`mt-6 ${lead}`}>{EXAMS_INDEX.description}</p>
+          <p className={eyebrow}>{index.eyebrow}</p>
+          <h1 className={`mt-4 font-display ${ink} text-5xl sm:text-6xl tracking-[-0.03em] font-medium leading-[1.02]`}>{index.h1}</h1>
+          <p className={`mt-6 ${lead}`}>{index.headDescription}</p>
           <p className={`mt-4 text-[16px] ${muted}`}>
-            Looking for something else? Read the <a href="/faq" className="text-[#C2410C] underline underline-offset-4">OpenExam Hub FAQ</a> or the{' '}
-            <a href="/blog" className="text-[#C2410C] underline underline-offset-4">blog on exam scores, fees and requirements</a>.
+            {t('exam.indexMoreBefore')} <a href={href('/faq')} className="text-[#C2410C] underline underline-offset-4">{t('exam.indexFaq')}</a> {t('exam.indexMoreMid')}{' '}
+            <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">{t('exam.indexBlog')}</a>.
           </p>
         </header>
         <ul className="mt-12 grid gap-5 sm:grid-cols-2">
-          {EXAM_PAGES.map((p) => {
+          {pages.map((p) => {
+            const unit = localizedUnit(locale, `exam:${p.slug}`) || p;
             const count = relatedPosts(posts, p.tags).length;
             return (
               <li key={p.slug} className="rounded-2xl border border-[#E7E1D7] bg-white/70 p-6">
                 <h2 className={`font-display ${ink} text-[26px] tracking-[-0.02em] font-medium`}>
-                  <a href={`/exams/${p.slug}`} className="hover:text-[#C2410C]">{p.label}</a>
+                  <a href={href(`/exams/${p.slug}`)} className="hover:text-[#C2410C]">{unit.label}</a>
                 </h2>
-                <p className={`mt-2 text-[16px] leading-[1.6] ${muted}`}>{p.description}</p>
+                <p className={`mt-2 text-[16px] leading-[1.6] ${muted}`}>{unit.description}</p>
                 <p className="mt-4 text-[15px]">
-                  <a href={`/exams/${p.slug}`} className="inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
-                    {p.label} guide <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  <a href={href(`/exams/${p.slug}`)} className="inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
+                    {t('exam.guideLink', { label: unit.label })} <ArrowRight className={arrow} aria-hidden="true" />
                   </a>
-                  {count ? <span className="text-[#6B635A]"> · {count} blog {count === 1 ? 'article' : 'articles'}</span> : null}
+                  {count ? <span className="text-[#6B635A]"> · {t(count === 1 ? 'exam.blogOne' : 'exam.blogMany', { count })}</span> : null}
                 </p>
               </li>
             );

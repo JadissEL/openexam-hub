@@ -114,6 +114,18 @@ test('/app-ads.txt is proxied to the ads.txt handler', async () => {
   }
 });
 
+test('/fr/app 301-redirects to /app and keeps the query', async () => {
+  const res = await fetchPath('/fr/app?exam=TEF_CANADA');
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), 'https://openexamhub.org/app?exam=TEF_CANADA');
+});
+
+test('/ar/app/plan 301-redirects to /app/plan', async () => {
+  const res = await fetchPath('/ar/app/plan');
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), 'https://openexamhub.org/app/plan');
+});
+
 test('unknown paths stay 404', async () => {
   const res = await fetchPath('/no-such-page');
   assert.equal(res.status, 404);

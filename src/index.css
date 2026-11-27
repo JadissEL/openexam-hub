@@ -27,14 +27,20 @@ body { -webkit-font-smoothing: antialiased; }
 .blog-prose a { color: #C2410C; text-decoration: underline; text-underline-offset: 4px; }
 .blog-prose a:hover { color: #9A3412; }
 .blog-prose strong { color: #1A1714; font-weight: 600; }
-.blog-prose ul, .blog-prose ol { padding-left: 1.25em; }
+.blog-prose ul, .blog-prose ol { padding-inline-start: 1.25em; }
+[dir="rtl"] .pl-5 { padding-left: 0; padding-right: 1.25rem; }
+[dir="rtl"] .pr-8 { padding-right: 0; padding-left: 2rem; }
+[dir="rtl"] .pr-10 { padding-right: 0; padding-left: 2.5rem; }
+[dir="rtl"] .text-left { text-align: start; }
+[dir="rtl"] .border-l { border-left-width: 0; }
+[dir="rtl"] .ml-auto { margin-left: 0; margin-right: auto; }
 .blog-prose ul { list-style: disc; }
 .blog-prose ol { list-style: decimal; }
 .blog-prose li + li { margin-top: 0.4em; }
 .blog-prose li > ul, .blog-prose li > ol { margin-top: 0.4em; }
 .blog-prose blockquote {
-  border-left: 3px solid #E7C9B4;
-  padding-left: 1rem;
+  border-inline-start: 3px solid #E7C9B4;
+  padding-inline-start: 1rem;
   color: #5C554C;
   font-style: italic;
 }

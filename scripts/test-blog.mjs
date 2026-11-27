@@ -28,6 +28,7 @@ import * as siteModule from '../src/seo/site.js';
 import { PLAN_PAGES, planPath } from '../src/seo/planPages.js';
 import { DONATION_COPY, DONATION_LINKS, DONATION_PLATFORMS } from '../src/donations.js';
 import { FAQ } from '../src/landing/content.js';
+import { alternatesFor } from '../src/i18n/publish.js';
 import { relatedPostsFor, RELATED_POST_SLUGS } from '../src/blog/related.js';
 
 // Exam bodies, public broadcasters and governments only (study plans link nothing else).
@@ -869,7 +870,8 @@ if (process.argv.includes('--built')) {
     const sitemap = read('sitemap.xml');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
     const posts = loadBlogPosts({ includeDrafts: includeDraftsFromEnv() });
-    const expected = [...SITEMAP_PATHS.map((p) => `https://openexamhub.org${p === '/' ? '/' : p}`), ...posts.map((p) => p.canonical)];
+    const paths = [...SITEMAP_PATHS, ...posts.map((p) => `/blog/${p.slug}`)];
+    const expected = paths.flatMap((p) => alternatesFor(p).filter((alt) => alt.hreflang !== 'x-default').map((alt) => alt.href));
     assert.deepEqual([...locs].sort(), [...expected].sort());
     assert.equal(new Set(locs).size, locs.length, 'no duplicate URLs');
     assert.ok(locs.length >= 20, `sitemap has only ${locs.length} URLs`);

@@ -143,6 +143,54 @@ export const CEFR_TOOL_TITLE = 'IELTS, CELPIP, PTE, TCF to CEFR converter · Ope
 export const CEFR_TOOL_DESCRIPTION =
   'See the CEFR level (A1 to C2) for an IELTS, CELPIP, PTE Academic or TCF score, using only the tables the test owners and Campus France publish.';
 
+/** Page chrome. The date in the lead and the disclaimer stays a {date} placeholder. */
+export const CEFR_CHROME = {
+  tabs: CEFR_TABS.map((tab) => tab.title),
+  crumb: 'CEFR level converter',
+  eyebrow: 'Free tool · Published tables only',
+  lead: 'Enter a score and see the CEFR level (A1 to C2) its test owner gives it: IELTS, CELPIP and Pearson for PTE Academic, and the TCF level grid Campus France publishes. When a table doesn’t place a score, the tool says so instead of guessing. Checked on {date}.',
+  converterTitle: 'Converter',
+  stepTest: '1. Pick your test',
+  testLabel: 'Test',
+  tcfType: 'TCF score type',
+  tcfPoints: 'Reading, listening, structures (points)',
+  tcfMarks: 'Speaking or writing (/20)',
+  stepScore: '2. Enter your score',
+  rangePlaceholder: '{min} to {max}',
+  emptyResult: 'Your CEFR level shows here.',
+  scoreLine: '{exam} {value}',
+  marksSuffix: '/20',
+  pointsSuffix: ' points',
+  about: 'About {cefr}',
+  noLevel: 'No CEFR level on the published table',
+  fine: 'Not affiliated with any test owner. Tables checked on {date}. A CEFR level is not a score in another test. Nothing you type leaves your device.',
+  tablesTitle: 'The published tables',
+  tablesLead: 'Each table is quoted as its source states it. They are not conversions between tests.',
+  cefrCol: 'CEFR',
+  tableRegion: '{exam} to CEFR table',
+  missingTitle: 'Tests not on this page',
+  missing: [
+    { strong: 'TEF and TEF Canada:', text: ' we found no score-to-CEFR table from CCI Paris Île-de-France. For Canada, IRCC gives NCLC levels for TEF Canada.' },
+    { strong: 'PTE Core:', text: ' Pearson aligns PTE Core to the Canadian Language Benchmarks, not the CEFR. Pearson’s CEFR table above is for PTE Academic.' },
+    { strong: 'DELF, DALF, Goethe and telc:', text: ' each certificate is awarded at one CEFR level, so the level is printed on it.' }
+  ],
+  canadaBefore: 'Applying in Canada? IRCC uses CLB and NCLC levels, not the CEFR: use the ',
+  canadaLink: 'CLB converter',
+  canadaAfter: '.',
+  faqTitle: 'Questions people ask',
+  aimTitle: 'Aiming for B2 or C1?',
+  aimBody: 'Build a free day-by-day study plan from official, free practice material.',
+  aimButton: 'Pick your exam',
+  relatedTitle: 'Related',
+  related: [
+    { href: '/blog/ielts-to-cefr', label: 'IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2' },
+    { href: '/compare/delf-vs-tcf', label: 'DELF vs TCF: levels, validity and acceptance' },
+    { href: '/compare/goethe-vs-telc', label: 'Goethe vs telc: German exams by CEFR level' },
+    { href: '/compare/ielts-vs-pte', label: 'IELTS vs PTE Core: CLB scores side by side' },
+    { href: '/tools/clb-converter', label: 'CLB / NCLC score converter for Canada' }
+  ]
+};
+
 export const CEFR_TOOL_FAQ = [
   {
     q: 'What IELTS band is C1?',

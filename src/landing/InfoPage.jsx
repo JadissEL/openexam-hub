@@ -4,10 +4,23 @@ import { SiteHeader, SiteFooter } from './SiteChrome.jsx';
 import { BrowserFrame } from './frames.jsx';
 import { GithubMark } from './icons.jsx';
 import { ink, muted, eyebrow, h2, lead, pageFont } from './theme.js';
-import { APP_PATH, CONTACT_EMAIL, FAQ, REPO_URL } from './content.js';
+import { APP_PATH, CONTACT_EMAIL, REPO_URL } from './content.js';
 import { DONATION_LINKS, donationCopy } from '../donations.js';
 import { FundProjectButton } from '../FundProject.jsx';
 import { BooksPanel, usePublicBooks } from '../BooksPanel.jsx';
+import { useHref, useLocale, useT, useUnit } from '../i18n/LocaleContext.jsx';
+
+const arrow = 'w-4 h-4 rtl:-scale-x-100';
+
+function withTokens(template, tokens) {
+  return String(template).split(/(\{[a-zA-Z0-9]+\})/g).map((part, i) => {
+    const m = /^\{([a-zA-Z0-9]+)\}$/.exec(part);
+    if (m && Object.prototype.hasOwnProperty.call(tokens, m[1])) {
+      return <React.Fragment key={i}>{tokens[m[1]]}</React.Fragment>;
+    }
+    return part;
+  });
+}
 
 // <title> and meta tags come from src/seo/site.js (prerendered, and synced in src/main.jsx).
 function PageShell({ title, eyebrowText, intro, children }) {
@@ -27,50 +40,42 @@ function PageShell({ title, eyebrowText, intro, children }) {
   );
 }
 
-function HonestNote() {
+function HonestNote({ page }) {
   return (
-    <section aria-label="Where the project is today" className="border-y border-[#E7E1D7]">
+    <section aria-label={page.todayLabel} className="border-y border-[#E7E1D7]">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-10 sm:py-12 grid md:grid-cols-[auto_1fr] gap-4 md:gap-12 items-baseline">
-        <p className={eyebrow}>Where we are today</p>
+        <p className={eyebrow}>{page.todayEyebrow}</p>
         <p className={`font-display ${ink} text-[22px] sm:text-[26px] leading-[1.4] tracking-[-0.01em]`}>
-          OpenExam Hub is new. We don’t have thousands of users or press quotes to show you, and we won’t make
-          them up. What we can show you is how it works, where every resource comes from, and the code itself.
+          {page.today}
         </p>
       </div>
     </section>
   );
 }
 
-function Story() {
+function Story({ page }) {
   return (
     <section id="story" className="scroll-mt-6" aria-labelledby="story-title">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-24 grid lg:grid-cols-[1fr_1.6fr] gap-10 lg:gap-20">
         <div>
-          <p className={eyebrow}>Who’s behind this</p>
-          <h2 id="story-title" className={`mt-4 ${h2}`}>A family project, not a startup.</h2>
+          <p className={eyebrow}>{page.whoEyebrow}</p>
+          <h2 id="story-title" className={`mt-4 ${h2}`}>{page.whoTitle}</h2>
         </div>
         <div className={`space-y-6 text-[18px] sm:text-[20px] leading-[1.75] ${muted}`}>
-          <p className={`${ink} first-letter:font-display first-letter:text-[64px] first-letter:leading-[0.8] first-letter:float-left first-letter:mr-3 first-letter:mt-1.5 first-letter:text-[#C2410C]`}>
-            OpenExam Hub started at our kitchen table when my wife was preparing for her language certification
-            exams. We saw first-hand how stressful it is to hunt for reliable study material without getting
-            pulled into expensive coaching agencies or ending up on broken links.
+          <p className={`${ink} first-letter:font-display first-letter:text-[64px] first-letter:leading-[0.8] first-letter:float-left first-letter:me-3 first-letter:mt-1.5 first-letter:text-[#C2410C]`}>
+            {page.p1}
           </p>
-          <p>
-            The strange part is that the good material already exists. The CCI Paris, France Éducation international,
-            ETS, Paragon Testing Enterprises, Instituto Cervantes, the Goethe-Institut, the British Council and public broadcasters publish free
-            sample papers and practice for these exams. It is just scattered across dozens of pages, in different
-            languages, with no plan attached.
-          </p>
-          <p>
-            So we built the tool we wished we’d had: pick your exam, your level and your date, and get a schedule
-            that points only to those official, free pages. No paywall, now or later. Free. Create a free account
-            to generate your plan.
-          </p>
+          <p>{page.p2}</p>
+          <p>{page.p3}</p>
           <div className="pt-4 flex items-center gap-4">
             <span aria-hidden="true" className="w-12 h-12 rounded-full bg-[#1A1714] text-white font-display text-lg flex items-center justify-center">J</span>
             <div className="leading-tight">
               <p className={`${ink} font-semibold text-[17px]`}>Jadiss El Antaki</p>
-              <p className="text-[15px] text-[#6B635A]">Built OpenExam Hub · <a className="underline underline-offset-4 hover:text-[#C2410C]" href={`mailto:${CONTACT_EMAIL}`}>write to me</a></p>
+              <p className="text-[15px] text-[#6B635A]">
+                {withTokens(page.role, {
+                  write: <a className="underline underline-offset-4 hover:text-[#C2410C]" href={`mailto:${CONTACT_EMAIL}`}>{page.roleWrite}</a>
+                })}
+              </p>
             </div>
           </div>
         </div>
@@ -79,26 +84,26 @@ function Story() {
   );
 }
 
-function ProductPeek() {
+function ProductPeek({ page }) {
+  const href = useHref();
   return (
     <section aria-labelledby="peek-title" className="bg-[#1A1714] text-white">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-24">
         <div className="max-w-2xl">
-          <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#FDBA8C]">What you actually get</p>
+          <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#FDBA8C]">{page.peekEyebrow}</p>
           <h2 id="peek-title" className="mt-4 font-display text-[34px] leading-[1.08] sm:text-5xl tracking-[-0.02em] font-medium">
-            Real resources, checked every night.
+            {page.peekTitle}
           </h2>
           <p className="mt-6 text-[18px] leading-[1.7] text-[#D9D2C8]">
-            This is the real library inside the app. Every resource shows which official site it comes from,
-            whether its link was reachable, and the date it was last checked.
+            {page.peekBody}
           </p>
-          <a href={APP_PATH} className="mt-8 inline-flex items-center gap-2 text-[17px] font-semibold text-white underline decoration-[#EA580C] decoration-2 underline-offset-[6px]">
-            Open the planner <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          <a href={href(APP_PATH)} className="mt-8 inline-flex items-center gap-2 text-[17px] font-semibold text-white underline decoration-[#EA580C] decoration-2 underline-offset-[6px]">
+            {page.peekCta} <ArrowRight className={arrow} aria-hidden="true" />
           </a>
         </div>
         <BrowserFrame
           src="/landing/desk-library.webp"
-          alt="Screenshot of the OpenExam Hub library for TCF: France Éducation international, TV5Monde and RFI, each marked ‘official domain, link checked, reachable’ with the date of the last check."
+          alt={page.peekAlt}
           width={1024}
           height={272}
           className="mt-12"
@@ -108,20 +113,16 @@ function ProductPeek() {
   );
 }
 
-function OpenSource() {
+function OpenSource({ page }) {
   return (
     <section aria-labelledby="code-title">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-24 grid lg:grid-cols-[1fr_1.4fr] gap-10 lg:gap-20 items-start">
         <div>
-          <p className={eyebrow}>Built in the open</p>
-          <h2 id="code-title" className={`mt-4 ${h2}`}>Don’t take our word for it. Read the code.</h2>
+          <p className={eyebrow}>{page.codeEyebrow}</p>
+          <h2 id="code-title" className={`mt-4 ${h2}`}>{page.codeTitle}</h2>
         </div>
         <div>
-          <p className={lead}>
-            Everything on this site can be checked: the resource allowlist, the link checker, how plans are paced,
-            and exactly what is stored in the database. The full source code is on GitHub under the MIT licence, and
-            issues and suggestions for new official resources are welcome.
-          </p>
+          <p className={lead}>{page.codeBody}</p>
           <a
             href={REPO_URL}
             target="_blank"
@@ -136,18 +137,19 @@ function OpenSource() {
   );
 }
 
-function MoreToRead() {
+function MoreToRead({ page }) {
+  const href = useHref();
   return (
     <section aria-labelledby="more-read-title" className="border-t border-[#E7E1D7]">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-20">
         <h2 id="more-read-title" className={`font-display ${ink} text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium`}>
-          More to read
+          {page.moreTitle}
         </h2>
         <p className={`mt-4 max-w-3xl text-[17px] leading-[1.7] ${muted}`}>
-          Questions about what OpenExam Hub costs, which exams it covers, and how plans are made are answered on the{' '}
-          <a href="/faq" className="text-[#C2410C] underline underline-offset-4">FAQ</a>
-          . Guides on exam scores, fees and requirements are on the{' '}
-          <a href="/blog" className="text-[#C2410C] underline underline-offset-4">blog</a>.
+          {withTokens(page.moreBody, {
+            faq: <a href={href('/faq')} className="text-[#C2410C] underline underline-offset-4">{page.moreFaq}</a>,
+            blog: <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">{page.moreBlog}</a>
+          })}
         </p>
       </div>
     </section>
@@ -155,36 +157,39 @@ function MoreToRead() {
 }
 
 export function AboutPage() {
+  const page = useUnit('landing:about');
   return (
     <PageShell
-      title="About OpenExam Hub"
-      eyebrowText="The project"
-      intro="A family project that turns official free exam material into a day-by-day study plan."
+      title={page.title}
+      eyebrowText={page.eyebrow}
+      intro={page.intro}
     >
-      <HonestNote />
-      <Story />
-      <ProductPeek />
-      <OpenSource />
-      <MoreToRead />
+      <HonestNote page={page} />
+      <Story page={page} />
+      <ProductPeek page={page} />
+      <OpenSource page={page} />
+      <MoreToRead page={page} />
     </PageShell>
   );
 }
 
 export function FaqPage() {
+  const faq = useUnit('landing:faq');
   return (
     <PageShell
-      title="Fair questions"
-      eyebrowText="FAQ"
+      title={faq.title}
+      eyebrowText={faq.eyebrow}
       intro={
         <>
-          Something missing? <a className="text-[#C2410C] underline underline-offset-4" href={`mailto:${CONTACT_EMAIL}`}>Ask me directly</a>.
+          {faq.intro}{' '}
+          <a className="text-[#C2410C] underline underline-offset-4" href={`mailto:${CONTACT_EMAIL}`}>{faq.ask}</a>.
         </>
       }
     >
       <section aria-labelledby="faq-list-title" className="mx-auto max-w-6xl px-5 sm:px-8 pb-24">
-        <h2 id="faq-list-title" className="sr-only">Frequently asked questions</h2>
+        <h2 id="faq-list-title" className="sr-only">{faq.srTitle}</h2>
         <div className="border-t border-[#D9D1C5]">
-          {FAQ.map((f) => (
+          {(faq.items || []).map((f) => (
             <details key={f.q} className="group border-b border-[#D9D1C5]">
               <summary className={`flex cursor-pointer list-none items-start justify-between gap-6 py-6 ${ink} text-[18px] sm:text-xl font-semibold [&::-webkit-details-marker]:hidden`}>
                 {f.q}
@@ -208,16 +213,17 @@ function FundingBooks() {
   );
 }
 
-
 function FundingCta() {
-  const copy = donationCopy();
+  const locale = useLocale();
+  const t = useT();
+  const copy = donationCopy(locale);
   return (
     <>
       <p className={`mt-8 text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
         {copy.fundingHelp}
       </p>
       <div className="mt-6 mb-16 flex flex-col sm:flex-row sm:items-center gap-3">
-        <FundProjectButton />
+        <FundProjectButton lang={locale} />
         {DONATION_LINKS.kofi ? (
           <a
             href={DONATION_LINKS.kofi}
@@ -226,7 +232,7 @@ function FundingCta() {
             className="inline-flex items-center justify-center gap-2 min-h-[48px] px-6 rounded-full border border-[#1A1714] text-[#1A1714] font-semibold hover:bg-[#1A1714] hover:text-white transition-colors"
           >
             {copy.supportOn('Ko-fi')} <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
-            <span className="sr-only"> (opens in a new tab)</span>
+            <span className="sr-only"> {t('donate.newTab')}</span>
           </a>
         ) : null}
       </div>
@@ -235,44 +241,39 @@ function FundingCta() {
 }
 
 export function FundingPage() {
-  const promises = [
-    ['No paywall', 'Every feature is free, forever. There is no premium tier waiting behind it.'],
-    ['Open books', 'Every euro from donations and dashboard ads, and every recorded expense, is shown publicly, so you can see exactly how the site is paid for.'],
-    ['No selling data', 'We don’t sell or rent personal data, and never will.']
-  ];
+  const page = useUnit('landing:funding');
+  const href = useHref();
   return (
     <PageShell
-      title="How the lights stay on"
-      eyebrowText="Funding and ads"
-      intro="Free forever. Funded openly by donations and a few dashboard ads, which go away once the next 5 years are covered."
+      title={page.title}
+      eyebrowText={page.eyebrow}
+      intro={page.intro}
     >
       <section aria-labelledby="funding-detail-title" className="mx-auto max-w-6xl px-5 sm:px-8 pb-8">
-        <h2 id="funding-detail-title" className="sr-only">How OpenExam Hub is funded</h2>
+        <h2 id="funding-detail-title" className="sr-only">{page.h2}</h2>
         <p className={`text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
-          The expensive part of exam prep is usually the course, not the content. We skip the course. What’s left
-          is hosting and AI calls for writing plans. Ads appear only on the study dashboard, never on the landing
-          page. Earnings from ads and donations, and the project’s expenses, are published so anyone can see what
-          we take in and what we spend.
+          {page.body}
         </p>
         <dl className="mt-10 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7] max-w-4xl">
-          {promises.map(([t, d]) => (
-            <div key={t} className="py-5 grid sm:grid-cols-[11rem_1fr] gap-1 sm:gap-6">
-              <dt className={`${ink} font-display text-[22px] font-medium`}>{t}</dt>
-              <dd className={`text-[17px] leading-[1.65] ${muted}`}>{d}</dd>
+          {page.promises.map(([title, detail]) => (
+            <div key={title} className="py-5 grid sm:grid-cols-[11rem_1fr] gap-1 sm:gap-6">
+              <dt className={`${ink} font-display text-[22px] font-medium`}>{title}</dt>
+              <dd className={`text-[17px] leading-[1.65] ${muted}`}>{detail}</dd>
             </div>
           ))}
         </dl>
         <FundingBooks />
         <FundingCta />
         <p className={`text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
-          Questions about cost, accounts and ads are also on the{' '}
-          <a href="/faq" className="text-[#C2410C] underline underline-offset-4">FAQ</a>
-          . For exam scores, fees and requirements, see the{' '}
-          <a href="/blog" className="text-[#C2410C] underline underline-offset-4">blog</a>.
+          {withTokens(page.more, {
+            faq: <a href={href('/faq')} className="text-[#C2410C] underline underline-offset-4">{page.moreFaq}</a>,
+            blog: <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">{page.moreBlog}</a>
+          })}
         </p>
         <p className={`pt-8 pb-24 text-[17px] leading-[1.7] ${muted}`}>
-          The live totals are also on the Transparency tab inside the{' '}
-          <a className="text-[#C2410C] underline underline-offset-4" href="/app">planner</a> (free account).
+          {withTokens(page.planner, {
+            planner: <a className="text-[#C2410C] underline underline-offset-4" href={href('/app')}>{page.plannerLink}</a>
+          })}
         </p>
       </section>
     </PageShell>

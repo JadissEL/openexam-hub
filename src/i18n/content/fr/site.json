@@ -1,0 +1,18 @@
+{
+  "exams": {
+    "sourceHash": "b53fd2a3b2cdd21d7d5dcb7902ac0a7254fb2e38a0301bf111a1bfb7efb7332a",
+    "strings": {
+      "headTitle": "Guides d’examens de langue : TEF Canada, TCF, IELTS, TOEFL, CELPIP, DELF, Goethe, DELE",
+      "headDescription": "Guides gratuits des principaux examens de langue pour les études, le travail et l’immigration : formats et durées officiels, façon dont les scores sont présentés, et matériel officiel gratuit pour chaque examen.",
+      "h1": "Guides d’examens de langue",
+      "eyebrow": "Guides d’examen"
+    }
+  },
+  "blog": {
+    "sourceHash": "62dbbbe4a59fb82ba27db438f3ba87f82a3c3fed6fa8792fe302c939a9cbb618",
+    "strings": {
+      "headTitle": "Blog · OpenExam Hub",
+      "headDescription": "Guides sur les examens de langue pour les étudiants, les professionnels et les candidats à l’immigration : à quoi ils servent, qui les demande, et quand commencer à se préparer."
+    }
+  }
+}

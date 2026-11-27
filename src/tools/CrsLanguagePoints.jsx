@@ -3,7 +3,6 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { SiteHeader, SiteFooter } from '../landing/SiteChrome.jsx';
 import { ink, muted, eyebrow, lead, pageFont } from '../landing/theme.js';
 import { Breadcrumbs } from '../seo/ExamPages.jsx';
-import { SKILL_LABELS } from './clbData.js';
 import {
   CRS_FIRST_LANGUAGE_MAX,
   CRS_FIRST_LANGUAGE_ROWS,
@@ -11,27 +10,31 @@ import {
   CRS_LAST_VERIFIED,
   CRS_SECOND_LANGUAGE_MAX,
   CRS_SECOND_LANGUAGE_ROWS,
-  CRS_TOOL_FAQ,
-  CRS_TOOL_H1,
   CRS_TOOL_PATH,
   CRS_URL,
   EE_LANGUAGE_URL,
   LEVEL_OPTIONS,
   SKILLS,
-  crsLanguagePoints,
-  levelOptionLabel
+  crsLanguagePoints
 } from './crsLanguage.js';
+import { useHref, useLocale, useT, useUnit } from '../i18n/LocaleContext.jsx';
+import { localeMeta } from '../i18n/locales.js';
 
 const linkCls = 'text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]';
+const arrow = 'w-4 h-4 rtl:-scale-x-100';
+
+function fill(template, vars) {
+  return String(template ?? '').replace(/\{([a-zA-Z0-9]+)\}/g, (m, k) => (vars && vars[k] != null ? String(vars[k]) : m));
+}
 
 export const crsBreadcrumbs = [
   { name: 'Home', path: '/' },
   { name: 'CRS language points', path: CRS_TOOL_PATH }
 ];
 
-function dateLabel(date) {
+function dateLabel(date, locale = 'en') {
   const [y, m, d] = date.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(localeMeta(locale || 'en').dateLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 function SectionTitle({ id, children }) {
@@ -42,8 +45,14 @@ function SectionTitle({ id, children }) {
   );
 }
 
-const LANG = { en: { name: 'English', scheme: 'CLB' }, fr: { name: 'French', scheme: 'NCLC' } };
+const SCHEME = { en: 'CLB', fr: 'NCLC' };
 const EMPTY = { reading: '', listening: '', writing: '', speaking: '' };
+
+function showLevel(lvl, scheme, copy) {
+  if (lvl <= 3) return fill(copy.below, { scheme });
+  if (lvl >= 10) return fill(copy.top, { scheme });
+  return fill(copy.levelN, { scheme, n: lvl });
+}
 
 function Toggle({ label, options, value, onChange }) {
   return (
@@ -65,15 +74,16 @@ function Toggle({ label, options, value, onChange }) {
   );
 }
 
-function LevelInputs({ idPrefix, language, levels, onChange, points }) {
-  const scheme = LANG[language].scheme;
+function LevelInputs({ idPrefix, language, levels, onChange, points, copy }) {
+  const t = useT();
+  const scheme = SCHEME[language];
   return (
     <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
       {SKILLS.map((s) => (
         <label key={s} htmlFor={`${idPrefix}-${s}`} className="flex flex-col gap-1.5 rounded-2xl border border-[#E7E1D7] bg-white px-4 py-3">
           <span className="text-[14px] font-semibold text-[#3B352F]">
-            {SKILL_LABELS[s].en}
-            {points ? <span className="float-right tabular-nums text-[#6B635A] font-normal">{points[s]} pts</span> : null}
+            {t(`skill.${s}`)}
+            {points ? <span className="float-right tabular-nums text-[#6B635A] font-normal">{fill(copy.pts, { n: points[s] })}</span> : null}
           </span>
           <select
             id={`${idPrefix}-${s}`}
@@ -81,10 +91,10 @@ function LevelInputs({ idPrefix, language, levels, onChange, points }) {
             onChange={(e) => onChange({ ...levels, [s]: e.target.value })}
             className="h-11 rounded-xl border border-[#D9D2C8] bg-white px-3 text-[16px] text-[#1A1714] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714]"
           >
-            <option value="">Choose your {scheme} level</option>
+            <option value="">{fill(copy.chooseLevel, { scheme })}</option>
             {LEVEL_OPTIONS.map((l) => (
               <option key={l} value={l}>
-                {levelOptionLabel(l, scheme)}
+                {showLevel(l, scheme, copy)}
               </option>
             ))}
           </select>
@@ -94,24 +104,10 @@ function LevelInputs({ idPrefix, language, levels, onChange, points }) {
   );
 }
 
-function bonusText(r) {
-  switch (r.frenchBonusCase) {
-    case 'strongEnglish':
-      return 'NCLC 7 or higher in all four French skills and CLB 5 or higher in all four English skills: 50 additional points.';
-    case 'lowEnglish':
-      return 'NCLC 7 or higher in all four French skills and CLB 4 or lower in English: 25 additional points.';
-    case 'noEnglish':
-      return 'NCLC 7 or higher in all four French skills and no English test: 25 additional points.';
-    case 'mixedEnglish':
-      return 'NCLC 7 or higher in all four French skills, with English at CLB 5 or higher in only some skills. IRCC’s table lists 50 points for CLB 5 or higher in all four English skills and 25 for CLB 4 or lower, so check this case with IRCC; no number is shown.';
-    case 'incomplete':
-      return 'You reach NCLC 7 in all four French skills. Enter all four English levels to see whether the 25 or 50-point case applies.';
-    default:
-      return 'French additional points need NCLC 7 or higher in all four French skills.';
-  }
-}
-
 function Calculator() {
+  const copy = useUnit('tool:crs');
+  const href = useHref();
+  const locale = useLocale();
   const [spouse, setSpouse] = useState('no');
   const [firstLang, setFirstLang] = useState('en');
   const [firstLv, setFirstLv] = useState(EMPTY);
@@ -135,28 +131,30 @@ function Calculator() {
     setSecondLv(firstLv);
   };
   const anyFrench = firstLang === 'fr' || hasSecond === 'yes';
+  const langName = (id) => copy.langName[id];
+  const checked = dateLabel(CRS_LAST_VERIFIED, locale);
 
   return (
     <section aria-labelledby="calc-title" className="mt-10 rounded-3xl border border-[#E7E1D7] bg-white/80 p-5 sm:p-8 shadow-[0_30px_60px_-40px_rgba(26,23,20,0.35)]">
-      <h2 id="calc-title" className="sr-only">Calculator</h2>
+      <h2 id="calc-title" className="sr-only">{copy.calcTitle}</h2>
       <div className="flex flex-col gap-5">
         <div>
-          <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6B635A]">1. Your situation</p>
+          <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6B635A]">{copy.stepSituation}</p>
           <div className="mt-3 flex flex-col gap-3">
             <Toggle
-              label="Spouse or common-law partner coming with you"
+              label={copy.spouseLabel}
               options={[
-                { id: 'no', title: 'Single, or partner not coming' },
-                { id: 'yes', title: 'Partner coming with me' }
+                { id: 'no', title: copy.spouseNo },
+                { id: 'yes', title: copy.spouseYes }
               ]}
               value={spouse}
               onChange={setSpouse}
             />
             <Toggle
-              label="First official language"
+              label={copy.firstLangLabel}
               options={[
-                { id: 'en', title: 'First language: English' },
-                { id: 'fr', title: 'First language: French' }
+                { id: 'en', title: copy.firstEn },
+                { id: 'fr', title: copy.firstFr }
               ]}
               value={firstLang}
               onChange={swap}
@@ -165,106 +163,110 @@ function Calculator() {
         </div>
         <div>
           <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6B635A]">
-            2. {LANG[firstLang].name} ({LANG[firstLang].scheme}), first official language
+            {fill(copy.stepFirst, { name: langName(firstLang), scheme: SCHEME[firstLang] })}
           </p>
-          <LevelInputs idPrefix="first" language={firstLang} levels={firstLv} onChange={setFirstLv} points={r.first.perSkill} />
+          <LevelInputs idPrefix="first" language={firstLang} levels={firstLv} onChange={setFirstLv} points={r.first.perSkill} copy={copy} />
         </div>
         <div>
           <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6B635A]">
-            3. {LANG[secondLang].name} ({LANG[secondLang].scheme}), second official language
+            {fill(copy.stepSecond, { name: langName(secondLang), scheme: SCHEME[secondLang] })}
           </p>
           <div className="mt-3">
             <Toggle
-              label={`Do you have a ${LANG[secondLang].name} test result?`}
+              label={fill(copy.haveTest, { name: langName(secondLang) })}
               options={[
-                { id: 'yes', title: `I have a ${LANG[secondLang].name} result` },
-                { id: 'no', title: 'No second language test' }
+                { id: 'yes', title: fill(copy.haveResult, { name: langName(secondLang) }) },
+                { id: 'no', title: copy.noSecond }
               ]}
               value={hasSecond}
               onChange={setHasSecond}
             />
           </div>
           {hasSecond === 'yes' ? (
-            <LevelInputs idPrefix="second" language={secondLang} levels={secondLv} onChange={setSecondLv} points={r.second?.perSkill} />
+            <LevelInputs idPrefix="second" language={secondLang} levels={secondLv} onChange={setSecondLv} points={r.second?.perSkill} copy={copy} />
           ) : null}
         </div>
 
         <div aria-live="polite" className="rounded-3xl bg-[#F1EDE5] px-5 sm:px-7 py-6">
-          <p className={`text-[16px] font-semibold ${ink}`}>Your official-language CRS points</p>
+          <p className={`text-[16px] font-semibold ${ink}`}>{copy.resultTitle}</p>
           <dl className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-[15px]">
             <div className="rounded-2xl bg-white px-4 py-3">
-              <dt className={muted}>First official language</dt>
+              <dt className={muted}>{copy.firstOfficial}</dt>
               <dd className="mt-1 text-[22px] font-semibold tabular-nums" data-crs-first>
                 {r.first.total} <span className="text-[14px] font-normal text-[#6B635A]">/ {r.first.max}</span>
               </dd>
             </div>
             <div className="rounded-2xl bg-white px-4 py-3">
-              <dt className={muted}>Second official language</dt>
+              <dt className={muted}>{copy.secondOfficial}</dt>
               <dd className="mt-1 text-[22px] font-semibold tabular-nums" data-crs-second>
                 {r.second ? r.second.total : 0} <span className="text-[14px] font-normal text-[#6B635A]">/ {CRS_SECOND_LANGUAGE_MAX[withSpouse ? 0 : 1]}</span>
               </dd>
             </div>
             <div className="rounded-2xl bg-white px-4 py-3">
-              <dt className={muted}>French additional points</dt>
+              <dt className={muted}>{copy.frenchExtra}</dt>
               <dd className="mt-1 text-[22px] font-semibold tabular-nums" data-crs-bonus>
                 {r.frenchBonus} <span className="text-[14px] font-normal text-[#6B635A]">/ 50</span>
               </dd>
             </div>
           </dl>
           <p className="mt-4 text-[16px]">
-            Language total: <strong className="tabular-nums">{r.core.total + r.frenchBonus}</strong> points ({r.core.total} of {r.core.max} for official languages
-            {r.frenchBonus ? `, plus ${r.frenchBonus} French additional points` : ''}).
+            {(() => {
+              const extra = r.frenchBonus ? fill(copy.languageExtra, { bonus: r.frenchBonus }) : '';
+              const line = fill(copy.languageTotal, { total: '{total}', core: r.core.total, max: r.core.max, extra });
+              const [before, after] = line.split('{total}');
+              return <>{before}<strong className="tabular-nums">{r.core.total + r.frenchBonus}</strong>{after}</>;
+            })()}
           </p>
           {r.second?.capped ? (
             <p className={`mt-2 text-[14px] ${muted}`}>
-              Your four second-language skills add up to {r.second.raw}, but IRCC caps the second official language at {r.second.max} points {withSpouse ? 'with' : 'without'} a spouse or partner.
+              {fill(copy.cap, { raw: r.second.raw, max: r.second.max, with: withSpouse ? copy.withSpouse : copy.withoutSpouse })}
             </p>
           ) : null}
-          {anyFrench ? <p className={`mt-2 text-[14px] ${muted}`}>{bonusText(r)}</p> : null}
+          {anyFrench ? <p className={`mt-2 text-[14px] ${muted}`}>{copy.bonus[r.frenchBonusCase] || copy.bonus.none}</p> : null}
           <p className={`mt-2 text-[14px] ${muted}`}>
-            Only the language parts of the CRS grid. Age, education, work experience, skill transferability and your partner’s factors aren’t calculated here.
+            {copy.onlyLanguage}
           </p>
         </div>
 
         <div className="rounded-3xl bg-[#1A1714] px-5 sm:px-7 py-6 text-white">
-          <p className="font-display text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium leading-tight">Don’t know your CLB or NCLC level yet?</p>
+          <p className="font-display text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium leading-tight">{copy.unknownTitle}</p>
           <p className="mt-2 text-[15px] leading-relaxed text-[#D9D2C8]">
-            Enter your IELTS, CELPIP, PTE Core, TEF Canada or TCF Canada scores in the converter. It uses IRCC’s own tables and shows the level for each skill.
+            {copy.unknownBody}
           </p>
-          <a href="/tools/clb-converter" className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold">
-            Convert my scores to CLB <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          <a href={href('/tools/clb-converter')} className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold">
+            {copy.unknownButton} <ArrowRight className={arrow} aria-hidden="true" />
           </a>
         </div>
       </div>
       <p className="mt-5 text-[13px] leading-snug text-[#6B635A]">
-        Not affiliated with IRCC. Points checked against canada.ca on {dateLabel(CRS_LAST_VERIFIED)}. No guarantee about your CRS score or an invitation. Nothing you type leaves your device.
+        {fill(copy.fine, { date: checked })}
       </p>
     </section>
   );
 }
 
-function PointsTable({ caption, region, rows, maxNote }) {
+function PointsTable({ caption, region, rows, labels, maxNote, copy }) {
   return (
     <div className="mt-3 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714] focus-visible:ring-offset-2" tabIndex={0} role="region" aria-label={region}>
       <table className="w-full text-left text-[15px] leading-snug">
         <caption className="sr-only">{caption}</caption>
         <thead className="bg-[#F1EDE5] text-[#3B352F]">
           <tr>
-            <th scope="col" className="px-4 py-3 font-semibold">Level per ability</th>
-            <th scope="col" className="px-4 py-3 font-semibold">With a spouse or partner</th>
-            <th scope="col" className="px-4 py-3 font-semibold">Without a spouse or partner</th>
+            <th scope="col" className="px-4 py-3 font-semibold">{copy.levelPer}</th>
+            <th scope="col" className="px-4 py-3 font-semibold">{copy.withCol}</th>
+            <th scope="col" className="px-4 py-3 font-semibold">{copy.withoutCol}</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {rows.map((r, i) => (
             <tr key={r.label} className="border-t border-[#EEE8DE]">
-              <th scope="row" className="px-4 py-2.5 font-medium">{r.label}</th>
+              <th scope="row" className="px-4 py-2.5 font-medium">{labels[i]}</th>
               <td className="px-4 py-2.5 tabular-nums">{r.points[0]}</td>
               <td className="px-4 py-2.5 tabular-nums">{r.points[1]}</td>
             </tr>
           ))}
           <tr className="border-t border-[#EEE8DE] bg-[#FAF7F2]">
-            <th scope="row" className="px-4 py-2.5 font-semibold">Maximum</th>
+            <th scope="row" className="px-4 py-2.5 font-semibold">{copy.maximum}</th>
             <td className="px-4 py-2.5 tabular-nums font-semibold">{maxNote[0]}</td>
             <td className="px-4 py-2.5 tabular-nums font-semibold">{maxNote[1]}</td>
           </tr>
@@ -275,64 +277,72 @@ function PointsTable({ caption, region, rows, maxNote }) {
 }
 
 export default function CrsLanguagePoints() {
-  const checked = dateLabel(CRS_LAST_VERIFIED);
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
+  const copy = useUnit('tool:crs');
+  const checked = dateLabel(CRS_LAST_VERIFIED, locale);
+  const sourceUrls = { crs: CRS_URL, ee: EE_LANGUAGE_URL };
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased" style={pageFont}>
       <SiteHeader />
       <main id="main">
         <article className="mx-auto max-w-4xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
-          <Breadcrumbs items={crsBreadcrumbs} />
+          <Breadcrumbs items={[{ name: t('crumb.home'), path: '/' }, { name: copy.crumb, path: CRS_TOOL_PATH }]} />
           <header className="mt-6 max-w-3xl">
-            <p className={eyebrow}>Free tool · IRCC’s CRS grid</p>
-            <h1 className={`mt-4 font-display ${ink} text-[36px] sm:text-5xl lg:text-[56px] tracking-[-0.03em] font-medium leading-[1.05]`}>{CRS_TOOL_H1}</h1>
-            <p className={`mt-6 ${lead}`}>
-              Express Entry gives CRS points for your first official language and, separately, for your second. French at NCLC 7 or higher also earns additional points. Choose your CLB (English) and NCLC (French) level for each skill and see the points from IRCC’s CRS grid, checked on {checked}.
-            </p>
+            <p className={eyebrow}>{copy.eyebrow}</p>
+            <h1 className={`mt-4 font-display ${ink} text-[36px] sm:text-5xl lg:text-[56px] tracking-[-0.03em] font-medium leading-[1.05]`}>{copy.h1}</h1>
+            <p className={`mt-6 ${lead}`}>{fill(copy.lead, { date: checked })}</p>
           </header>
 
           <Calculator />
 
           <section aria-labelledby="second-title" className="mt-14 max-w-3xl">
-            <SectionTitle id="second-title">Second official language points</SectionTitle>
+            <SectionTitle id="second-title">{copy.secondTitle}</SectionTitle>
             <p className={`mt-4 ${lead}`}>
-              IRCC gives up to 6 points per ability for the second official language, with a combined maximum of {CRS_SECOND_LANGUAGE_MAX[0]} points with a spouse or common-law partner and {CRS_SECOND_LANGUAGE_MAX[1]} without. Four skills at CLB 9 or more add up to 24, so with a partner the {CRS_SECOND_LANGUAGE_MAX[0]}-point cap applies.
+              {fill(copy.secondLead, { withSpouse: CRS_SECOND_LANGUAGE_MAX[0], without: CRS_SECOND_LANGUAGE_MAX[1] })}
             </p>
             <PointsTable
-              caption="CRS points per ability for the second official language"
-              region="IRCC CRS second official language points table"
+              caption={copy.secondCaption}
+              region={copy.secondRegion}
               rows={CRS_SECOND_LANGUAGE_ROWS}
+              labels={copy.secondLabels}
               maxNote={CRS_SECOND_LANGUAGE_MAX}
+              copy={copy}
             />
           </section>
 
           <section aria-labelledby="first-title" className="mt-14 max-w-3xl">
-            <SectionTitle id="first-title">First official language points</SectionTitle>
+            <SectionTitle id="first-title">{copy.firstTitle}</SectionTitle>
             <p className={`mt-4 ${lead}`}>
-              For comparison, the first official language earns far more per ability: up to 32 with a spouse or partner and 34 without, for a maximum of {CRS_FIRST_LANGUAGE_MAX[0]} or {CRS_FIRST_LANGUAGE_MAX[1]}. With the second language, official languages are worth up to {CRS_LANGUAGE_CORE_MAX[0]} or {CRS_LANGUAGE_CORE_MAX[1]} core CRS points.
+              {fill(copy.firstLead, { firstWith: CRS_FIRST_LANGUAGE_MAX[0], firstWithout: CRS_FIRST_LANGUAGE_MAX[1], coreWith: CRS_LANGUAGE_CORE_MAX[0], coreWithout: CRS_LANGUAGE_CORE_MAX[1] })}
             </p>
             <PointsTable
-              caption="CRS points per ability for the first official language"
-              region="IRCC CRS first official language points table"
+              caption={copy.firstCaption}
+              region={copy.firstRegion}
               rows={CRS_FIRST_LANGUAGE_ROWS}
+              labels={copy.firstLabels}
               maxNote={CRS_FIRST_LANGUAGE_MAX}
+              copy={copy}
             />
           </section>
 
           <section aria-labelledby="bonus-title" className="mt-14 max-w-3xl">
-            <SectionTitle id="bonus-title">French additional points</SectionTitle>
+            <SectionTitle id="bonus-title">{copy.bonusTitle}</SectionTitle>
             <ul className={`mt-4 space-y-2 list-disc pl-5 text-[16px] leading-relaxed ${muted}`}>
-              <li>NCLC 7 or higher on all four French skills and CLB 4 or lower in English (or no English test): <strong className={ink}>25 points</strong>.</li>
-              <li>NCLC 7 or higher on all four French skills and CLB 5 or higher on all four English skills: <strong className={ink}>50 points</strong>.</li>
+              {copy.bonusItems.map((item) => (
+                <li key={item.strong}>{item.before}<strong className={ink}>{item.strong}</strong>{item.after}</li>
+              ))}
             </ul>
             <p className={`mt-3 text-[15px] ${muted}`}>
-              These come from IRCC’s “Additional points” table and are added on top of the language points above.
+              {copy.bonusNote}
             </p>
           </section>
 
           <section aria-labelledby="faq-title" className="mt-14 max-w-3xl">
-            <SectionTitle id="faq-title">Questions people ask</SectionTitle>
+            <SectionTitle id="faq-title">{copy.faqTitle}</SectionTitle>
             <div className="mt-4 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]">
-              {CRS_TOOL_FAQ.map((f) => (
+              {copy.faq.map((f) => (
                 <details key={f.q} className="group py-4">
                   <summary className={`cursor-pointer list-none flex items-start justify-between gap-4 text-[17px] font-medium ${ink}`}>
                     {f.q}
@@ -345,31 +355,26 @@ export default function CrsLanguagePoints() {
           </section>
 
           <section aria-labelledby="sources-title" className="mt-14 max-w-3xl">
-            <SectionTitle id="sources-title">Sources</SectionTitle>
+            <SectionTitle id="sources-title">{copy.sourcesTitle}</SectionTitle>
             <ul className="mt-4 space-y-2 text-[16px]">
-              <li>
-                <a href={CRS_URL} target="_blank" rel="noopener noreferrer" className={linkCls}>
-                  IRCC: Comprehensive Ranking System (CRS) criteria (first and second official language points, additional points)
-                  <ArrowUpRight className="inline w-4 h-4 ml-1" aria-hidden="true" />
-                </a>
-              </li>
-              <li>
-                <a href={EE_LANGUAGE_URL} target="_blank" rel="noopener noreferrer" className={linkCls}>
-                  IRCC: Express Entry language test results and CLB/NCLC tables
-                  <ArrowUpRight className="inline w-4 h-4 ml-1" aria-hidden="true" />
-                </a>
-              </li>
+              {copy.sources.map((s) => (
+                <li key={s.urlKey}>
+                  <a href={sourceUrls[s.urlKey]} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                    {s.label}
+                    <ArrowUpRight className="inline w-4 h-4 ml-1" aria-hidden="true" />
+                  </a>
+                </li>
+              ))}
             </ul>
-            <p className={`mt-3 text-[14px] ${muted}`}>Checked on {checked}. OpenExam Hub is independent and not affiliated with IRCC.</p>
+            <p className={`mt-3 text-[14px] ${muted}`}>{fill(copy.checked, { date: checked })}</p>
           </section>
 
           <section aria-labelledby="related-title" className="mt-14 max-w-3xl">
-            <SectionTitle id="related-title">Related</SectionTitle>
+            <SectionTitle id="related-title">{copy.relatedTitle}</SectionTitle>
             <ul className="mt-4 space-y-2 text-[16px]">
-              <li><a href="/tools/clb-converter" className={linkCls}>CLB / NCLC score converter: IELTS, CELPIP, PTE Core, TEF Canada, TCF Canada</a></li>
-              <li><a href="/compare/tef-vs-tcf" className={linkCls}>TEF Canada vs TCF Canada: NCLC scores side by side</a></li>
-              <li><a href="/compare/clb-equivalency-table" className={linkCls}>CLB equivalency table for all five IRCC tests</a></li>
-              <li><a href="/compare" className={linkCls}>All comparisons</a></li>
+              {copy.related.map((item) => (
+                <li key={item.href}><a href={href(item.href)} className={linkCls}>{item.label}</a></li>
+              ))}
             </ul>
           </section>
         </article>

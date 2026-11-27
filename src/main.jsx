@@ -2,6 +2,10 @@ import React, { Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import { syncHead } from './seo/head.js';
+import { LocaleProvider, applyDocumentLocale } from './i18n/LocaleContext.jsx';
+import { splitLocale, isEnglishOnly } from './i18n/paths.js';
+import { isPagePublished } from './i18n/publish.js';
+import { ENABLED_LOCALES } from './i18n/locales.js';
 
 // Tiny path router. The marketing pages ship without Firebase; the study app (App.jsx and the
 // Firebase SDK) is code-split and only downloaded on /app.
@@ -22,7 +26,7 @@ function isBlogPath(p) {
   return p === '/blog' || p.startsWith('/blog/');
 }
 
-/** Which page module a path needs, and its props. */
+/** Which page module a path needs, and its props. `pathname` is the English path. */
 function resolveRoute(pathname) {
   const p = pathname.replace(/\/+$/, '') || '/';
   if (p === '/') return { key: 'landing', props: {} };
@@ -52,35 +56,56 @@ function Loading() {
   );
 }
 
+const catalogs = import.meta.glob('./i18n/catalogs/*.js');
+
 async function boot() {
-  const pathname = window.location.pathname;
-  syncHead(pathname);
+  const { locale, path } = splitLocale(window.location.pathname);
+  const search = window.location.search || '';
+  const hash = window.location.hash || '';
+  if (locale !== 'en' && (isEnglishOnly(path) || !ENABLED_LOCALES.includes(locale))) {
+    window.location.replace(path + search + hash);
+    return;
+  }
+  if (locale !== 'en') {
+    const load = catalogs[`./i18n/catalogs/${locale}.js`];
+    if (load) await load();
+    if (!isPagePublished(locale, path)) {
+      window.location.replace(path + search + hash);
+      return;
+    }
+  }
+  applyDocumentLocale(locale);
+  syncHead(window.location.pathname);
   const container = document.getElementById('root');
-  const route = resolveRoute(pathname);
+  const route = resolveRoute(path);
   // dist/index.html carries the prerendered landing page. When it is served for another path
   // (an SPA fallback), drop that markup so the right page mounts into an empty root.
   if (container.dataset.prerendered && container.dataset.prerendered !== route.key) {
     container.replaceChildren();
   }
   delete container.dataset.prerendered;
+  const tree = (Page) => (
+    <React.StrictMode>
+      <LocaleProvider locale={locale} path={path}>
+        <Page {...route.props} />
+      </LocaleProvider>
+    </React.StrictMode>
+  );
   if (container.firstElementChild) {
     // Prerendered HTML is already on screen: load the page module first so React swaps in the
     // same markup instead of flashing the "Loading…" fallback.
     const mod = await loaders[route.key]();
-    const Page = mod.default;
-    createRoot(container).render(
-      <React.StrictMode>
-        <Page {...route.props} />
-      </React.StrictMode>
-    );
+    createRoot(container).render(tree(mod.default));
     return;
   }
   const Page = lazyPages[route.key];
   createRoot(container).render(
     <React.StrictMode>
-      <Suspense fallback={<Loading />}>
-        <Page {...route.props} />
-      </Suspense>
+      <LocaleProvider locale={locale} path={path}>
+        <Suspense fallback={<Loading />}>
+          <Page {...route.props} />
+        </Suspense>
+      </LocaleProvider>
     </React.StrictMode>
   );
 }

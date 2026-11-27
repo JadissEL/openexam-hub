@@ -157,6 +157,11 @@ export default {
     if (pathname === '/tools' || pathname === '/tools/') {
       return Response.redirect(`https://${APEX}/tools/clb-converter${url.search}`, 301);
     }
+    // Locale copies of the study app are not translated. Send them to the English app.
+    const localeApp = pathname.match(/^\/(fr|ar|vi|hi|bn|ur|id)(\/app(?:\/.*)?)$/);
+    if (localeApp) {
+      return Response.redirect(`https://${APEX}${localeApp[2]}${url.search}`, 301);
+    }
     if (pathname === '/api/hit') return hitBeacon(request, env, ctx);
     if (pathname.startsWith('/api/')) return proxyToApi(request, env, url, pathname);
     // /ads.txt and /app-ads.txt share one seller line (AdSense and AdMob, same publisher id).
