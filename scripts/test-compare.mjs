@@ -64,8 +64,10 @@ test('every compare page has unique slug, title ≤ 60, description ≤ 160, FAQ
     assert.ok(page.title.length <= 60, `${page.slug} title ${page.title.length}`);
     assert.ok(page.description.length <= 160, `${page.slug} description ${page.description.length}`);
     assert.ok(page.faq.length >= 4, `${page.slug} faq`);
-    for (const id of page.tests) assert.ok(TABLES[id] && TEST_FORMATS[id], `${page.slug} test ${id}`);
-    for (const m of page.cefr) assert.ok(m.sources.length && m.lastVerified, `${page.slug} ${m.id} sourced`);
+    for (const id of page.tests || []) assert.ok(TABLES[id], `${page.slug} table ${id}`);
+    for (const id of page.formats || page.tests) assert.ok(TEST_FORMATS[id], `${page.slug} format ${id}`);
+    for (const m of page.cefr || []) assert.ok(m.sources.length && m.lastVerified, `${page.slug} ${m.id} sourced`);
+    assert.ok((page.tests || []).length || (page.formats || []).length, `${page.slug} compares something`);
     assert.equal(comparePageBySlug(page.slug), page);
   }
   assert.match(COMPARE_LAST_VERIFIED, /^\d{4}-\d{2}-\d{2}$/);
@@ -74,7 +76,7 @@ test('every compare page has unique slug, title ≤ 60, description ≤ 160, FAQ
 
 test('sources are the official domains only', () => {
   for (const u of Object.values(SOURCE_URLS)) {
-    assert.match(u, /^https:\/\/(www\.canada\.ca|ielts\.org|www\.celpip\.ca|www\.pearsonpte\.com)\//, u);
+    assert.match(u, /^https:\/\/(www\.canada\.ca|ielts\.org|www\.celpip\.ca|www\.pearsonpte\.com|www\.lefrancaisdesaffaires\.fr|www\.france-education-international\.fr|www\.etudiant\.gouv\.fr|www\.maroc\.campusfrance\.org|www\.service-public\.gouv\.fr|www\.goethe\.de|www\.telc\.net|www\.bamf\.de|www\.daad\.de)\//, u);
   }
 });
 
@@ -83,13 +85,14 @@ test('PTE Academic CEFR table is labelled as PTE Academic and never as PTE Core'
   assert.match(PTE_ACADEMIC_CEFR.scoreLabel, /PTE Academic/);
   assert.doesNotMatch(PTE_ACADEMIC_CEFR.scoreLabel, /Core/);
   for (const page of COMPARE_PAGES) {
-    for (const m of page.cefr) assert.notEqual(m.id, 'PTE_CORE_CEFR', 'no PTE Core CEFR table exists');
+    for (const m of page.cefr || []) assert.notEqual(m.id, 'PTE_CORE_CEFR', 'no PTE Core CEFR table exists');
   }
 });
 
 test('side-by-side rows: one per CLB level 10 to 4, one non-empty cell per test', () => {
   for (const page of COMPARE_PAGES) {
     for (const skill of ['reading', 'listening', 'writing', 'speaking']) {
+      if (!(page.tests || []).length) continue;
       const rows = clbRows(page.tests, skill);
       assert.deepEqual(rows.map((r) => r.level), [10, 9, 8, 7, 6, 5, 4]);
       for (const r of rows) for (const c of r.cells) assert.ok(c.text, `${page.slug} ${skill} CLB ${r.level} ${c.tableId}`);
@@ -153,6 +156,22 @@ test('hub and table page have meta, canonical and sitemap entries', () => {
   }
 });
 
+test('PR 4: TEF vs TCF uses the NCLC Express Entry tables; DELF/TCF and Goethe/telc have no score tables', () => {
+  const tef = comparePageBySlug('tef-vs-tcf');
+  assert.deepEqual(tef.tests, ['TEF_EXPRESS_ENTRY', 'TCF_CANADA']);
+  assert.equal(tef.scheme, 'NCLC');
+  assert.ok(!tef.tests.includes('TEF_NEW_699'), '/699 scale is not for Express Entry');
+  for (const slug of ['delf-vs-tcf', 'goethe-vs-telc']) {
+    const p = comparePageBySlug(slug);
+    assert.ok(!(p.tests || []).length, `${slug}: no score tables`);
+    assert.ok(!(p.cefr || []).length, `${slug}: no score-to-CEFR tables`);
+    assert.doesNotMatch(JSON.stringify(p.faq), /CLB tables are copied/, `${slug}: FAQ does not claim CLB tables`);
+  }
+  // NCLC 7 FAQ numbers come from the tables (hand-copied from canada.ca here).
+  const nclc7 = tef.faq.find((f) => f.q.includes('NCLC 7')).a;
+  for (const n of ['310–348', '249–279', '207–232', '458–502', '453–498', '10–11']) assert.ok(nclc7.includes(n), `NCLC 7 answer has ${n}`);
+});
+
 if (built) {
   const dist = path.join(root, 'dist');
   const read = (rel) => fs.readFileSync(path.join(dist, rel), 'utf8');
@@ -179,13 +198,13 @@ if (built) {
       const body = text(html);
       assert.ok(body.includes(page.h1), 'H1 text');
       for (const item of page.faq) assert.ok(body.includes(item.q), `visible FAQ ${item.q}`);
-      assert.ok(body.includes('not affiliated with IRCC'), 'disclaimer');
+      assert.ok(/not affiliated with/.test(body), 'disclaimer');
       const hrefs = [...html.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
       for (const h of hrefs) {
         if (h.startsWith('/assets/') || /\.(ico|svg|png|webmanifest|xml|css|js)$/.test(h.split('?')[0]) || h.startsWith('/app')) continue;
         assert.ok(exists(h), `internal link ${h} resolves in dist/`);
       }
-      if (page.tests.includes('PTE_CORE')) {
+      if ((page.tests || []).includes('PTE_CORE')) {
         for (const n of ['68–75', '60–70', '60–68', '69–78', '84–88', '82–88', '78–87', '88–89']) assert.ok(body.includes(n), `PTE Core cell ${n}`);
         assert.ok(body.includes('PTE Academic score'), 'PTE Academic CEFR table is labelled');
       }

@@ -23,6 +23,9 @@
 
 - [CELPIP vs PTE Core](https://openexamhub.org/compare/celpip-vs-pte): IRCC's CLB table for CELPIP-General and PTE Core side by side, and test format
 - [CLB and NCLC equivalency table](https://openexamhub.org/compare/clb-equivalency-table): IRCC's tables for all five Express Entry tests (IELTS General Training, CELPIP-General, PTE Core, TEF Canada, TCF Canada) per skill, with a CSV download ([CSV](https://openexamhub.org/compare/clb-equivalency-table.csv))
+- [TEF Canada vs TCF Canada](https://openexamhub.org/compare/tef-vs-tcf): IRCC's NCLC tables for both French Express Entry tests side by side (TEF on the Express Entry scale), test format and validity
+- [DELF vs TCF](https://openexamhub.org/compare/delf-vs-tcf): diploma vs test by CEFR level, validity, and what IRCC and the French authorities accept (no score conversion)
+- [Goethe vs telc](https://openexamhub.org/compare/goethe-vs-telc): German exams by CEFR level, with the certificates BAMF and DAAD name for spouse visas, naturalisation and university
 - [All comparisons](https://openexamhub.org/compare)
 
 ## Study plans

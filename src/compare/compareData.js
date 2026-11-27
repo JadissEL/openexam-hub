@@ -46,7 +46,21 @@ export const SOURCE_URLS = {
   CELPIP_FORMAT: 'https://www.celpip.ca/test-format-scoring/',
   PTE_CORE: 'https://www.pearsonpte.com/pte-core',
   PTE_CORE_SCORING: PTE_CORE_SCORING_URL,
-  PTE_ACADEMIC_SCORE: 'https://www.pearsonpte.com/pte-academic/scoring/understand-your-score/'
+  PTE_ACADEMIC_SCORE: 'https://www.pearsonpte.com/pte-academic/scoring/understand-your-score/',
+  // French tests (PR 4)
+  TEF_CANADA: 'https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/presentation/',
+  TCF_CANADA: 'https://www.france-education-international.fr/test/tcf-canada',
+  IRCC_CITIZENSHIP: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/become-canadian-citizen/eligibility/language-proof/step-5.html',
+  ETUDIANT_GOUV: 'https://www.etudiant.gouv.fr/fr/apprendre-et-certifier-son-niveau-de-francais-775',
+  CAMPUS_FRANCE_MAROC: 'https://www.maroc.campusfrance.org/pour-tout-savoir-sur-le-tcf-delfdalf-et-tef',
+  SERVICE_PUBLIC_NATIONALITE: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F11926',
+  // German exams (PR 4)
+  GOETHE_EXAMS: 'https://www.goethe.de/de/spr/prf.html',
+  TELC_DEUTSCH: 'https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/',
+  TELC_C1_HOCHSCHULE: 'https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/telc-deutsch-c1-hochschule/',
+  BAMF_SPOUSE_A1: 'https://www.bamf.de/SharedDocs/Anlagen/DE/MigrationAufenthalt/Ehegattennachzug/ehegattennachzug-en.pdf?__blob=publicationFile&v=8',
+  BAMF_B1_LIST: 'https://www.bamf.de/SharedDocs/Anlagen/DE/Integration/SprachnachweiseZertifikate/nachweis-b1-zertifkat.pdf?__blob=publicationFile',
+  DAAD_GERMAN: 'https://www.daad.de/en/studying-in-germany/living-in-germany/german-language/'
 };
 
 /**
@@ -160,6 +174,125 @@ export const TEST_FORMATS = {
     }
   }
 };
+
+const IRCC_CITIZENSHIP_FR = 'IRCC citizenship: B1 or higher in listening and speaking';
+const EE_FR = 'Express Entry: accepted (IRCC)';
+
+Object.assign(TEST_FORMATS, {
+  // TEF Canada: CCI Paris Île-de-France's page, read 27 Nov 2026. Score maxima are IRCC's Express Entry scale.
+  TEF_CANADA: {
+    name: 'TEF Canada',
+    sourceUrl: SOURCE_URLS.TEF_CANADA,
+    sourceLabel: 'Le français des affaires (CCI Paris Île-de-France): TEF Canada',
+    rows: {
+      owner: 'Le français des affaires, CCI Paris Île-de-France',
+      version: 'TEF Canada. For Express Entry, enter the “Équivalence ancien score” column, not “Score / 699”',
+      sections: 'Reading (40 questions), listening (40 questions), writing (2 sections), speaking (2 sections). All four are compulsory for immigration and must be taken on the same day',
+      timing: 'Reading 1 h, listening 40 min, writing 1 h, speaking 15 min',
+      scale: 'On IRCC’s Express Entry scale: reading up to 300, listening up to 360, writing and speaking up to 450',
+      clb: 'IRCC gives a score range for each NCLC level, per skill',
+      validity: 'CCI Paris: results certificate valid 2 years from its date of issue. ' + EE_VALIDITY
+    }
+  },
+  // TCF Canada: format from France Éducation international's 2026 candidate manual (as used on /exams/tcf-canada);
+  // score maxima from IRCC's table. FEI's site blocks automated checks, so the format row was not re-read today.
+  TCF_CANADA: {
+    name: 'TCF Canada',
+    sourceUrl: SOURCE_URLS.TCF_CANADA,
+    sourceLabel: 'France Éducation international: TCF Canada',
+    rows: {
+      owner: 'France Éducation international',
+      version: 'TCF Canada only. The general TCF (tout public) is not on IRCC’s Express Entry list',
+      sections: 'Listening (39 questions), reading (39 questions), writing (3 tasks), speaking (3 tasks). All four are compulsory',
+      timing: 'Listening 35 min, reading 60 min, writing 60 min, speaking 12 min: 2 h 47 min in total',
+      scale: 'On IRCC’s table: listening and reading up to 699, writing and speaking up to 20',
+      clb: 'IRCC gives a score range for each NCLC level, per skill',
+      validity: EE_VALIDITY
+    }
+  },
+  // DELF / DALF and the TCF: étudiant.gouv.fr, Campus France Maroc, IRCC and Service-Public, read 27 Nov 2026.
+  DELF_DALF: {
+    name: 'DELF and DALF',
+    sourceUrl: SOURCE_URLS.ETUDIANT_GOUV,
+    sourceLabel: 'Étudiant.gouv.fr: Apprendre et certifier son niveau de français',
+    extraSources: [{ url: SOURCE_URLS.CAMPUS_FRANCE_MAROC, label: 'Campus France Maroc: Pour tout savoir sur le TCF, DELF/DALF et TEF' }],
+    rows: {
+      kind: 'A diploma, awarded at one CEFR level',
+      levels: 'DELF A1, A2, B1, B2; DALF C1, C2',
+      skills: 'Listening, reading, writing, speaking',
+      results: 'Marked out of 100, 25 per skill. Pass: 50/100 or more, with at least 5/25 in every skill',
+      validity: 'Valid for life once obtained',
+      expressEntry: 'Not accepted: IRCC lists only TEF Canada and TCF Canada for French',
+      citizenshipCa: 'IRCC citizenship: DELF B1 or higher, and any DALF result',
+      naturalisationFr: 'Service-Public accepts any diploma attesting at least B2, so DELF B2, DALF C1 or DALF C2 (DELF is not named on that page)'
+    }
+  },
+  TCF_FRENCH: {
+    name: 'TCF',
+    sourceUrl: SOURCE_URLS.CAMPUS_FRANCE_MAROC,
+    sourceLabel: 'Campus France Maroc: Pour tout savoir sur le TCF, DELF/DALF et TEF',
+    extraSources: [{ url: SOURCE_URLS.SERVICE_PUBLIC_NATIONALITE, label: 'Service-Public: Nationalité française, justifier de son niveau en français' }],
+    rows: {
+      kind: 'A test of your level at one moment. It comes in versions: TCF tout public (French university DAP), TCF Canada (IRCC)',
+      levels: 'Result placed on the CEFR scale, A1 to C2',
+      skills: 'Depends on the version; TCF Canada has listening, reading, writing and speaking',
+      results: 'An attestation of your level, not a pass or fail',
+      validity: 'Attestation valid 2 years',
+      expressEntry: 'TCF Canada only (IRCC). ' + EE_VALIDITY,
+      citizenshipCa: 'TCF Canada: B1 or higher in listening and speaking (IRCC)',
+      naturalisationFr: 'TCF attestation issued less than 2 years ago (Service-Public), B2 required'
+    }
+  },
+  // Goethe-Zertifikat and telc Deutsch: BAMF, DAAD and telc.net read 27 Nov 2026. goethe.de blocks automated
+  // checks, so Goethe facts here come from BAMF and DAAD, plus the level range on the Goethe guide.
+  GOETHE: {
+    name: 'Goethe-Zertifikat',
+    sourceUrl: SOURCE_URLS.GOETHE_EXAMS,
+    sourceLabel: 'Goethe-Institut: German exams',
+    rows: {
+      owner: 'Goethe-Institut',
+      levels: 'Goethe-Zertifikat A1 to C2, one exam per level',
+      spouseA1: 'Start Deutsch 1 of the Goethe-Institut is one of the certificates BAMF names (leaflet last revised 03/2023)',
+      naturalisationB1: 'On BAMF’s list of recognised B1 proofs (dated July 2023): Goethe-Zertifikat B1 and Goethe-Zertifikat B1 (Jugendliche)',
+      university: 'DAAD: Goethe-Zertifikat C2 is usually recognised by universities; some programmes also recognise Goethe-Zertifikat B2 and C1',
+      practice: 'Free official practice sets on goethe.de (see the Goethe guide)'
+    }
+  },
+  TELC: {
+    name: 'telc Deutsch',
+    sourceUrl: SOURCE_URLS.TELC_DEUTSCH,
+    sourceLabel: 'telc: Deutsch-Prüfungen',
+    extraSources: [{ url: SOURCE_URLS.TELC_C1_HOCHSCHULE, label: 'telc: telc Deutsch C1 Hochschule' }],
+    rows: {
+      owner: 'telc gGmbH',
+      levels: 'All CEFR levels, A1 to C2, including dual-level exams (for example telc Deutsch A2·B1) that certify the lower or the higher level',
+      spouseA1: 'Start Deutsch 1 of telc is one of the certificates BAMF names (leaflet last revised 03/2023)',
+      naturalisationB1: 'On BAMF’s list (July 2023): telc Deutsch A2-B1, Zertifikat Deutsch / telc Deutsch B1, Deutsch B1+ Beruf, B1-B2 Beruf, B1-B2 Pflege and the DTB B1',
+      university: 'DAAD: telc Deutsch C1 Hochschule is usually recognised by universities',
+      practice: 'Free official mock exams with audio on telc.net (see the telc guide)'
+    }
+  }
+});
+
+export const FRENCH_DIPLOMA_ROWS = [
+  ['kind', 'What you get'],
+  ['levels', 'Levels'],
+  ['skills', 'Skills'],
+  ['results', 'Results'],
+  ['validity', 'Validity'],
+  ['expressEntry', 'Canada: Express Entry'],
+  ['citizenshipCa', 'Canada: citizenship'],
+  ['naturalisationFr', 'France: naturalisation (B2)']
+];
+
+export const GERMAN_EXAM_ROWS = [
+  ['owner', 'Run by'],
+  ['levels', 'Levels'],
+  ['spouseA1', 'Spouse visa (A1)'],
+  ['naturalisationB1', 'Naturalisation (B1)'],
+  ['university', 'University admission'],
+  ['practice', 'Official practice']
+];
 
 export const FORMAT_ROW_LABELS = [
   ['owner', 'Run by'],
