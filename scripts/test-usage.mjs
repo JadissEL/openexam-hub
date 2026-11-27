@@ -522,7 +522,13 @@ test('generateJson walks primary, Gemini fallbacks, then the Cloudflare fallback
   ];
   const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
   const origFetch = globalThis.fetch;
+  const origTimeout = AbortSignal.timeout.bind(AbortSignal);
   const calls = [];
+  const timeouts = [];
+  AbortSignal.timeout = (ms) => {
+    timeouts.push(ms);
+    return origTimeout(ms);
+  };
   const fail = (status) => ({
     ok: false,
     status,
@@ -575,6 +581,48 @@ test('generateJson walks primary, Gemini fallbacks, then the Cloudflare fallback
     assert.equal(calls[0].url, 'https://api.groq.com/openai/v1/chat/completions');
     assert.equal(calls[3].url, 'https://api.cloudflare.com/client/v4/accounts/abc/ai/v1/chat/completions');
     assert.equal(calls[3].auth, 'Bearer ck');
+    assert.deepEqual(timeouts, [30000, 30000, 30000, 55000]);
+  } finally {
+    globalThis.fetch = origFetch;
+    AbortSignal.timeout = origTimeout;
+    for (const k of keys) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  }
+});
+
+test('generateJson skips a provider call that would run past deadlineAt', async () => {
+  const { generateJson } = await import('../lib/llm.js');
+  const keys = ['LLM_BASE_URL', 'LLM_API_KEY', 'LLM_MODEL', 'LLM_FALLBACK_BASE_URL', 'LLM_FALLBACK_API_KEY', 'LLM_FALLBACK_MODEL', 'LLM_FALLBACK2_BASE_URL'];
+  const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  const origFetch = globalThis.fetch;
+  let calls = 0;
+  try {
+    Object.assign(process.env, {
+      LLM_BASE_URL: 'https://primary.example/v1',
+      LLM_API_KEY: 'pk',
+      LLM_MODEL: 'primary-model',
+      LLM_FALLBACK_BASE_URL: 'https://fallback.example/v1',
+      LLM_FALLBACK_API_KEY: 'fk',
+      LLM_FALLBACK_MODEL: 'fallback-model'
+    });
+    delete process.env.LLM_FALLBACK2_BASE_URL;
+    globalThis.fetch = async () => {
+      calls += 1;
+      throw new Error('fetch should not run past the deadline');
+    };
+    await assert.rejects(
+      () => generateJson({
+        agent: 'PLANNER',
+        system: 'test',
+        prompt: 'ping',
+        schema: { type: 'object' },
+        deadlineAt: Date.now() + 1000
+      }),
+      (err) => err?.message === 'AI service temporarily unavailable'
+    );
+    assert.equal(calls, 0);
   } finally {
     globalThis.fetch = origFetch;
     for (const k of keys) {

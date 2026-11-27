@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { learnerPipeline, pipelineDetailForLearner } from '../lib/algo/common.js';
 import {
   ShieldCheck,
   Sparkles,
@@ -1243,6 +1244,7 @@ function Dashboard({ initialUser }) {
         if (roadmap && Array.isArray(roadmap.phases)) {
           const clonedForUser = {
             ...roadmap,
+            pipeline: learnerPipeline(roadmap.pipeline),
             id: cacheKey,
             exam: selectedExam,
             createdAt: localDate(),
@@ -1255,7 +1257,7 @@ function Dashboard({ initialUser }) {
           trackRoadmap('shared_cache');
           setCacheLayerHit('global');
           setAgentStep(5);
-          setPipelineTrace(roadmap.pipeline || []);
+          setPipelineTrace(learnerPipeline(roadmap.pipeline));
           await saveToPersonalCache(clonedForUser);
           await recordCacheHitMetric();
           setStatusNotice(
@@ -1329,6 +1331,7 @@ function Dashboard({ initialUser }) {
         }, { token });
         const newRoadmap = {
           ...roadmap,
+          pipeline: learnerPipeline(roadmap.pipeline),
           id: cacheKey,
           exam: selectedExam,
           completedTasks: {},
@@ -1338,7 +1341,7 @@ function Dashboard({ initialUser }) {
         };
         stepTimers.forEach(clearTimeout);
         setAgentStep(5);
-        setPipelineTrace(roadmap.pipeline || []);
+        setPipelineTrace(newRoadmap.pipeline);
         if (roadmap.source === 'global_cache') setCacheLayerHit('global');
         Object.assign(newRoadmap, targetTag(newRoadmap.exam));
         setSavedRoadmaps((prev) => [
@@ -2362,7 +2365,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                               tone={step.status === 'ok' ? 'green' : step.status === 'skipped' ? 'slate' : 'amber'}
                             />
                             <strong className="text-neutral-900 font-semibold whitespace-nowrap">{agentLabel(step.agent)}</strong>
-                            <span className="min-w-0">{step.detail}</span>
+                            <span className="min-w-0">{pipelineDetailForLearner(step)}</span>
                           </li>
                         ))}
                       </ul>
