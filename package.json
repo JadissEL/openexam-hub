@@ -10,9 +10,9 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "node scripts/local-server.mjs",
-    "build": "vite build && node scripts/test-blog.mjs --built && node scripts/test-clb.mjs --built",
+    "build": "vite build && node scripts/test-blog.mjs --built && node scripts/test-clb.mjs --built && node scripts/test-compare.mjs --built",
     "preview": "vite preview",
-    "test": "node scripts/test-http.mjs && node scripts/test-client-helpers.mjs && node scripts/test-orchestrator.mjs && node scripts/test-learner-agents.mjs && node scripts/test-ledger.mjs && node scripts/test-usage.mjs && node scripts/test-algo.mjs && node scripts/test-v3.mjs && node scripts/test-blog.mjs && node scripts/test-worker.mjs && node scripts/test-signup-alert.mjs && node scripts/test-auth-gate.mjs && node scripts/test-user-emails.mjs && node scripts/test-funding-prerender.mjs && node scripts/test-hits.mjs && node scripts/test-clb.mjs",
+    "test": "node scripts/test-http.mjs && node scripts/test-client-helpers.mjs && node scripts/test-orchestrator.mjs && node scripts/test-learner-agents.mjs && node scripts/test-ledger.mjs && node scripts/test-usage.mjs && node scripts/test-algo.mjs && node scripts/test-v3.mjs && node scripts/test-blog.mjs && node scripts/test-worker.mjs && node scripts/test-signup-alert.mjs && node scripts/test-auth-gate.mjs && node scripts/test-user-emails.mjs && node scripts/test-funding-prerender.mjs && node scripts/test-hits.mjs && node scripts/test-clb.mjs && node scripts/test-compare.mjs",
     "test:algo": "node scripts/test-algo.mjs && node scripts/test-v3.mjs",
     "e2e": "node scripts/e2e.mjs",
     "mock-llm": "node scripts/mock-llm.mjs",

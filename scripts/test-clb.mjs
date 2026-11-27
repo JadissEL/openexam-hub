@@ -86,6 +86,22 @@ const CASES = {
     ['speaking', 3.5, 0], ['speaking', 4.0, 4], ['speaking', 5.0, 5], ['speaking', 5.5, 6], ['speaking', 6.0, 7], ['speaking', 6.5, 8],
     ['speaking', 7.0, 9], ['speaking', 7.5, 10], ['speaking', 9.0, 10]
   ],
+  // PTE Core, from IRCC's Express Entry language test results page (CLB 4 row from the Federal Skilled
+  // Trades table, CLB 5-10 from the Federal Skilled Worker / CEC tables), read 2026-11-27. Scale is 10-90.
+  PTE_CORE: [
+    ['speaking', 41, 0], ['speaking', 42, 4], ['speaking', 50, 4], ['speaking', 51, 5], ['speaking', 58, 5], ['speaking', 59, 6],
+    ['speaking', 67, 6], ['speaking', 68, 7], ['speaking', 75, 7], ['speaking', 76, 8], ['speaking', 83, 8], ['speaking', 84, 9],
+    ['speaking', 88, 9], ['speaking', 89, 10], ['speaking', 90, 10], ['speaking', 91, null],
+    ['listening', 27, 0], ['listening', 28, 4], ['listening', 38, 4], ['listening', 39, 5], ['listening', 49, 5], ['listening', 50, 6],
+    ['listening', 59, 6], ['listening', 60, 7], ['listening', 70, 7], ['listening', 71, 8], ['listening', 81, 8], ['listening', 82, 9],
+    ['listening', 88, 9], ['listening', 89, 10], ['listening', 90, 10], ['listening', 91, null],
+    ['reading', 32, 0], ['reading', 33, 4], ['reading', 41, 4], ['reading', 42, 5], ['reading', 50, 5], ['reading', 51, 6],
+    ['reading', 59, 6], ['reading', 60, 7], ['reading', 68, 7], ['reading', 69, 8], ['reading', 77, 8], ['reading', 78, 9],
+    ['reading', 87, 9], ['reading', 88, 10], ['reading', 90, 10], ['reading', 91, null],
+    ['writing', 40, 0], ['writing', 41, 4], ['writing', 50, 4], ['writing', 51, 5], ['writing', 59, 5], ['writing', 60, 6],
+    ['writing', 68, 6], ['writing', 69, 7], ['writing', 78, 7], ['writing', 79, 8], ['writing', 87, 8], ['writing', 88, 9],
+    ['writing', 89, 9], ['writing', 90, 10], ['writing', 91, null]
+  ],
   // CELPIP-General: IRCC lists CLB level = CELPIP level for 4 to 9, and "10+" for CLB 10 (scale tops out at 12).
   CELPIP_G: [
     ...['reading', 'listening', 'writing', 'speaking'].flatMap((skill) => [
@@ -299,7 +315,8 @@ test('CTA picks the planner level from the gap and is a valid planner deep link'
   assert.equal(plannerHref('IELTS_GT', 8), '/app?exam=IELTS&level=C1&days=30&utm_source=clb-tool');
   assert.equal(plannerHref('CELPIP_G', 6), '/app?exam=CELPIP&level=B2&days=30&utm_source=clb-tool');
   assert.equal(plannerHref('CELPIP_G', 8), '/app?exam=CELPIP&level=C1&days=30&utm_source=clb-tool');
-  for (const id of TABLE_IDS) {
+  assert.equal(plannerHref('PTE_CORE', 7), null, 'PTE Core has no planner exam, so no /app deep link');
+  for (const id of TABLE_IDS.filter((t) => t !== 'PTE_CORE')) {
     for (const lvl of [null, 5, 7, 9]) {
       const qs = plannerHref(id, lvl).split('?')[1];
       assert.equal(isPlannerDeepLink(qs), true, `${id} ${lvl}`);
@@ -355,7 +372,10 @@ test('?tab= deep-links select a converter test and ignore invalid values', () =>
   assert.equal(modeFromTabParam('tef'), 'TEF_EXPRESS_ENTRY');
   assert.equal(modeFromTabParam('ielts'), 'IELTS_GT');
   assert.equal(modeFromTabParam('celpip'), 'CELPIP_G');
-  for (const bad of [undefined, null, '', 'foo', 'TCF_CANADA', 'tef-canada', 'tcf-canada', '1']) {
+  assert.equal(modeFromTabParam('pte'), 'PTE_CORE');
+  assert.equal(modeFromSearch('?tab=pte'), 'PTE_CORE');
+  assert.equal(tabFromMode('PTE_CORE'), 'pte');
+  for (const bad of [undefined, null, '', 'foo', 'TCF_CANADA', 'tef-canada', 'tcf-canada', '1', 'pte-academic', 'PTE_CORE']) {
     assert.equal(modeFromTabParam(bad), DEFAULT_TOOL_MODE, `invalid tab ${JSON.stringify(bad)} falls back to TEF`);
   }
   assert.equal(modeFromSearch(''), DEFAULT_TOOL_MODE);
@@ -441,8 +461,8 @@ if (process.argv.includes('--built')) {
 
     assert.match(html, new RegExp(`<meta property="og:url" content="${url}"`));
     assert.doesNotMatch(html, /name="robots"[^>]*noindex/);
-    assert.match(html, /<title>IELTS, CELPIP, TEF &amp; TCF to CLB \(NCLC\) converter · OpenExam Hub<\/title>/);
-    assert.match(html, /<h1[^>]*>IELTS, CELPIP, TEF Canada and TCF Canada to CLB \(NCLC\) score converter<\/h1>/);
+    assert.match(html, /<title>IELTS, CELPIP, PTE, TEF, TCF to CLB converter · OpenExam Hub<\/title>/);
+    assert.match(html, /<h1[^>]*>IELTS, CELPIP, PTE Core, TEF Canada and TCF Canada to CLB \(NCLC\) score converter<\/h1>/);
     assert.match(html, /<script type="module"/, 'interactive page keeps its module script so React takes over');
     const text = visibleText(html);
     for (const needle of [
@@ -530,7 +550,7 @@ if (process.argv.includes('--built')) {
     assert.ok(tefCard.includes('href="/tools/clb-converter"'), 'TEF Canada card uses the bare converter URL');
     assert.ok(!tefCard.includes('?tab='), 'TEF Canada card does not add a tab query');
     assert.ok(visibleText(read('exams/ielts/index.html')).includes('Express Entry accepts IELTS General Training only, not Academic'), 'IELTS guide card states the General Training rule');
-    assert.ok(fs.readFileSync(path.join(root, 'public/llms.txt'), 'utf8').includes('IELTS, CELPIP, TEF Canada and TCF Canada to CLB (NCLC) score converter'), 'llms.txt describes the new scope');
+    assert.ok(fs.readFileSync(path.join(root, 'public/llms.txt'), 'utf8').includes('IELTS, CELPIP, PTE Core, TEF Canada and TCF Canada to CLB (NCLC) score converter'), 'llms.txt describes the new scope');
     for (const rel of ['index.html', 'exams/tef-canada/index.html', 'blog/index.html', 'tools/clb-converter/index.html']) {
       assert.ok(read(rel).includes('href="/tools/clb-converter"'), `${rel} footer/tool link`);
     }

@@ -11,12 +11,15 @@ import {
   ENGLISH_LAST_VERIFIED,
   FRENCH_BONUS,
   LAST_VERIFIED,
+  PTE_CORE_SCORING_URL,
+  PTE_LAST_VERIFIED,
   SKILLS,
   SKILL_LABELS,
   START_UP_URL,
   TABLES,
   convert,
   formatScore,
+  bandText,
   levelLabel,
   maxScore,
   plannerHref,
@@ -28,7 +31,8 @@ const MODES = [
   { id: 'TEF_EXPRESS_ENTRY', tab: 'tef', title: 'TEF Canada' },
   { id: 'TCF_CANADA', tab: 'tcf', title: 'TCF Canada' },
   { id: 'IELTS_GT', tab: 'ielts', title: 'IELTS' },
-  { id: 'CELPIP_G', tab: 'celpip', title: 'CELPIP' }
+  { id: 'CELPIP_G', tab: 'celpip', title: 'CELPIP' },
+  { id: 'PTE_CORE', tab: 'pte', title: 'PTE Core' }
 ];
 
 function verifiedLabel(date = LAST_VERIFIED) {
@@ -51,7 +55,7 @@ function SectionTitle({ id, children }) {
 
 function Segmented({ label, options, value, onChange }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex w-full sm:w-fit sm:self-start rounded-full bg-[#EDE7DD] p-1">
+    <div role="group" aria-label={label} className="inline-flex flex-wrap w-full sm:w-fit sm:self-start rounded-[28px] bg-[#EDE7DD] p-1">
       {options.map((o) => (
         <button
           key={o.id}
@@ -69,15 +73,7 @@ function Segmented({ label, options, value, onChange }) {
   );
 }
 
-// IRCC prints one listed score per level for IELTS and CELPIP (the lowest that earns it), and a range only on
-// the top row (IELTS "7.5-9.0", CELPIP "10+"). Show them as IRCC does; the other tables show full ranges.
-function cellText(table, r) {
-  if (!table.listed) return r.min === r.max ? String(r.min) : `${r.min}–${r.max}`;
-  const fmt = (n) => formatScore(table.id, n);
-  if (r.level < 10) return fmt(r.min);
-  return table.id === 'CELPIP_G' ? `${r.min}+` : `${fmt(r.min)}–${fmt(r.max)}`;
-}
-
+const cellText = (table, r) => bandText(table, r);
 
 function tableRegionLabel(table) {
   return {
@@ -85,7 +81,8 @@ function tableRegionLabel(table) {
     TEF_NEW_699: 'IRCC TEF Canada Score /699 table',
     TCF_CANADA: 'IRCC TCF Canada table',
     IELTS_GT: 'IRCC IELTS General Training table',
-    CELPIP_G: 'IRCC CELPIP-General table'
+    CELPIP_G: 'IRCC CELPIP-General table',
+    PTE_CORE: 'IRCC PTE Core table'
   }[table.id] || `IRCC ${table.short || table.label} table`;
 }
 
@@ -235,6 +232,7 @@ function Converter() {
   const examName = table.examName || (table.exam === 'TCF_CANADA' ? 'TCF Canada' : 'TEF Canada');
   const scheme = table.scheme;
   const french = table.language === 'fr';
+  const tableVerified = french ? LAST_VERIFIED : tableId === 'PTE_CORE' ? PTE_LAST_VERIFIED : ENGLISH_LAST_VERIFIED;
   const activeTab = mode === 'TEF_NEW_699' ? 'TEF_EXPRESS_ENTRY' : mode;
 
   return (
@@ -259,6 +257,13 @@ function Converter() {
                 {' '}See the{' '}
                 <a href="/exams/celpip" className="text-[#C2410C] underline underline-offset-4">CELPIP guide</a>
                 {' '}for test format and official practice.
+              </>
+            ) : null}
+            {table.id === 'PTE_CORE' ? (
+              <>
+                {' '}See{' '}
+                <a href="/compare/ielts-vs-pte" className="text-[#C2410C] underline underline-offset-4">IELTS vs PTE Core</a>
+                {' '}for the test format and the two CLB tables side by side.
               </>
             ) : null}
           </p>
@@ -417,11 +422,27 @@ function Converter() {
               Get a free study plan to reach CLB 7/9 <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </a>
           </div>
-        ) : null}
+        ) : (
+          <div className="mt-6 rounded-3xl bg-[#1A1714] px-5 sm:px-7 py-6 text-white">
+            <p className="font-display text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium leading-tight">
+              Choosing between PTE Core, IELTS and CELPIP?
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-[#D9D2C8]">
+              OpenExam Hub has no PTE Core study plan yet. See the PTE Core and IELTS General Training CLB tables and test formats side by side, from IRCC and the official test sites.
+            </p>
+            <a
+              href="/compare/ielts-vs-pte"
+              data-clb-cta
+              className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold"
+            >
+              Compare IELTS and PTE Core <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </a>
+          </div>
+        )}
       </div>
 
       <p className="mt-5 text-[13px] leading-snug text-[#6B635A]">
-        Not affiliated with IRCC. Tables checked on {verifiedLabel(french ? LAST_VERIFIED : ENGLISH_LAST_VERIFIED)}. No score guarantees. Verify your level on{' '}
+        Not affiliated with IRCC. Tables checked on {verifiedLabel(tableVerified)}. No score guarantees. Verify your level on{' '}
         <a href={mode === 'TEF_NEW_699' ? START_UP_URL : EE_LANGUAGE_URL} target="_blank" rel="noopener noreferrer" className="text-[#C2410C] underline underline-offset-4">canada.ca</a>.
         Nothing you type leaves your device.
       </p>
@@ -435,6 +456,7 @@ export default function ClbConverter() {
   const tef699 = TABLES.TEF_NEW_699;
   const ielts = TABLES.IELTS_GT;
   const celpip = TABLES.CELPIP_G;
+  const pte = TABLES.PTE_CORE;
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased" style={pageFont}>
       <SiteHeader />
@@ -445,7 +467,7 @@ export default function ClbConverter() {
             <p className={eyebrow}>Free tool · No account needed</p>
             <h1 className={`mt-4 font-display ${ink} text-[36px] sm:text-5xl lg:text-[56px] tracking-[-0.03em] font-medium leading-[1.05]`}>{TOOL_H1}</h1>
             <p className={`mt-6 ${lead}`}>
-              Pick IELTS General Training, CELPIP-General, TEF Canada or TCF Canada, enter your four scores and see your CLB (NCLC) level for each skill, your lowest level overall, whether you meet level 7 or 9, and the CRS language points they earn. It uses IRCC’s own tables from canada.ca, checked on {verifiedLabel(ENGLISH_LAST_VERIFIED)} (IELTS and CELPIP) and {verifiedLabel()} (TEF Canada and TCF Canada). The tool gives no score guarantees.
+              Pick IELTS General Training, CELPIP-General, PTE Core, TEF Canada or TCF Canada, enter your four scores and see your CLB (NCLC) level for each skill, your lowest level overall, whether you meet level 7 or 9, and the CRS language points they earn. It uses IRCC’s own tables from canada.ca, checked on {verifiedLabel(ENGLISH_LAST_VERIFIED)} (IELTS and CELPIP), {verifiedLabel(PTE_LAST_VERIFIED)} (PTE Core) and {verifiedLabel()} (TEF Canada and TCF Canada). The tool gives no score guarantees.
             </p>
           </header>
 
@@ -456,6 +478,7 @@ export default function ClbConverter() {
             <ul className={`mt-4 list-disc pl-5 space-y-2 text-[17px] leading-[1.7] ${muted}`}>
               <li><strong className={ink}>IELTS:</strong> your General Training band for each skill, in steps of 0.5 (for example 6.0 or 6.5). Express Entry accepts IELTS General Training only, not IELTS Academic.</li>
               <li><strong className={ink}>CELPIP:</strong> your CELPIP-General level for each skill, a whole number. Express Entry accepts the CELPIP-General test. For test format and official practice, see the <a href="/exams/celpip" className="text-[#C2410C] underline underline-offset-4">CELPIP guide</a>.</li>
+              <li><strong className={ink}>PTE Core:</strong> your PTE Core score for each skill, a whole number from 10 to 90. Express Entry accepts PTE Core only, not PTE Academic.</li>
               <li><strong className={ink}>TEF Canada, for Express Entry:</strong> the numbers in the “Équivalence ancien score” column of your attestation de résultats. Don’t use the “Score / 699” column.</li>
               <li><strong className={ink}>TCF Canada:</strong> reading and listening are out of 699; speaking and writing are out of 20.</li>
               <li>CLB or NCLC 10 is the top level on IRCC’s tables, so any score from its lower limit up counts as level 10.</li>
@@ -467,11 +490,12 @@ export default function ClbConverter() {
           <section aria-labelledby="tables-title" className="mt-14">
             <SectionTitle id="tables-title">IRCC score tables used by this tool</SectionTitle>
             <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>
-              Copied from canada.ca. The TEF Canada and TCF Canada tables were last checked on {verifiedLabel()}, and the IELTS and CELPIP tables on {verifiedLabel(ENGLISH_LAST_VERIFIED)}. For TEF Canada and TCF Canada each range is the score that earns that NCLC level. For IELTS and CELPIP the table shows the score IRCC lists for each CLB level.
+              Copied from canada.ca. The TEF Canada and TCF Canada tables were last checked on {verifiedLabel()}, and the IELTS and CELPIP tables on {verifiedLabel(ENGLISH_LAST_VERIFIED)}. The PTE Core table was checked on {verifiedLabel(PTE_LAST_VERIFIED)}. For PTE Core, TEF Canada and TCF Canada each range is the score that earns that level. For IELTS and CELPIP the table shows the score IRCC lists for each CLB level.
             </p>
             <div className="mt-6 space-y-9">
               <ReferenceTable table={ielts} />
               <ReferenceTable table={celpip} />
+              <ReferenceTable table={pte} />
               <ReferenceTable table={tef} />
               <ReferenceTable table={tcf} />
               <ReferenceTable table={tef699} />
@@ -508,7 +532,8 @@ export default function ClbConverter() {
             <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Sources and disclaimer</h2>
             <ol className="mt-4 space-y-2 text-[16px] leading-snug">
               {[
-                { url: EE_LANGUAGE_URL, label: 'IRCC: Express Entry, Language test results (IELTS General Training, CELPIP-General, TEF Canada “ancien score” and TCF Canada tables)' },
+                { url: EE_LANGUAGE_URL, label: 'IRCC: Express Entry, Language test results (IELTS General Training, CELPIP-General, PTE Core, TEF Canada “ancien score” and TCF Canada tables)' },
+                { url: PTE_CORE_SCORING_URL, label: 'Pearson: PTE Core scoring (scores reported on a 10–90 scale)' },
                 { url: START_UP_URL, label: 'IRCC: Start-up visa, Language testing (TEF Canada “Score / 699” table, tests after 10 December 2023)' },
                 { url: CRS_URL, label: 'IRCC: Comprehensive Ranking System (CRS) criteria (first official language points, French bonus)' }
               ].map((s) => (
@@ -520,7 +545,7 @@ export default function ClbConverter() {
               ))}
             </ol>
             <p className="mt-4 text-[14px] leading-relaxed text-[#6B635A]">
-              IRCC’s Express Entry language test results page was last modified on <time dateTime={EE_LANGUAGE_MODIFIED}>{verifiedLabel(EE_LANGUAGE_MODIFIED)}</time> (the page’s modified date in its metadata when we read it). IELTS and CELPIP tables last verified on <time dateTime={ENGLISH_LAST_VERIFIED}>{verifiedLabel(ENGLISH_LAST_VERIFIED)}</time>; TEF Canada and TCF Canada tables on <time dateTime={LAST_VERIFIED}>{verifiedLabel()}</time>. OpenExam Hub is independent and not affiliated with IRCC, the IELTS test owners, Paragon Testing Enterprises (CELPIP), CCI Paris Île-de-France or France Éducation international. The tool gives no score guarantees. This tool is for information only and is not immigration advice. IRCC can change its tables and rules at any time, so verify your level and your program’s requirements on canada.ca before you apply.
+              IRCC’s Express Entry language test results page was last modified on <time dateTime={EE_LANGUAGE_MODIFIED}>{verifiedLabel(EE_LANGUAGE_MODIFIED)}</time> (the page’s modified date in its metadata when we read it). IELTS and CELPIP tables last verified on <time dateTime={ENGLISH_LAST_VERIFIED}>{verifiedLabel(ENGLISH_LAST_VERIFIED)}</time>; PTE Core table on <time dateTime={PTE_LAST_VERIFIED}>{verifiedLabel(PTE_LAST_VERIFIED)}</time>; TEF Canada and TCF Canada tables on <time dateTime={LAST_VERIFIED}>{verifiedLabel()}</time>. OpenExam Hub is independent and not affiliated with IRCC, the IELTS test owners, Paragon Testing Enterprises (CELPIP), Pearson (PTE Core), CCI Paris Île-de-France or France Éducation international. The tool gives no score guarantees. This tool is for information only and is not immigration advice. IRCC can change its tables and rules at any time, so verify your level and your program’s requirements on canada.ca before you apply.
             </p>
           </section>
 
@@ -531,6 +556,8 @@ export default function ClbConverter() {
               <li><a href="/exams/celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CELPIP guide: test format, CLB scores and free official practice</a></li>
               <li><a href="/exams/tef-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TEF Canada guide: format, NCLC scores and free official practice</a></li>
               <li><a href="/exams/tcf-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TCF Canada guide: format, timings and free official practice</a></li>
+              <li><a href="/compare/ielts-vs-celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS vs CELPIP: CLB scores and test format side by side</a></li>
+              <li><a href="/compare/ielts-vs-pte" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS vs PTE Core: CLB scores and test format side by side</a></li>
               <li><a href="/blog/ielts-to-clb-express-entry" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS to CLB for Express Entry</a></li>
               <li>
                 <a href="/blog/ielts-to-cefr" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2</a>
