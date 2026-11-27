@@ -105,6 +105,23 @@ test('dedupKey: locale segments, www, index pages', () => {
   assert.equal(K.isLocaleSegment('api'), false);
   assert.equal(K.siteOf('https://learngerman.dw.com/x'), 'dw.com');
   assert.equal(K.siteOf('https://www.bbc.co.uk/x'), 'bbc.co.uk');
+  assert.notEqual(
+    K.dedupKey('https://www.youtube.com/watch?v=9YpA3MRjLFg'),
+    K.dedupKey('https://www.youtube.com/watch?v=YsFtmYT4t-E'),
+    'distinct YouTube videos must not share a dedup key'
+  );
+  assert.equal(
+    K.dedupKey('https://youtu.be/9YpA3MRjLFg'),
+    K.dedupKey('https://youtu.be/9YpA3MRjLFg?feature=share')
+  );
+  assert.equal(
+    K.canonicalUrl('https://www.youtube.com/watch?v=9YpA3MRjLFg&feature=youtu.be'),
+    'https://www.youtube.com/watch?v=9YpA3MRjLFg'
+  );
+  assert.equal(
+    K.canonicalUrl('https://www.youtube.com/@CELPIPOfficial?cbrd=1&ucbcb=1'),
+    'https://www.youtube.com/@CELPIPOfficial'
+  );
 });
 test('shingles/jaccard/isNearDuplicate', () => {
   assert.equal(K.jaccard(new Set(), new Set()), 1);
