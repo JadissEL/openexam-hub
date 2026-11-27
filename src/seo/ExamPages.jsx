@@ -254,14 +254,78 @@ const COMPARE = {
   }
 };
 
-function CompareNote({ guide }) {
+/**
+ * Contextual pointers from an exam guide to the blog comparison posts (matched by slug). A link is only
+ * rendered when the post exists and is published, so a renamed or unpublished post never leaves a dead link.
+ * `anchor` is the visible link text; keep it in step with the post title.
+ */
+const POST_NOTES = {
+  ielts: [
+    {
+      slug: 'toefl-vs-ielts',
+      lead: 'Choosing between the two tests? Read',
+      anchor: 'TOEFL vs IELTS in 2026: which English test should you take?',
+      tail: 'for format, scoring and acceptance.'
+    },
+    {
+      slug: 'ielts-to-cefr',
+      lead: 'For the CEFR side, see',
+      anchor: 'IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2',
+      tail: 'for what IELTS.org says about bands and levels.'
+    }
+  ],
+  toefl: [
+    {
+      slug: 'toefl-vs-ielts',
+      lead: 'Read our comparison',
+      anchor: 'TOEFL vs IELTS in 2026: which English test should you take?',
+      tail: 'for format, scoring and why TOEFL is not on IRCC’s Express Entry list.'
+    }
+  ],
+  delf: [
+    {
+      slug: 'delf-vs-tcf-which-french-test',
+      lead: 'Weighing DELF against TCF? See',
+      anchor: 'DELF vs TCF: which French test should you take?',
+      tail: 'for what the French government, universities and IRCC accept.'
+    }
+  ],
+  tcf: [
+    {
+      slug: 'delf-vs-tcf-which-french-test',
+      lead: 'Weighing TCF against DELF? See',
+      anchor: 'DELF vs TCF: which French test should you take?',
+      tail: 'for what the French government, universities and IRCC accept.'
+    }
+  ],
+  'tcf-canada': [
+    {
+      slug: 'delf-vs-tcf-which-french-test',
+      lead: 'Also considering a French diploma? See',
+      anchor: 'DELF vs TCF: which French test should you take?',
+      tail: 'for how the two compare for citizenship, study and Canadian immigration.'
+    }
+  ]
+};
+
+function CompareNote({ guide, posts = [] }) {
   const c = COMPARE[guide];
-  if (!c) return null;
+  const notes = (POST_NOTES[guide] || [])
+    .map((n) => ({ ...n, post: posts.find((p) => p.slug === n.slug && !p.draft) }))
+    .filter((n) => n.post);
+  if (!c && !notes.length) return null;
   return (
-    <section aria-label="Comparing English tests" className="mt-10 max-w-3xl">
-      <p className={`text-[16px] leading-[1.7] ${muted}`}>
-        {c.lead} <a href={`/exams/${c.slug}`} className="text-[#C2410C] underline underline-offset-4">{c.anchor}</a>. {c.tail}
-      </p>
+    <section aria-label="Comparing tests" className="mt-10 max-w-3xl space-y-3">
+      {c ? (
+        <p className={`text-[16px] leading-[1.7] ${muted}`}>
+          {c.lead} <a href={`/exams/${c.slug}`} className="text-[#C2410C] underline underline-offset-4">{c.anchor}</a>. {c.tail}
+        </p>
+      ) : null}
+      {notes.map((n) => (
+        <p key={n.slug} className={`text-[16px] leading-[1.7] ${muted}`}>
+          {n.lead} <a href={n.post.url} className="text-[#C2410C] underline underline-offset-4">{n.anchor}</a> {n.tail}
+        </p>
+      ))}
     </section>
   );
 }
@@ -535,7 +599,7 @@ export function ExamPage({ slug, posts = [] }) {
 
         <StudyPlans guide={slug} />
         <RelatedTool guide={slug} />
-        <CompareNote guide={slug} />
+        <CompareNote guide={slug} posts={posts} />
         <FormatTable format={c.format} />
         <DeleLevels rows={c.deleLevels} scoring={c.scoring} />
         <Resources groups={c.resources} lastChecked={c.lastChecked} />

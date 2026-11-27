@@ -22,6 +22,20 @@
 - [TCF B2 30-day study plan](https://openexamhub.org/exams/tcf/b2-30-day-study-plan)
 - [Goethe-Zertifikat B1 30-day study plan](https://openexamhub.org/exams/goethe/b1-30-day-study-plan)
 
+## Blog guides
+- [DELF vs TCF: which French test should you take?](https://openexamhub.org/blog/delf-vs-tcf-which-french-test): A lifetime diploma or a score valid for two years? What the French government, universities and IRCC actually accept for citizenship, residence, study and Canadian immigration.
+- [IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2](https://openexamhub.org/blog/ielts-to-cefr): What IELTS.org and the British Council say about overall IELTS bands and CEFR levels, why 5.0, 6.5 and 8.0 are borderline, and what the UK Home Office asks per skill.
+- [TOEFL vs IELTS in 2026: which English test should you take?](https://openexamhub.org/blog/toefl-vs-ielts): TOEFL iBT changed in January 2026. How it compares with IELTS on format, scoring and acceptance, and why TOEFL is not on IRCC’s Express Entry list.
+- [IELTS Academic or General Training: which one you need for Express Entry](https://openexamhub.org/blog/ielts-for-express-entry-academic-or-general): IRCC accepts only IELTS General Training for Express Entry, not Academic, One Skill Retake or IELTS Online. When Academic is the right test for university or professional registration.
+- [IELTS to CLB for Express Entry](https://openexamhub.org/blog/ielts-to-clb-express-entry): How to read IRCC’s official IELTS General Training to CLB table for Express Entry, what CLB 7 requires in each skill, and which IELTS products Canada accepts.
+- [TEF Canada vs TCF Canada: differences and which to take](https://openexamhub.org/blog/tef-canada-vs-tcf-canada): Both French tests are listed by IRCC for Express Entry and citizenship, and by Quebec for skilled workers. What actually differs, what doesn’t, and how to choose.
+- [Which German exam you need for a visa, university or professional recognition](https://openexamhub.org/blog/german-exams-visa-university-professional-recognition): Official CEFR levels and accepted exams for German visas, university admission and professional recognition, including Goethe-Zertifikat, TestDaF, DSH and the Fachsprachenprüfung for doctors and nurses.
+- [IELTS 6.5 in 30 days: what is realistic](https://openexamhub.org/blog/ielts-6-5-in-30-days): What an overall IELTS 6.5 means on official scoring and CEFR pages, how the band is rounded, and why a 30-day window depends on your starting point — with no promised score.
+- [NCLC 7 / CLB 7: what TEF Canada and TCF Canada scores you need](https://openexamhub.org/blog/nclc-7-clb-7-express-entry-scores): The exact TEF Canada (old-scale and /699) and TCF Canada scores that correspond to NCLC 7, and why CLB/NCLC 7 is the Express Entry threshold on IRCC’s pages.
+- [TCF Canada scores to CLB and NCLC for Express Entry](https://openexamhub.org/blog/tcf-canada-clb-nclc-express-entry): Official IRCC tables that convert TCF Canada speaking, listening, reading and writing scores to NCLC, plus programme minimums, result validity and the CRS French bonus.
+- [IELTS fees, registration and 2027 test dates](https://openexamhub.org/blog/ielts-fees-registration-2027-test-dates): How to find official IELTS fees and 2027 dates for your country and centre, how to register, and which test Express Entry and universities actually accept.
+- [TEF Canada scores to CLB and NCLC for Express Entry](https://openexamhub.org/blog/tef-canada-clb-nclc-express-entry): How to read a TEF Canada certificate, which score column to enter in an Express Entry profile, and the official IRCC and CCI tables that convert those scores to NCLC.
+
 ## Site
 - [Study planner](https://openexamhub.org/app): free account required to generate a plan
 - [Blog](https://openexamhub.org/blog): guides on exam fees, dates, score conversions and requirements ([RSS](https://openexamhub.org/blog/rss.xml))
