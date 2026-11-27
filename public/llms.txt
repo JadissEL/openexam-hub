@@ -15,6 +15,7 @@
 - [DELE](https://openexamhub.org/exams/dele): exam format by level and official resources
 
 ## Free tools
+- [CRS points for first and second official language](https://openexamhub.org/tools/crs-language-points): IRCC's CRS grid for English and French (first and second official language, French additional points), from CLB/NCLC levels
 - [IELTS, CELPIP, PTE Core, TEF Canada and TCF Canada to CLB (NCLC) score converter](https://openexamhub.org/tools/clb-converter): level per skill, CLB/NCLC 7 and 9 check and CRS language points from IRCC's official tables (IELTS General Training, CELPIP-General and PTE Core only, not PTE Academic; no score guarantees)
 
 ## Comparisons

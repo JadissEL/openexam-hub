@@ -141,6 +141,35 @@ export async function prerenderPages(distDir, template, { applyHead, injectRoot,
     written.push(p);
   }
 
+  // /tools/crs-language-points: interactive like the converter (module script stays).
+  {
+    const p = ssr.CRS_TOOL_PATH;
+    const url = `${SITE_ORIGIN}${p}`;
+    const ld = [
+      breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'CRS language points', path: p }]),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        '@id': `${url}#webapp`,
+        name: ssr.CRS_TOOL_H1,
+        url,
+        description: ssr.CRS_TOOL_DESCRIPTION,
+        applicationCategory: 'EducationalApplication',
+        operatingSystem: 'Any',
+        browserRequirements: 'Requires JavaScript',
+        inLanguage: 'en',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: 0, priceCurrency: 'EUR', category: 'Free' },
+        dateModified: ssr.CRS_LAST_VERIFIED,
+        isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+        publisher: { '@id': `${SITE_ORIGIN}/#organization` }
+      },
+      faqPageJsonLd(ssr.CRS_TOOL_FAQ)
+    ];
+    writePage(distDir, p, injectRoot(headFor(p, ld), ssr.renderPage(p, posts)));
+    written.push(p);
+  }
+
   // /compare/<slug>: static comparison pages (IDEA-13). Full HTML, no module script, no ads.
   for (const page of ssr.COMPARE_PAGES) {
     const p = ssr.comparePath(page);

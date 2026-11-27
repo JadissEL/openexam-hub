@@ -508,6 +508,11 @@ export default function ClbConverter() {
               Express Entry’s Comprehensive Ranking System gives points for each of the four abilities. The table below is IRCC’s current “first official language” table: points per ability, up to 128 with a spouse or common-law partner and 136 without. NCLC 7 and NCLC 9 also matter for the CRS skill-transferability factors that combine language with education or foreign work experience.
             </p>
             <CrsTable />
+            <p className={`mt-3 text-[15px] ${muted}`}>
+              Have results in both English and French? The{' '}
+              <a href="/tools/crs-language-points" className="text-[#C2410C] underline underline-offset-4">CRS language points calculator</a>{' '}
+              adds IRCC’s second-official-language points and the French additional points.
+            </p>
           </section>
 
           <section aria-labelledby="exam-faq-title" className="mt-14">
@@ -556,6 +561,7 @@ export default function ClbConverter() {
               <li><a href="/exams/celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CELPIP guide: test format, CLB scores and free official practice</a></li>
               <li><a href="/exams/tef-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TEF Canada guide: format, NCLC scores and free official practice</a></li>
               <li><a href="/exams/tcf-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TCF Canada guide: format, timings and free official practice</a></li>
+              <li><a href="/tools/crs-language-points" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CRS points for your first and second official language</a></li>
               <li><a href="/compare/ielts-vs-celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS vs CELPIP: CLB scores and test format side by side</a></li>
               <li><a href="/compare/ielts-vs-pte" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS vs PTE Core: CLB scores and test format side by side</a></li>
               <li><a href="/blog/ielts-to-clb-express-entry" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS to CLB for Express Entry</a></li>
