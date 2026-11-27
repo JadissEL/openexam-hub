@@ -46,7 +46,7 @@ async function check(name, fn) {
 
 /** The dashboard must not be in the DOM: no tab bar, no Welcome card, no ad slot. */
 async function assertNoDashboard(page) {
-  assert.equal(await page.getByRole('button', { name: /^Your account$/ }).count(), 0, 'account button rendered');
+  assert.equal(await page.getByRole('button', { name: /^Your account/ }).count(), 0, 'account button rendered');
   assert.equal(await page.getByText(/^Welcome( back)?/).count(), 0, 'Welcome card rendered');
   assert.equal(await page.getByText('Which exam?').count(), 0, 'planner rendered');
   assert.equal(await page.locator('nav >> text=Library').count(), 0, 'tab bar rendered');
@@ -300,7 +300,7 @@ async function emulatorChecks(browser) {
     });
 
     await check('emulator: sign out returns to the gate', async () => {
-      await page.getByRole('button', { name: 'Your account' }).first().click();
+      await page.getByRole('button', { name: /^Your account/ }).first().click();
       await page.getByRole('button', { name: 'Sign out' }).click();
       await page.getByTestId('auth-gate').waitFor({ timeout: 15000 });
       await assertNoDashboard(page);
@@ -316,7 +316,7 @@ async function emulatorChecks(browser) {
     });
 
     await check('emulator: wrong password shows a friendly error', async () => {
-      await page.getByRole('button', { name: 'Your account' }).first().click();
+      await page.getByRole('button', { name: /^Your account/ }).first().click();
       await page.getByRole('button', { name: 'Sign out' }).click();
       await page.getByRole('tab', { name: 'Log in' }).click();
       await page.getByLabel('Email').fill(email);

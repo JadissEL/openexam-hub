@@ -161,6 +161,10 @@ test('rank: components (level, tier, health decay, Bayesian prior, Wilson)', () 
   assert.equal(R.tierScore('https://www.ielts.org/x', 'GOETHE'), 0.85);
   assert.equal(R.tierScore('https://learngerman.dw.com/x', 'GOETHE'), 0.75);
   assert.equal(R.tierScore('https://europa.eu/x', 'GOETHE'), 0.6);
+  assert.equal(R.tierScore('https://www.cambridgeenglish.org/exams-and-tests/ielts/preparation/', 'IELTS'), 1);
+  assert.equal(R.tierScore('https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/', 'CAMBRIDGE'), 1);
+  assert.equal(R.tierScore('https://www.ielts.org/x', 'IELTS'), 1);
+  assert.equal(R.tierScore('https://takeielts.britishcouncil.org/x', 'IELTS'), 1);
   assert.equal(R.healthScore('dead', null, NOW), null);
   assert.ok(Math.abs(R.healthScore('ok', NOW, NOW) - 1) < 1e-9);
   assert.ok(Math.abs(R.healthScore('ok', NOW - 30 * DAY, NOW) - 0.75) < 1e-9, 'half-life 30 days');
