@@ -53,7 +53,7 @@ CELPIP has two versions, according to [the CELPIP test overview](https://www.cel
 
 *Chart by OpenExam Hub, from celpip.ca and IRCC, checked 27 November 2026. Not an official graphic.*
 
-An LS result only has two skills, so it cannot give IRCC the four levels Express Entry asks for. Book CELPIP-General, and check which version any other organisation names before you register.
+An LS result only has two skills, so it cannot give IRCC the four levels Express Entry asks for. Book CELPIP-General, and check which version any other organisation names before you register. For the test format, official practice and how CELPIP levels correspond to CLB and CEFR, see the [CELPIP guide](/exams/celpip).
 
 ## IRCC’s CELPIP table, as published
 
