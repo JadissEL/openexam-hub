@@ -5,6 +5,7 @@ import { ink, muted, eyebrow, lead, pageFont } from '../landing/theme.js';
 import { EXAM_PAGES, EXAMS_INDEX } from './site.js';
 import { examContent } from './examContent.js';
 import { planPage, planPath, plansForGuide } from './planPages.js';
+import { toolPathForGuide } from '../tools/clbContent.js';
 
 function formatDate(iso) {
   const [y, m, d] = String(iso || '').split('-').map(Number);
@@ -178,7 +179,7 @@ function Resources({ groups, lastChecked }) {
 
 const TOOL_GUIDES = ['tef-canada', 'tcf-canada', 'ielts', 'celpip'];
 
-/** Free-tool card on the TEF Canada and TCF Canada guides (links to /tools/clb-converter). */
+/** Free-tool card on the TEF Canada, TCF Canada, IELTS and CELPIP guides (deep-links the matching converter tab). */
 function RelatedTool({ guide }) {
   if (!TOOL_GUIDES.includes(guide)) return null;
   const name = { 'tcf-canada': 'TCF Canada', ielts: 'IELTS', celpip: 'CELPIP' }[guide] || 'TEF Canada';
@@ -192,7 +193,7 @@ function RelatedTool({ guide }) {
       <p className={`mt-3 text-[16px] leading-[1.65] ${muted} max-w-2xl`}>
         Enter your four scores and see your CLB (NCLC) level per skill, whether you meet level 7 or 9, and your CRS language points, using IRCC’s official tables.{guide === 'ielts' ? ' Express Entry accepts IELTS General Training only, not Academic.' : guide === 'celpip' ? ' Express Entry accepts the CELPIP-General test.' : ''} No score guarantees, no account needed.
       </p>
-      <a href="/tools/clb-converter" className="mt-4 inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
+      <a href={toolPathForGuide(guide)} className="mt-4 inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
         Open the CLB / NCLC score converter <ArrowRight className="w-4 h-4" aria-hidden="true" />
       </a>
     </section>
@@ -601,7 +602,7 @@ export function PlanPage({ guide, slug, posts = [] }) {
               </li>
               {TOOL_GUIDES.includes(plan.guide) ? (
                 <li>
-                  <a href="/tools/clb-converter" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CLB / NCLC score converter (free tool)</a>
+                  <a href={toolPathForGuide(plan.guide)} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CLB / NCLC score converter (free tool)</a>
                 </li>
               ) : null}
               {related.map((r) => (

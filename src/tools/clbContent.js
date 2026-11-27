@@ -37,6 +37,21 @@ export function toolPathForTab(tab) {
   return slug === 'tef' ? TOOL_PATH : `${TOOL_PATH}?tab=${slug}`;
 }
 
+/** Exam-guide slugs that have a matching converter tab. */
+export const GUIDE_TOOL_TABS = {
+  'tef-canada': 'tef',
+  'tcf-canada': 'tcf',
+  ielts: 'ielts',
+  celpip: 'celpip'
+};
+
+/** Converter href for an exam guide. TEF stays on the bare path; other tests add ?tab=. Extra query params (utm, etc.) are kept. */
+export function toolPathForGuide(guide, search = '') {
+  const mode = modeFromTabParam(GUIDE_TOOL_TABS[guide] || 'tef');
+  const qs = searchWithTab(search, mode);
+  return qs ? `${TOOL_PATH}${qs}` : TOOL_PATH;
+}
+
 /** Update only the tab param in an existing query string; other params are kept. TEF drops `tab`. */
 export function searchWithTab(search, mode) {
   const params = new URLSearchParams(String(search || '').replace(/^\?/, ''));

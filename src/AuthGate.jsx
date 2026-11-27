@@ -10,6 +10,7 @@ import {
 import { examLabel, parsePlannerQuery, parsePlannerVariant, isPlannerDeepLink } from '../lib/exams.js';
 import { trackAuth, track, count } from './analytics.js';
 import PlanPreview from './PlanPreview.jsx';
+import { authFormError } from './authForm.js';
 
 // Sign-up / log-in page shown on /app to anyone who is not signed in with a real account.
 // The dashboard (tabs, plans, ads, data fetches) is never rendered behind it. The URL (including
@@ -146,6 +147,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [errorField, setErrorField] = useState(null);
   const [notice, setNotice] = useState(null);
   const [showSample, setShowSample] = useState(false);
   // A full deep link (/app?exam=..&level=..&days=..) or ?preview=1 opens the no-account preview.
@@ -228,6 +230,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
   const switchMode = (m) => {
     setMode(m);
     setError(null);
+    setErrorField(null);
     setNotice(null);
   };
 
@@ -235,16 +238,20 @@ export default function AuthGate({ auth, sampleRoadmap }) {
     e.preventDefault();
     if (!auth || busy) return;
     setError(null);
+    setErrorField(null);
     setNotice(null);
+    const issue = authFormError({ email, password, mode });
+    if (issue) {
+      setError(issue.message);
+      setErrorField(issue.field);
+      return;
+    }
     const em = email.trim();
-    if (!em) return setError('Please enter your email address.');
     setBusy(true);
     try {
       if (mode === 'reset') {
         await sendPasswordResetEmail(auth, em);
         setNotice('If an account exists for this email, a reset link is on its way. Check your inbox.');
-      } else if (!password) {
-        setError('Please enter your password.');
       } else if (mode === 'signup') {
         count('signup_started');
         await createUserWithEmailAndPassword(auth, em, password);
@@ -264,6 +271,7 @@ export default function AuthGate({ auth, sampleRoadmap }) {
     if (!auth || busy) return;
     setBusy(true);
     setError(null);
+    setErrorField(null);
     if (mode === 'signup') count('signup_started');
     try {
       const cred = await signInWithPopup(auth, new GoogleAuthProvider());
@@ -372,10 +380,12 @@ export default function AuthGate({ auth, sampleRoadmap }) {
               </>
             )}
 
+            {/* noValidate: native bubbles would hide the friendly JS hints below. type/required/minLength still document the rules. */}
             <form onSubmit={submit} className={`space-y-3 ${mode === 'reset' ? 'mt-6' : ''}`} noValidate>
               <label className="block">
                 <span className="text-sm font-medium">Email</span>
                 <input
+                  id="auth-email"
                   type="email"
                   name="email"
                   autoComplete="email"
@@ -384,12 +394,15 @@ export default function AuthGate({ auth, sampleRoadmap }) {
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1 w-full min-h-[48px] rounded-xl border border-black/15 bg-white px-4 text-[16px] focus:outline-none focus:ring-2 focus:ring-[#C2410C]"
                   required
+                  aria-invalid={errorField === 'email' ? true : undefined}
+                  aria-describedby={error ? 'auth-form-error' : undefined}
                 />
               </label>
               {mode !== 'reset' && (
                 <label className="block">
                   <span className="text-sm font-medium">Password</span>
                   <input
+                    id="auth-password"
                     type="password"
                     name="password"
                     autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
@@ -398,13 +411,15 @@ export default function AuthGate({ auth, sampleRoadmap }) {
                     minLength={6}
                     className="mt-1 w-full min-h-[48px] rounded-xl border border-black/15 bg-white px-4 text-[16px] focus:outline-none focus:ring-2 focus:ring-[#C2410C]"
                     required
+                    aria-invalid={errorField === 'password' ? true : undefined}
+                    aria-describedby={[mode === 'signup' ? 'auth-password-hint' : null, error ? 'auth-form-error' : null].filter(Boolean).join(' ') || undefined}
                   />
-                  {mode === 'signup' && <span className="mt-1 block text-xs text-[#6B635A]">At least 6 characters.</span>}
+                  {mode === 'signup' && <span id="auth-password-hint" className="mt-1 block text-xs text-[#6B635A]">At least 6 characters.</span>}
                 </label>
               )}
 
               {error && (
-                <p role="alert" className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-800">
+                <p id="auth-form-error" role="alert" className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-sm text-rose-800">
                   {error}
                 </p>
               )}
