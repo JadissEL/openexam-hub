@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>OpenExam Hub — Free backlink tracker</title>
+  <link rel="icon" href="./openexam-hub.ico" type="image/x-icon" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -85,13 +86,46 @@
       pointer-events: none;
     }
 
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0 0 0.85rem;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      flex: 0 0 auto;
+      box-shadow: 0 8px 20px -12px rgba(26, 23, 20, 0.55);
+    }
     .eyebrow {
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--terracotta);
-      margin: 0 0 0.75rem;
+      margin: 0;
+    }
+    .save-pill {
+      margin-left: auto;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--live);
+      background: var(--live-bg);
+      border-radius: 999px;
+      padding: 0.35rem 0.7rem;
+      white-space:nowrap;
+    }
+    .save-pill.warn {
+      color: var(--progress);
+      background: var(--progress-bg);
+    }
+    .save-pill.err {
+      color: #991b1b;
+      background: #fee2e2;
     }
 
     h1 {
@@ -408,11 +442,19 @@
 </head>
 <body>
   <div class="shell">
+    <nav class="topnav" aria-label="Tracker sections" style="display:flex;gap:0.5rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
+      <a href="./tracker.html" style="text-decoration:none;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:999px;padding:0.45rem 0.9rem;font-size:0.85rem;font-weight:700">Backlinks <span style="display:inline-block;margin-left:0.35rem;padding:0.1rem 0.45rem;border-radius:999px;background:rgba(255,255,255,0.2);font-size:0.72rem">1000</span></a>
+      <a href="./ideas.html" style="text-decoration:none;border:1px solid var(--line);background:rgba(255,255,255,0.7);color:var(--muted);border-radius:999px;padding:0.45rem 0.9rem;font-size:0.85rem;font-weight:700">Ideas <span style="display:inline-block;margin-left:0.35rem;padding:0.1rem 0.45rem;border-radius:999px;background:var(--paper-2);color:var(--ink);font-size:0.72rem">34</span></a>
+    </nav>
     <header class="hero">
       <div class="panel hero-copy">
-        <p class="eyebrow">OpenExam Hub · Growth</p>
+        <div class="brand-row">
+          <img class="brand-mark" src="./mark.svg" width="42" height="42" alt="OpenExam Hub" />
+          <p class="eyebrow">OpenExam Hub · Growth</p>
+          <span class="save-pill warn" id="savePill" title="Progress sync status">Syncing…</span>
+        </div>
         <h1>Free backlink &amp; article tracker</h1>
-        <p class="lede">Internal repo tool — not on the live site. Track the 1000 free places we can list OpenExam Hub and publish free articles. Progress is saved in this browser.</p>
+        <p class="lede">Internal repo tool - not on the live site. Track the 1000 free places we can list OpenExam Hub and publish free articles. Progress is saved in this browser and on disk so it is not lost. Open <strong>Ideas · 34</strong> above for the phased execution cockpit (default: Now / Wave 1).</p>
         <div class="hero-actions">
           <button type="button" id="btnReload">Reload CSV</button>
           <button type="button" class="secondary" id="btnImport">Import CSV</button>
@@ -484,7 +526,7 @@
 
     <footer class="foot">
       <span>OpenExam Hub · free outreach only · no fake stats</span>
-      <span><a href="https://openexamhub.org" target="_blank" rel="noreferrer">openexamhub.org</a> · progress key: <code>oeh-growth-v1</code></span>
+      <span><a href="https://openexamhub.org" target="_blank" rel="noreferrer">openexamhub.org</a> · browser + disk backup</span>
     </footer>
   </div>
 
@@ -503,16 +545,87 @@
 
     const state = {
       rows: [],
-      overrides: loadOverrides(),
+      overrides: {},
       filters: { q: '', priority: '', status: '', category: '' },
+      diskReady: false,
+      saveTimer: null,
     };
 
-    function loadOverrides() {
+    function setSavePill(text, kind = '') {
+      const el = document.getElementById('savePill');
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove('warn', 'err');
+      if (kind) el.classList.add(kind);
+    }
+
+    function loadBrowserOverrides() {
       try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; }
       catch { return {}; }
     }
-    function saveOverrides() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides));
+
+    function mergeOverrides(a = {}, b = {}) {
+      const out = { ...a };
+      for (const [id, entry] of Object.entries(b || {})) {
+        const prev = out[id];
+        if (!prev) { out[id] = entry; continue; }
+        const aTime = Date.parse(prev.updatedAt || 0) || 0;
+        const bTime = Date.parse(entry?.updatedAt || 0) || 0;
+        out[id] = bTime >= aTime ? entry : prev;
+      }
+      return out;
+    }
+
+    function saveOverrides(opts = {}) {
+      const immediate = !!opts.immediate;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides));
+      } catch {
+        setSavePill('Browser save failed', 'err');
+      }
+      if (state.saveTimer) clearTimeout(state.saveTimer);
+      const run = () => persistToDisk();
+      if (immediate) run();
+      else state.saveTimer = setTimeout(run, 350);
+    }
+
+    async function persistToDisk() {
+      try {
+        const res = await fetch('/api/progress', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ overrides: state.overrides }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        state.diskReady = true;
+        const n = Object.keys(state.overrides).length;
+        setSavePill(n ? `Saved · ${n} updates` : 'Saved on disk', '');
+      } catch {
+        setSavePill('Browser only (start via Desktop icon)', 'warn');
+      }
+    }
+
+    async function hydrateProgress() {
+      setSavePill('Syncing…', 'warn');
+      const browser = loadBrowserOverrides();
+      let disk = {};
+      try {
+        const res = await fetch('/api/progress', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          disk = data?.overrides || {};
+          state.diskReady = true;
+        }
+      } catch {
+        state.diskReady = false;
+      }
+      state.overrides = mergeOverrides(browser, disk);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.overrides)); } catch { /* ignore */ }
+      if (state.diskReady) {
+        await persistToDisk();
+      } else {
+        setSavePill('Browser only (start via Desktop icon)', 'warn');
+      }
     }
 
     function parseCsv(text) {
@@ -809,13 +922,17 @@
       e.target.value = '';
     });
     document.getElementById('btnReset').addEventListener('click', () => {
-      if (!confirm('Clear all local status overrides in this browser?')) return;
+      if (!confirm('Clear all saved status overrides (browser + disk backup)?')) return;
       state.overrides = {};
-      saveOverrides();
+      saveOverrides({ immediate: true });
       render();
     });
 
-    loadDefaultCsv();
+    (async function boot() {
+      await hydrateProgress();
+      await loadDefaultCsv();
+      render();
+    })();
   </script>
 </body>
 </html>

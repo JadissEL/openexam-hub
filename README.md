@@ -116,5 +116,20 @@ Net on the site is earnings minus recorded expenses minus lifetime AI cost.
 | `api/` | Vercel serverless entrypoints. Route handlers live in `lib/routes/`; add new endpoints to a dispatcher, not as new `api/` files. |
 | `lib/` | Server code: orchestrator, agents, LLM client, usage counters, library store, ledger, link checker, and `lib/algo/`. |
 | `scripts/` | Unit suites, end-to-end test, mock LLM, local API server, library seeder. |
+| `docs/growth/` | **Internal** backlink + ideas trackers (GitHub/agents only; not on openexamhub.org). Start at [`docs/growth/AGENTS.md`](docs/growth/AGENTS.md). |
+| `docs/ideas/` | Idea exhaustion specs (`IDEA-*.md`) for the ideas cockpit. |
 | `firestore.rules`, `firestore.indexes.json`, `firebase.json` | Firestore rules and indexes for the `openexam-hub` Firebase project. |
 | `vercel.json` | Static build, functions, SPA rewrite, and scheduled crons. |
+
+## Internal growth trackers (GitHub only)
+
+Not deployed to the live site. Local HTML boards for outreach and product ideas:
+
+- Backlinks: [`docs/growth/tracker.html`](docs/growth/tracker.html)
+- Ideas cockpit: [`docs/growth/ideas.html`](docs/growth/ideas.html)
+- Agent entrypoint: [`docs/growth/AGENTS.md`](docs/growth/AGENTS.md)
+
+```bash
+node docs/growth/serve-tracker.mjs
+# then http://127.0.0.1:5179/tracker.html or /ideas.html
+```

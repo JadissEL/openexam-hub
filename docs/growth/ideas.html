@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenExam Hub · Idea execution cockpit</title>
+  <link rel="icon" href="./openexam-hub.ico" type="image/x-icon" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1714;
+      --muted: #5c554c;
+      --soft: #8a8176;
+      --paper: #f7f3ec;
+      --paper-2: #efe8dc;
+      --line: #e7e1d7;
+      --terracotta: #9a3412;
+      --terracotta-soft: #c2410c;
+      --live: #166534;
+      --live-bg: #dcfce7;
+      --progress: #a16207;
+      --progress-bg: #fef3c7;
+      --skipped: #6b7280;
+      --skipped-bg: #f3f4f6;
+      --todo-bg: #fff;
+      --shadow: 0 18px 50px -28px rgba(26, 23, 20, 0.45);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(154, 52, 18, 0.12), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(26, 23, 20, 0.08), transparent 50%),
+        linear-gradient(180deg, #fbf8f2 0%, var(--paper) 42%, #f1ede5 100%);
+    }
+    .shell { width: min(1280px, calc(100% - 2.5rem)); margin: 0 auto; padding: 2rem 0 4rem; }
+    @media (max-width: 900px) { .shell { width: min(100% - 1.25rem, 1280px); } }
+
+    .topnav { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+    .topnav a {
+      text-decoration: none; border: 1px solid var(--line); background: rgba(255,255,255,0.7);
+      color: var(--muted); border-radius: 999px; padding: 0.45rem 0.9rem; font-size: 0.85rem; font-weight: 700;
+    }
+    .topnav a.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .topnav .count {
+      display: inline-block; margin-left: 0.35rem; padding: 0.1rem 0.45rem; border-radius: 999px;
+      background: rgba(255,255,255,0.2); font-size: 0.72rem;
+    }
+    .topnav a:not(.active) .count { background: var(--paper-2); color: var(--ink); }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.72); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px);
+    }
+    header.hero {
+      display: grid; grid-template-columns: 1.4fr 0.9fr; gap: 1.5rem; margin-bottom: 1.25rem;
+    }
+    @media (max-width: 900px) { header.hero { grid-template-columns: 1fr; } }
+    .hero-copy { padding: 1.75rem 1.9rem 1.6rem; }
+    .brand-row { display: flex; align-items: center; gap: 0.75rem; margin: 0 0 0.85rem; }
+    .brand-mark { width: 42px; height: 42px; border-radius: 12px; }
+    .eyebrow {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--terracotta); margin: 0;
+    }
+    .save-pill {
+      margin-left: auto; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--live); background: var(--live-bg);
+      border-radius: 999px; padding: 0.35rem 0.7rem; white-space: nowrap;
+    }
+    .save-pill.warn { color: var(--progress); background: var(--progress-bg); }
+    .save-pill.err { color: #991b1b; background: #fee2e2; }
+    h1 {
+      font-family: Fraunces, Georgia, serif; font-weight: 550;
+      font-size: clamp(1.85rem, 3.2vw, 2.75rem); line-height: 1.05;
+      letter-spacing: -0.03em; margin: 0 0 0.75rem; max-width: 18ch;
+    }
+    .lede { margin: 0; color: var(--muted); font-size: 1.02rem; line-height: 1.6; max-width: 48ch; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.25rem; }
+    button {
+      appearance: none; border: 1px solid var(--ink); background: var(--ink); color: #fff;
+      border-radius: 999px; padding: 0.65rem 1rem; font: inherit; font-size: 0.9rem;
+      font-weight: 600; cursor: pointer;
+    }
+    button.secondary { background: transparent; color: var(--ink); }
+    button.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+    button.tiny {
+      padding: 0.35rem 0.7rem; font-size: 0.78rem; border-radius: 10px;
+      background: transparent; color: var(--ink); border-color: var(--line);
+    }
+
+    .ring-panel { padding: 1.35rem 1.5rem; display: grid; gap: 0.85rem; place-items: center; }
+    .rings { display: flex; gap: 1.25rem; flex-wrap: wrap; justify-content: center; }
+    .ring-wrap { position: relative; width: 120px; height: 120px; }
+    .ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-track { fill: none; stroke: var(--paper-2); stroke-width: 10; }
+    .ring-value {
+      fill: none; stroke: var(--terracotta); stroke-width: 10; stroke-linecap: round;
+      stroke-dasharray: 440; stroke-dashoffset: 440; transition: stroke-dashoffset 0.6s ease;
+    }
+    .ring-value.alt { stroke: #166534; }
+    .ring-label { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+    .ring-label strong {
+      font-family: Fraunces, Georgia, serif; font-size: 1.55rem; letter-spacing: -0.04em;
+      display: block; line-height: 1;
+    }
+    .ring-label span { color: var(--muted); font-size: 0.72rem; }
+
+    .nextup {
+      padding: 1.1rem 1.25rem; margin-bottom: 1.25rem;
+    }
+    .nextup h2 {
+      margin: 0 0 0.75rem; font-family: Fraunces, Georgia, serif;
+      font-size: 1.25rem; letter-spacing: -0.02em;
+    }
+    .nextup-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+    @media (max-width: 900px) { .nextup-grid { grid-template-columns: 1fr; } }
+    .next-card {
+      border: 1px solid var(--line); background: rgba(255,255,255,0.65);
+      border-radius: 16px; padding: 0.9rem 1rem; display: grid; gap: 0.35rem;
+    }
+    .next-card strong { font-size: 0.95rem; line-height: 1.35; }
+    .next-card .hint { color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+    .next-card .action { color: var(--terracotta); font-size: 0.8rem; font-weight: 700; }
+
+    .stats {
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.75rem; margin-bottom: 1.1rem;
+    }
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stats .stat:last-child { grid-column: 1 / -1; }
+    }
+    .stat { padding: 1rem 1.1rem; min-height: 90px; }
+    .stat .k { color: var(--soft); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .stat .v { font-family: Fraunces, Georgia, serif; font-size: 1.85rem; letter-spacing: -0.03em; margin-top: 0.3rem; }
+    .stat .s { color: var(--muted); font-size: 0.82rem; margin-top: 0.1rem; }
+
+    .phase-row {
+      display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.85rem;
+    }
+    .phase-chip {
+      border: 1px solid var(--line); background: rgba(255,255,255,0.7); color: var(--muted);
+      border-radius: 999px; padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    }
+    .phase-chip.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+    .phase-chip .n {
+      margin-left: 0.35rem; opacity: 0.75; font-weight: 600; font-size: 0.75rem;
+    }
+
+    .toolbar {
+      padding: 1rem; display: grid;
+      grid-template-columns: 1.3fr auto auto auto auto;
+      gap: 0.55rem; align-items: center; margin-bottom: 0.85rem;
+      position: sticky; top: 0.75rem; z-index: 20;
+    }
+    @media (max-width: 1000px) {
+      .toolbar { grid-template-columns: 1fr 1fr; }
+      .toolbar .search { grid-column: 1 / -1; }
+    }
+    .search, select, textarea {
+      width: 100%; border: 1px solid var(--line); background: #fff;
+      border-radius: 14px; padding: 0.7rem 0.85rem; font: inherit; color: var(--ink);
+    }
+    textarea { min-height: 72px; resize: vertical; border-radius: 12px; }
+
+    .list { display: grid; gap: 0.75rem; }
+    .idea {
+      padding: 0; overflow: hidden;
+    }
+    .idea-head {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 0.85rem;
+      align-items: start; padding: 1rem 1.15rem; cursor: pointer;
+    }
+    @media (max-width: 820px) { .idea-head { grid-template-columns: 1fr; } }
+    .badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 4.2rem; height: 2.35rem; border-radius: 12px;
+      font-weight: 700; font-size: 0.75rem; background: #ffedd5; color: var(--terracotta);
+    }
+    .badge.P0 { background: #ffedd5; color: var(--terracotta); }
+    .badge.P1 { background: #fef3c7; color: #92400e; }
+    .badge.P2 { background: #eef2ff; color: #3730a3; }
+    .idea h3 { margin: 0; font-size: 1.02rem; font-weight: 650; letter-spacing: -0.01em; line-height: 1.35; }
+    .meta {
+      display: flex; flex-wrap: wrap; gap: 0.4rem 0.65rem; margin-top: 0.4rem;
+      color: var(--muted); font-size: 0.8rem; align-items: center;
+    }
+    .pill {
+      display: inline-flex; border-radius: 999px; padding: 0.18rem 0.5rem;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .pill.todo { background: var(--todo-bg); border: 1px solid var(--line); color: var(--muted); }
+    .pill.in_progress { background: var(--progress-bg); color: var(--progress); }
+    .pill.exhausted { background: var(--live-bg); color: var(--live); }
+    .pill.deferred { background: var(--skipped-bg); color: var(--skipped); }
+    .pill.wont_do { background: #fee2e2; color: #991b1b; }
+    .pill.phase { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+    .pill.type { background: #f8fafc; color: #475569; border: 1px solid var(--line); }
+    .pill.blocked { background: #fee2e2; color: #991b1b; }
+    .chev {
+      width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line);
+      display: grid; place-items: center; color: var(--muted); font-size: 0.85rem;
+      transition: transform 0.15s ease; background: #fff;
+    }
+    .idea.open .chev { transform: rotate(90deg); }
+    .idea-body {
+      display: none; padding: 0 1.15rem 1.15rem; border-top: 1px solid var(--line);
+    }
+    .idea.open .idea-body { display: block; padding-top: 1rem; }
+    .summary { margin: 0 0 0.75rem; color: var(--soft); font-size: 0.88rem; line-height: 1.5; }
+    .body-grid {
+      display: grid; grid-template-columns: 1.4fr 0.8fr; gap: 1rem; align-items: start;
+    }
+    @media (max-width: 900px) { .body-grid { grid-template-columns: 1fr; } }
+    .tools {
+      display: grid; gap: 0.35rem; padding: 0.75rem 0.85rem;
+      background: rgba(255,255,255,0.55); border: 1px solid var(--line); border-radius: 14px;
+    }
+    .tools label {
+      display: grid; grid-template-columns: auto 1fr; gap: 0.55rem; align-items: start;
+      font-size: 0.86rem; line-height: 1.4; color: var(--ink); cursor: pointer;
+    }
+    .tools input { margin-top: 0.2rem; }
+    .tools label.done span { color: var(--soft); text-decoration: line-through; }
+    .side { display: grid; gap: 0.65rem; }
+    .status-wrap { display: grid; gap: 0.35rem; }
+    .status-wrap .k, .notes-wrap .k {
+      font-size: 0.72rem; color: var(--soft); font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .deps { font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
+    .deps a { color: var(--terracotta-soft); font-weight: 600; text-decoration: none; }
+    .deps a:hover { text-decoration: underline; }
+    .spec-link { font-size: 0.82rem; font-weight: 700; color: var(--terracotta); text-decoration: none; }
+    .spec-link:hover { text-decoration: underline; }
+    .banner, .empty { padding: 1.15rem 1.3rem; color: var(--muted); line-height: 1.55; margin-bottom: 1rem; }
+    .banner { border-style: dashed; }
+    .banner strong { color: var(--ink); }
+    footer.foot {
+      margin-top: 1.5rem; color: var(--soft); font-size: 0.85rem;
+      display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    footer.foot a { color: var(--terracotta); }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="topnav" aria-label="Tracker sections">
+      <a href="./tracker.html">Backlinks <span class="count">1000</span></a>
+      <a class="active" href="./ideas.html">Ideas <span class="count">34</span></a>
+    </nav>
+
+    <header class="hero">
+      <div class="panel hero-copy">
+        <div class="brand-row">
+          <img class="brand-mark" src="./mark.svg" width="42" height="42" alt="OpenExam Hub" />
+          <p class="eyebrow">OpenExam Hub · Ideas cockpit</p>
+          <span class="save-pill warn" id="savePill">Syncing…</span>
+        </div>
+        <h1>Idea execution cockpit</h1>
+        <p class="lede">Phased roadmap for all 34 ideas. Default view is <strong>Now</strong> (Wave 1). Expand a card, check tools, add notes. Adjacent items (Kickstarter, banks) stay out of the way of core free-tool work.</p>
+        <div class="hero-actions">
+          <button type="button" id="btnReload">Reload ideas</button>
+          <button type="button" class="secondary" id="btnExport">Export progress</button>
+          <button type="button" class="ghost" id="btnReset">Reset idea progress</button>
+        </div>
+      </div>
+      <div class="panel ring-panel">
+        <div class="rings">
+          <div class="ring-wrap" aria-hidden="true">
+            <svg viewBox="0 0 160 160">
+              <circle class="ring-track" cx="80" cy="80" r="70"></circle>
+              <circle class="ring-value" id="ringIdeas" cx="80" cy="80" r="70"></circle>
+            </svg>
+            <div class="ring-label">
+              <strong id="pctIdeas">0%</strong>
+              <span>ideas done</span>
+            </div>
+          </div>
+          <div class="ring-wrap" aria-hidden="true">
+            <svg viewBox="0 0 160 160">
+              <circle class="ring-track" cx="80" cy="80" r="70"></circle>
+              <circle class="ring-value alt" id="ringTools" cx="80" cy="80" r="70"></circle>
+            </svg>
+            <div class="ring-label">
+              <strong id="pctTools">0%</strong>
+              <span>tools done</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;color:var(--muted);font-size:0.85rem">
+          <span id="exhaustedLabel">0</span> exhausted ·
+          <span id="doneToolsLabel">0</span>/<span id="totalToolsLabel">0</span> tools
+        </div>
+      </div>
+    </header>
+
+    <section class="panel nextup" aria-label="Next up">
+      <h2>Next up</h2>
+      <div class="nextup-grid" id="nextUp"></div>
+    </section>
+
+    <section class="stats" aria-label="Idea status totals">
+      <div class="panel stat"><div class="k">Todo</div><div class="v" id="statTodo">0</div><div class="s">not started</div></div>
+      <div class="panel stat"><div class="k">In progress</div><div class="v" id="statProgress">0</div><div class="s">tools underway</div></div>
+      <div class="panel stat"><div class="k">Exhausted</div><div class="v" id="statExhausted">0</div><div class="s">all tools done</div></div>
+      <div class="panel stat"><div class="k">Deferred</div><div class="v" id="statDeferred">0</div><div class="s">later / blocked</div></div>
+      <div class="panel stat"><div class="k">Won't do</div><div class="v" id="statWont">0</div><div class="s">explicit skip</div></div>
+    </section>
+
+    <div class="phase-row" id="phaseChips" aria-label="Phase filter"></div>
+
+    <div class="panel banner" id="loadBanner">Loading <strong>ideas.json</strong>…</div>
+
+    <div class="panel toolbar">
+      <input class="search" id="search" type="search" placeholder="Search idea, category, tool…" />
+      <select id="filterPriority" aria-label="Priority">
+        <option value="">All priorities</option>
+        <option value="P0">P0</option>
+        <option value="P1">P1</option>
+        <option value="P2">P2</option>
+      </select>
+      <select id="filterWorkType" aria-label="Work type">
+        <option value="">All types</option>
+        <option value="product">Product</option>
+        <option value="ops">Ops</option>
+        <option value="content">Content</option>
+        <option value="strategy">Strategy</option>
+      </select>
+      <select id="filterStatus" aria-label="Status">
+        <option value="">All statuses</option>
+        <option value="todo">Todo</option>
+        <option value="in_progress">In progress</option>
+        <option value="exhausted">Exhausted</option>
+        <option value="deferred">Deferred</option>
+        <option value="wont_do">Won't do</option>
+      </select>
+      <select id="filterCategory" aria-label="Category">
+        <option value="">All categories</option>
+      </select>
+    </div>
+
+    <div class="list" id="list"></div>
+
+    <footer class="foot">
+      <span>Deep specs in <code>docs/ideas/</code> · cockpit is local-only</span>
+      <span><a href="https://openexamhub.org" target="_blank" rel="noreferrer">openexamhub.org</a></span>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'oeh-ideas-v1';
+    const STATUSES = ['todo', 'in_progress', 'exhausted', 'deferred', 'wont_do'];
+    const PHASES = ['now', 'next', 'later', 'adjacent'];
+    const PRI_RANK = { P0: 0, P1: 1, P2: 2 };
+    const IE_RANK = { H: 0, M: 1, L: 2 };
+
+    const state = {
+      ideas: [],
+      ideaOverrides: {},
+      filters: { q: '', phase: 'now', priority: '', status: '', category: '', workType: '' },
+      openIds: new Set(),
+      diskReady: false,
+      saveTimer: null,
+      notesTimers: {},
+    };
+
+    function setSavePill(text, kind = '') {
+      const el = document.getElementById('savePill');
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove('warn', 'err');
+      if (kind) el.classList.add(kind);
+    }
+
+    function loadLocalIdeas() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; }
+      catch { return {}; }
+    }
+
+    function mergeOverrides(a = {}, b = {}) {
+      const out = { ...a };
+      for (const [id, entry] of Object.entries(b || {})) {
+        const prev = out[id];
+        if (!prev) { out[id] = entry; continue; }
+        const aTime = Date.parse(prev.updatedAt || 0) || 0;
+        const bTime = Date.parse(entry?.updatedAt || 0) || 0;
+        out[id] = bTime >= aTime ? entry : prev;
+      }
+      return out;
+    }
+
+    function saveProgress(opts = {}) {
+      const immediate = !!opts.immediate;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.ideaOverrides)); }
+      catch { setSavePill('Browser save failed', 'err'); }
+      if (state.saveTimer) clearTimeout(state.saveTimer);
+      const run = () => persistToDisk();
+      if (immediate) run();
+      else state.saveTimer = setTimeout(run, 350);
+    }
+
+    async function persistToDisk() {
+      try {
+        const res = await fetch('/api/progress', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ideaOverrides: state.ideaOverrides }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        state.diskReady = true;
+        const n = Object.keys(state.ideaOverrides).length;
+        setSavePill(n ? `Saved · ${n} ideas touched` : 'Saved on disk', '');
+      } catch {
+        setSavePill('Browser only (start via Desktop icon)', 'warn');
+      }
+    }
+
+    async function hydrateProgress() {
+      setSavePill('Syncing…', 'warn');
+      const browserIdeas = loadLocalIdeas();
+      let diskIdeas = {};
+      try {
+        const res = await fetch('/api/progress', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          diskIdeas = data?.ideaOverrides || {};
+          state.diskReady = true;
+        }
+      } catch { state.diskReady = false; }
+      state.ideaOverrides = mergeOverrides(browserIdeas, diskIdeas);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.ideaOverrides)); } catch { /* ignore */ }
+      if (state.diskReady) await persistToDisk();
+      else setSavePill('Browser only (start via Desktop icon)', 'warn');
+    }
+
+    function ov(id) { return state.ideaOverrides[id] || {}; }
+
+    function doneSet(id) {
+      const raw = ov(id).doneTools;
+      return new Set(Array.isArray(raw) ? raw.map(Number) : []);
+    }
+
+    function effectiveStatus(idea) {
+      const manual = ov(idea.id).status;
+      if (manual && STATUSES.includes(manual)) return manual;
+      const done = doneSet(idea.id).size;
+      const total = (idea.tools || []).length;
+      if (total && done >= total) return 'exhausted';
+      if (done > 0) return 'in_progress';
+      return 'todo';
+    }
+
+    function isExhaustedLike(idea) {
+      const st = effectiveStatus(idea);
+      return st === 'exhausted' || st === 'wont_do';
+    }
+
+    function blockingDeps(idea) {
+      const deps = Array.isArray(idea.dependsOn) ? idea.dependsOn : [];
+      return deps.filter((depId) => {
+        const dep = state.ideas.find((i) => i.id === depId);
+        if (!dep) return false;
+        return !isExhaustedLike(dep);
+      });
+    }
+
+    function setStatus(id, status) {
+      state.ideaOverrides[id] = { ...ov(id), status, updatedAt: new Date().toISOString() };
+      saveProgress();
+      render();
+    }
+
+    function setNotes(id, notes) {
+      state.ideaOverrides[id] = { ...ov(id), notes, updatedAt: new Date().toISOString() };
+      saveProgress();
+    }
+
+    function toggleTool(id, index, checked) {
+      const set = doneSet(id);
+      if (checked) set.add(index); else set.delete(index);
+      const toolsDone = [...set].sort((a, b) => a - b);
+      const idea = state.ideas.find((i) => i.id === id);
+      const total = (idea?.tools || []).length;
+      let status = ov(id).status;
+      if (!status || status === 'todo' || status === 'in_progress' || status === 'exhausted') {
+        if (total && toolsDone.length >= total) status = 'exhausted';
+        else if (toolsDone.length > 0) status = 'in_progress';
+        else status = 'todo';
+      }
+      state.ideaOverrides[id] = {
+        ...ov(id),
+        doneTools: toolsDone,
+        status,
+        updatedAt: new Date().toISOString(),
+      };
+      saveProgress();
+      render();
+    }
+
+    function pct(n, d) { return d ? Math.round((n / d) * 100) : 0; }
+
+    function summarize() {
+      const byStatus = Object.fromEntries(STATUSES.map((s) => [s, 0]));
+      const byPhase = Object.fromEntries(PHASES.map((p) => [p, 0]));
+      let toolsDone = 0;
+      let toolsTotal = 0;
+      for (const idea of state.ideas) {
+        byStatus[effectiveStatus(idea)] = (byStatus[effectiveStatus(idea)] || 0) + 1;
+        byPhase[idea.phase || 'later'] = (byPhase[idea.phase || 'later'] || 0) + 1;
+        const total = (idea.tools || []).length;
+        toolsTotal += total;
+        toolsDone += Math.min(doneSet(idea.id).size, total);
+      }
+      const exhausted = byStatus.exhausted || 0;
+      return {
+        byStatus,
+        byPhase,
+        toolsDone,
+        toolsTotal,
+        exhausted,
+        ideasPercent: pct(exhausted, state.ideas.length),
+        toolsPercent: pct(toolsDone, toolsTotal),
+      };
+    }
+
+    function sortIdeas(list) {
+      return [...list].sort((a, b) => {
+        const pa = PRI_RANK[a.priority] ?? 9;
+        const pb = PRI_RANK[b.priority] ?? 9;
+        if (pa !== pb) return pa - pb;
+        const ia = IE_RANK[a.impact] ?? 9;
+        const ib = IE_RANK[b.impact] ?? 9;
+        if (ia !== ib) return ia - ib;
+        const ea = IE_RANK[a.effort] ?? 9;
+        const eb = IE_RANK[b.effort] ?? 9;
+        if (ea !== eb) return ea - eb;
+        return String(a.id).localeCompare(String(b.id));
+      });
+    }
+
+    function filteredIdeas() {
+      const q = state.filters.q.trim().toLowerCase();
+      return sortIdeas(state.ideas.filter((idea) => {
+        if (state.filters.phase && (idea.phase || 'later') !== state.filters.phase) return false;
+        if (state.filters.priority && idea.priority !== state.filters.priority) return false;
+        if (state.filters.workType && idea.workType !== state.filters.workType) return false;
+        if (state.filters.category && idea.category !== state.filters.category) return false;
+        const st = effectiveStatus(idea);
+        if (state.filters.status && st !== state.filters.status) return false;
+        if (!q) return true;
+        const hay = [
+          idea.id, idea.title, idea.category, idea.summary, idea.phase, idea.workType,
+          ...(idea.tools || []),
+        ].join(' ').toLowerCase();
+        return hay.includes(q);
+      }));
+    }
+
+    function nextUpIdeas() {
+      const pool = sortIdeas(
+        state.ideas.filter((idea) => {
+          if (idea.priority !== 'P0') return false;
+          const st = effectiveStatus(idea);
+          if (st === 'exhausted' || st === 'wont_do' || st === 'deferred') return false;
+          return true;
+        })
+      );
+      return pool.slice(0, 3);
+    }
+
+    function firstOpenTool(idea) {
+      const done = doneSet(idea.id);
+      const tools = idea.tools || [];
+      for (let i = 0; i < tools.length; i++) {
+        if (!done.has(i)) return tools[i];
+      }
+      return 'Review and mark exhausted';
+    }
+
+    function labelStatus(s) {
+      return ({
+        todo: 'Todo',
+        in_progress: 'In progress',
+        exhausted: 'Exhausted',
+        deferred: 'Deferred',
+        wont_do: "Won't do",
+      })[s] || s;
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+    function escapeAttr(s) { return escapeHtml(s).replace(/'/g, '&#39;'); }
+
+    function setRing(el, percent) {
+      const circ = 2 * Math.PI * 70;
+      el.style.strokeDasharray = String(circ);
+      el.style.strokeDashoffset = String(circ * (1 - percent / 100));
+    }
+
+    function renderStats() {
+      const s = summarize();
+      document.getElementById('statTodo').textContent = s.byStatus.todo || 0;
+      document.getElementById('statProgress').textContent = s.byStatus.in_progress || 0;
+      document.getElementById('statExhausted').textContent = s.byStatus.exhausted || 0;
+      document.getElementById('statDeferred').textContent = s.byStatus.deferred || 0;
+      document.getElementById('statWont').textContent = s.byStatus.wont_do || 0;
+      document.getElementById('pctIdeas').textContent = `${s.ideasPercent}%`;
+      document.getElementById('pctTools').textContent = `${s.toolsPercent}%`;
+      document.getElementById('exhaustedLabel').textContent = String(s.exhausted);
+      document.getElementById('doneToolsLabel').textContent = String(s.toolsDone);
+      document.getElementById('totalToolsLabel').textContent = String(s.toolsTotal);
+      setRing(document.getElementById('ringIdeas'), s.ideasPercent);
+      setRing(document.getElementById('ringTools'), s.toolsPercent);
+    }
+
+    function renderPhaseChips() {
+      const s = summarize();
+      const wrap = document.getElementById('phaseChips');
+      const labels = { now: 'Now', next: 'Next', later: 'Later', adjacent: 'Adjacent' };
+      wrap.innerHTML = PHASES.map((ph) => {
+        const active = state.filters.phase === ph;
+        return `<button type="button" class="phase-chip${active ? ' active' : ''}" data-phase="${ph}">${labels[ph]}<span class="n">${s.byPhase[ph] || 0}</span></button>`;
+      }).join('') + `<button type="button" class="phase-chip${state.filters.phase === '' ? ' active' : ''}" data-phase="">All<span class="n">${state.ideas.length}</span></button>`;
+    }
+
+    function renderNextUp() {
+      const wrap = document.getElementById('nextUp');
+      const items = nextUpIdeas();
+      if (!items.length) {
+        wrap.innerHTML = `<div class="next-card"><strong>Wave 1 clear</strong><div class="hint">No open P0 ideas. Switch phase to Next or celebrate.</div></div>`;
+        return;
+      }
+      wrap.innerHTML = items.map((idea) => {
+        const blocked = blockingDeps(idea);
+        return `
+          <button type="button" class="next-card" data-jump="${escapeAttr(idea.id)}" style="text-align:left;width:100%;cursor:pointer">
+            <strong>${escapeHtml(idea.id)} · ${escapeHtml(idea.title)}</strong>
+            <div class="hint">${escapeHtml(idea.category)} · ${escapeHtml(idea.priority)} · ${doneSet(idea.id).size}/${(idea.tools || []).length} tools</div>
+            <div class="action">${blocked.length ? `Blocked by ${escapeHtml(blocked.join(', '))}` : `Next tool: ${escapeHtml(firstOpenTool(idea))}`}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderFilters() {
+      const catSel = document.getElementById('filterCategory');
+      const current = state.filters.category;
+      const cats = [...new Set(state.ideas.map((i) => i.category).filter(Boolean))].sort();
+      catSel.innerHTML = '<option value="">All categories</option>' + cats.map((c) =>
+        `<option value="${escapeAttr(c)}"${c === current ? ' selected' : ''}>${escapeHtml(c)}</option>`
+      ).join('');
+    }
+
+    function renderList() {
+      const list = document.getElementById('list');
+      const rows = filteredIdeas();
+      if (!state.ideas.length) { list.innerHTML = ''; return; }
+      if (!rows.length) {
+        list.innerHTML = `<div class="panel empty">No ideas match these filters. Try another phase or Clear to All.</div>`;
+        return;
+      }
+      list.innerHTML = rows.map((idea) => {
+        const st = effectiveStatus(idea);
+        const done = doneSet(idea.id);
+        const total = (idea.tools || []).length;
+        const doneCount = [...done].filter((i) => i >= 0 && i < total).length;
+        const open = state.openIds.has(idea.id);
+        const blocked = blockingDeps(idea);
+        const notes = ov(idea.id).notes || '';
+        const pri = idea.priority || 'P2';
+        return `
+          <article class="panel idea${open ? ' open' : ''}" data-id="${escapeAttr(idea.id)}" id="idea-${escapeAttr(idea.id)}">
+            <div class="idea-head" data-toggle="${escapeAttr(idea.id)}">
+              <div class="badge ${escapeAttr(pri)}">${escapeHtml(idea.id.replace('IDEA-', '#'))} · ${escapeHtml(pri)}</div>
+              <div>
+                <h3>${escapeHtml(idea.title)}</h3>
+                <div class="meta">
+                  <span class="pill ${st}">${labelStatus(st)}</span>
+                  <span class="pill phase">${escapeHtml(idea.phase || 'later')}</span>
+                  <span class="pill type">${escapeHtml(idea.workType || 'product')}</span>
+                  <span>${escapeHtml(idea.category || '')}</span>
+                  <span>${doneCount} / ${total} tools</span>
+                  <span>I${escapeHtml(idea.impact || '?')} / E${escapeHtml(idea.effort || '?')}</span>
+                  ${blocked.length ? `<span class="pill blocked">Blocked by ${escapeHtml(blocked.join(', '))}</span>` : ''}
+                </div>
+              </div>
+              <div class="chev" aria-hidden="true">›</div>
+            </div>
+            <div class="idea-body">
+              <p class="summary">${escapeHtml(idea.summary || '')}</p>
+              <div class="body-grid">
+                <div class="tools" data-tools-for="${escapeAttr(idea.id)}">
+                  ${(idea.tools || []).map((tool, idx) => `
+                    <label class="${done.has(idx) ? 'done' : ''}">
+                      <input type="checkbox" data-tool-id="${escapeAttr(idea.id)}" data-tool-idx="${idx}" ${done.has(idx) ? 'checked' : ''} />
+                      <span>${escapeHtml(tool)}</span>
+                    </label>
+                  `).join('')}
+                </div>
+                <div class="side">
+                  <div class="status-wrap">
+                    <span class="k">Status</span>
+                    <select data-status-for="${escapeAttr(idea.id)}" aria-label="Status for ${escapeAttr(idea.title)}">
+                      ${STATUSES.map((s) => `<option value="${s}"${s === st ? ' selected' : ''}>${labelStatus(s)}</option>`).join('')}
+                    </select>
+                  </div>
+                  <div class="notes-wrap">
+                    <span class="k">Notes</span>
+                    <textarea data-notes-for="${escapeAttr(idea.id)}" placeholder="Next action, blockers, links…">${escapeHtml(notes)}</textarea>
+                  </div>
+                  <div class="deps">
+                    Depends on: ${(idea.dependsOn || []).length
+                      ? (idea.dependsOn || []).map((d) => `<a href="#idea-${escapeAttr(d)}" data-jump="${escapeAttr(d)}">${escapeHtml(d)}</a>`).join(', ')
+                      : 'none'}
+                  </div>
+                  <a class="spec-link" href="/idea-docs/${escapeAttr(idea.file)}" target="_blank" rel="noreferrer">Open markdown spec</a>
+                </div>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function render() {
+      renderStats();
+      renderPhaseChips();
+      renderNextUp();
+      renderFilters();
+      renderList();
+      const banner = document.getElementById('loadBanner');
+      if (state.ideas.length) {
+        const wave = state.ideas.filter((i) => i.phase === 'now' && i.priority === 'P0').length;
+        banner.innerHTML = `<strong>${state.ideas.length}</strong> ideas loaded · <strong>${wave}</strong> Wave 1 (Now / P0). Cards start collapsed. Default filter: Now.`;
+      }
+    }
+
+    function jumpToIdea(id) {
+      state.filters.phase = '';
+      state.openIds.add(id);
+      document.getElementById('filterPriority').value = state.filters.priority;
+      render();
+      const el = document.getElementById(`idea-${id}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function loadIdeas() {
+      const banner = document.getElementById('loadBanner');
+      const urls = ['/api/ideas', './ideas.json'];
+      let lastErr = null;
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          state.ideas = Array.isArray(data.ideas) ? data.ideas : [];
+          render();
+          return;
+        } catch (err) { lastErr = err; }
+      }
+      banner.innerHTML = `Could not load ideas (<code>${escapeHtml(lastErr?.message || 'unknown')}</code>). Start via the Desktop tracker icon.`;
+    }
+
+    function exportProgress() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        ideaOverrides: state.ideaOverrides,
+        summary: summarize(),
+        ideas: state.ideas.map((idea) => ({
+          id: idea.id,
+          title: idea.title,
+          phase: idea.phase,
+          priority: idea.priority,
+          workType: idea.workType,
+          status: effectiveStatus(idea),
+          doneTools: [...doneSet(idea.id)],
+          toolCount: (idea.tools || []).length,
+          notes: ov(idea.id).notes || '',
+        })),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `openexam-ideas-progress-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    document.getElementById('list').addEventListener('click', (e) => {
+      const jump = e.target.closest('[data-jump]');
+      if (jump && jump.tagName === 'A') {
+        e.preventDefault();
+        jumpToIdea(jump.getAttribute('data-jump'));
+        return;
+      }
+      const head = e.target.closest('[data-toggle]');
+      if (!head) return;
+      if (e.target.closest('a, button, select, textarea, input, label')) return;
+      const id = head.getAttribute('data-toggle');
+      if (state.openIds.has(id)) state.openIds.delete(id);
+      else state.openIds.add(id);
+      renderList();
+    });
+
+    document.getElementById('list').addEventListener('change', (e) => {
+      const sel = e.target.closest('select[data-status-for]');
+      if (sel) {
+        setStatus(sel.getAttribute('data-status-for'), sel.value);
+        return;
+      }
+      const box = e.target.closest('input[data-tool-id]');
+      if (box) {
+        toggleTool(box.getAttribute('data-tool-id'), Number(box.getAttribute('data-tool-idx')), box.checked);
+      }
+    });
+
+    document.getElementById('list').addEventListener('input', (e) => {
+      const ta = e.target.closest('textarea[data-notes-for]');
+      if (!ta) return;
+      const id = ta.getAttribute('data-notes-for');
+      if (state.notesTimers[id]) clearTimeout(state.notesTimers[id]);
+      state.notesTimers[id] = setTimeout(() => setNotes(id, ta.value), 400);
+    });
+
+    document.getElementById('nextUp').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-jump]');
+      if (!btn) return;
+      jumpToIdea(btn.getAttribute('data-jump'));
+    });
+
+    document.getElementById('phaseChips').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-phase]');
+      if (!btn) return;
+      state.filters.phase = btn.getAttribute('data-phase');
+      render();
+    });
+
+    document.getElementById('search').addEventListener('input', (e) => {
+      state.filters.q = e.target.value;
+      renderList();
+    });
+    document.getElementById('filterPriority').addEventListener('change', (e) => {
+      state.filters.priority = e.target.value;
+      render();
+    });
+    document.getElementById('filterWorkType').addEventListener('change', (e) => {
+      state.filters.workType = e.target.value;
+      render();
+    });
+    document.getElementById('filterStatus').addEventListener('change', (e) => {
+      state.filters.status = e.target.value;
+      render();
+    });
+    document.getElementById('filterCategory').addEventListener('change', (e) => {
+      state.filters.category = e.target.value;
+      render();
+    });
+    document.getElementById('btnReload').addEventListener('click', loadIdeas);
+    document.getElementById('btnExport').addEventListener('click', exportProgress);
+    document.getElementById('btnReset').addEventListener('click', () => {
+      if (!confirm('Clear all idea tool checkoffs, notes, and statuses?')) return;
+      state.ideaOverrides = {};
+      saveProgress({ immediate: true });
+      render();
+    });
+
+    (async function boot() {
+      await hydrateProgress();
+      await loadIdeas();
+    })();
+  </script>
+</body>
+</html>

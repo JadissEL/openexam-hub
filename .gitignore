@@ -36,3 +36,7 @@ dist-e2e/
 # temp generator scratch
 scripts/_tmp-*
 docs/growth/_tmp-*
+docs/growth/_preview-*
+
+# machine-local growth tracker progress (also mirrored under %LOCALAPPDATA%\OpenExamHub)
+docs/growth/progress-local.json
