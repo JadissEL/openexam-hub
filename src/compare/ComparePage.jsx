@@ -66,7 +66,7 @@ export function SkillTable({ tests, skill, levelHeader = 'CLB' }) {
   );
 }
 
-function FormatTable({ tests }) {
+function FormatTable({ tests, rowLabels = FORMAT_ROW_LABELS }) {
   const formats = tests.map((id) => TEST_FORMATS[id]);
   return (
     <div className={regionCls} tabIndex={0} role="region" aria-label={`Test format: ${formats.map((f) => f.name).join(' and ')}`}>
@@ -81,7 +81,7 @@ function FormatTable({ tests }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-[#E7E1D7] align-top">
-          {FORMAT_ROW_LABELS.map(([key, label]) => (
+          {rowLabels.map(([key, label]) => (
             <tr key={key}>
               <th scope="row" className={`px-4 py-3 font-semibold ${ink} whitespace-nowrap`}>{label}</th>
               {formats.map((f) => (
@@ -135,11 +135,16 @@ function CefrTable({ map }) {
 export function ComparePage({ slug }) {
   const page = comparePageBySlug(slug);
   if (!page) return null;
-  const formats = page.tests.map((id) => TEST_FORMATS[id]);
+  const tests = page.tests || [];
+  const formatIds = page.formats || tests;
+  const formats = formatIds.map((id) => TEST_FORMATS[id]);
+  const cefr = page.cefr || [];
+  const scheme = page.scheme || 'CLB';
   const sources = [
-    { url: EE_LANGUAGE_URL, label: `IRCC: Express Entry, Language test results (${page.tests.map((id) => TABLES[id].label).join(' and ')} tables, accepted tests)` },
+    ...(tests.length ? [{ url: EE_LANGUAGE_URL, label: `IRCC: Express Entry, Language test results (${tests.map((id) => TABLES[id].label).join(' and ')} tables, accepted tests)` }] : []),
     ...formats.flatMap((f) => [{ url: f.sourceUrl, label: f.sourceLabel }, ...(f.extraSources || [])]),
-    ...page.cefr.flatMap((m) => m.sources)
+    ...cefr.flatMap((m) => m.sources),
+    ...(page.extraSources || [])
   ].filter((s, i, all) => all.findIndex((x) => x.url === s.url) === i);
 
   return (
@@ -149,24 +154,25 @@ export function ComparePage({ slug }) {
         <article className="mx-auto max-w-5xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
           <Breadcrumbs items={compareBreadcrumbs(page)} />
           <header className="mt-6 max-w-3xl">
-            <p className={eyebrow}>Side-by-side comparison · Official sources</p>
+            <p className={eyebrow}>{page.eyebrow || 'Side-by-side comparison · Official sources'}</p>
             <h1 className={`mt-4 font-display ${ink} text-[36px] sm:text-5xl lg:text-[56px] tracking-[-0.03em] font-medium leading-[1.05]`}>{page.h1}</h1>
             {page.intro.map((p) => (
               <p key={p.slice(0, 32)} className={`mt-6 ${lead}`}>{p}</p>
             ))}
             <p className={`mt-4 text-[14px] ${muted}`}>
-              Checked against canada.ca and the official test sites on <time dateTime={COMPARE_LAST_VERIFIED}>{dateLabel(COMPARE_LAST_VERIFIED)}</time>.
+              {page.checkedNote || 'Checked against canada.ca and the official test sites on'} <time dateTime={COMPARE_LAST_VERIFIED}>{dateLabel(COMPARE_LAST_VERIFIED)}</time>.
             </p>
           </header>
 
+          {tests.length ? (
           <section aria-labelledby="clb-title" className="mt-12">
-            <SectionTitle id="clb-title">CLB level by skill, side by side</SectionTitle>
+            <SectionTitle id="clb-title">{scheme} level by skill, side by side</SectionTitle>
             <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>
-              Each row is one CLB level. Each cell is the score IRCC gives for that level on that test, copied from IRCC’s Express Entry language page (last modified <time dateTime={EE_LANGUAGE_MODIFIED}>{dateLabel(EE_LANGUAGE_MODIFIED)}</time>). For IELTS and CELPIP, IRCC lists the score that earns each level; PTE Core rows are score ranges. CLB 10 is the top level on IRCC’s tables.
+              Each row is one {scheme} level. Each cell is the score IRCC gives for that level on that test, copied from IRCC’s Express Entry language page (last modified <time dateTime={EE_LANGUAGE_MODIFIED}>{dateLabel(EE_LANGUAGE_MODIFIED)}</time>). {page.tableNote || 'For IELTS and CELPIP, IRCC lists the score that earns each level; PTE Core rows are score ranges.'} {scheme} 10 is the top level on IRCC’s tables.
             </p>
             <div className="mt-6 grid gap-8 md:grid-cols-2">
               {SKILLS.map((s) => (
-                <SkillTable key={s} tests={page.tests} skill={s} />
+                <SkillTable key={s} tests={tests} skill={s} levelHeader={scheme} />
               ))}
             </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -177,26 +183,40 @@ export function ComparePage({ slug }) {
               ))}
             </div>
           </section>
+          ) : null}
+
+          {page.facts ? (
+            <section aria-labelledby="facts-title" className="mt-12">
+              <SectionTitle id="facts-title">{page.facts.title}</SectionTitle>
+              <ul className={`mt-4 space-y-3 text-[16px] leading-[1.7] ${muted} max-w-3xl list-disc pl-5`}>
+                {page.facts.items.map((f) => (
+                  <li key={f.slice(0, 40)}>{f}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <section aria-labelledby="format-title" className="mt-14">
             <SectionTitle id="format-title">Test format</SectionTitle>
             <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>
-              From each test owner’s official page, for the version IRCC accepts for Express Entry. The validity row is IRCC’s rule.
+              {page.formatNote || 'From each test owner’s official page, for the version IRCC accepts for Express Entry. The validity row is IRCC’s rule.'}
             </p>
-            <FormatTable tests={page.tests} />
+            <FormatTable tests={formatIds} rowLabels={page.formatRows || FORMAT_ROW_LABELS} />
           </section>
 
+          {cefr.length ? (
           <section aria-labelledby="cefr-title" className="mt-14">
             <SectionTitle id="cefr-title">CEFR, as each test owner publishes it</SectionTitle>
             <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>
               CEFR is a different scale from CLB, and IRCC uses CLB for Express Entry. These are the test owners’ own CEFR tables, shown separately. They are not used to line the two tests up.
             </p>
             <div className="mt-6 grid gap-8 md:grid-cols-2">
-              {page.cefr.map((m) => (
+              {cefr.map((m) => (
                 <CefrTable key={m.id} map={m} />
               ))}
             </div>
           </section>
+          ) : null}
 
           <section aria-labelledby="exam-faq-title" className="mt-14">
             <SectionTitle id="exam-faq-title">Questions people ask</SectionTitle>
@@ -225,7 +245,7 @@ export function ComparePage({ slug }) {
               ))}
             </ol>
             <p className="mt-4 text-[14px] leading-relaxed text-[#6B635A]">
-              OpenExam Hub is independent and not affiliated with IRCC or any test owner named on this page. This page is for information only and is not immigration advice, and it gives no score guarantees. IRCC and the test owners can change their tables, formats and rules at any time, so confirm on canada.ca and the official test site before you book or apply.
+              {page.disclaimer || 'OpenExam Hub is independent and not affiliated with IRCC or any test owner named on this page. This page is for information only and is not immigration advice, and it gives no score guarantees. IRCC and the test owners can change their tables, formats and rules at any time, so confirm on canada.ca and the official test site before you book or apply.'}
             </p>
           </section>
 

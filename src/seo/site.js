@@ -82,7 +82,7 @@ export const EXAM_PAGES = [
     slug: 'telc',
     label: 'telc',
     tags: ['TELC'],
-    title: 'telc Deutsch exams: official practice tests and handbooks',
+    title: 'telc German exams: free official mock tests',
     description:
       'telc German exams from telc gGmbH: free official mock exams, handbooks and regulations on telc.net, from A1 to C2, including A2+ Beruf and C1 Hochschule.'
   },

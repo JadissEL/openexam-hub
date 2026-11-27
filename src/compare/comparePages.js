@@ -1,13 +1,18 @@
 // Copy for the /compare/<slug> pages. Pure data so the prerender builds FAQPage JSON-LD from the same
 // text the page shows. Every fact is taken from the sources in compareData.js; no cross-exam score
 // equivalences beyond IRCC's own CLB tables.
-import { IELTS_CEFR, CELPIP_CEFR, PTE_ACADEMIC_CEFR, TABLES, EQUIVALENCY_TESTS, levelSentence, CSV_PATH } from './compareData.js';
+import { IELTS_CEFR, CELPIP_CEFR, PTE_ACADEMIC_CEFR, TABLES, EQUIVALENCY_TESTS, levelSentence, CSV_PATH, SOURCE_URLS, FRENCH_DIPLOMA_ROWS, GERMAN_EXAM_ROWS } from './compareData.js';
 
 export const COMPARE_BASE = '/compare';
 
 const NOT_AFFILIATED = (bodies) => ({
   q: 'Is this comparison official?',
   a: `No. OpenExam Hub is independent and not affiliated with IRCC, ${bodies}. The CLB tables are copied from canada.ca and the test facts from the official test websites, checked on the date shown on this page. Rules and tables can change, so confirm on canada.ca and the test owner’s site before you book or apply.`
+});
+
+const NOT_AFFILIATED_CEFR = (bodies, where) => ({
+  q: 'Is this comparison official?',
+  a: `No. OpenExam Hub is independent and not affiliated with ${bodies}. The facts on this page come from ${where}, checked on the date shown on this page. Rules and lists can change, so confirm with the authority that will read your result before you book.`
 });
 
 const VALIDITY_FAQ = {
@@ -196,6 +201,180 @@ export const COMPARE_PAGES = [
       { href: '/compare/ielts-vs-pte', label: 'IELTS vs PTE Core: CLB scores and test format' },
       { href: '/compare/clb-equivalency-table', label: 'CLB and NCLC table for all five Express Entry tests' }
     ]
+  },
+  {
+    slug: 'tef-vs-tcf',
+    label: 'TEF Canada vs TCF Canada',
+    title: 'TEF Canada vs TCF Canada: NCLC scores · OpenExam Hub',
+    description:
+      'TEF Canada and TCF Canada side by side: IRCC’s NCLC table per skill, test format and timings, which TEF score to enter, and validity. Sources cited.',
+    h1: 'TEF Canada vs TCF Canada: NCLC scores and test format',
+    intro: [
+      'IRCC accepts two French tests for Express Entry: TEF Canada and TCF Canada. It publishes a separate table for each that shows which score earns each NCLC level (Niveaux de compétence linguistique canadiens, the French counterpart of CLB). This page puts the two tables next to each other, skill by skill, with the test format from the official TEF and TCF sites.',
+      'It does not convert a TEF score into a TCF score. The two scores in a row are what IRCC counts as the same NCLC level on each test. TEF Canada numbers are on the Express Entry scale (“Équivalence ancien score”).'
+    ],
+    scheme: 'NCLC',
+    tests: ['TEF_EXPRESS_ENTRY', 'TCF_CANADA'],
+    formats: ['TEF_CANADA', 'TCF_CANADA'],
+    tableNote: 'IRCC gives a score range for each level on both tests.',
+    tabs: [
+      { href: '/tools/clb-converter', label: 'Convert TEF Canada scores to NCLC' },
+      { href: '/tools/clb-converter?tab=tcf', label: 'Convert TCF Canada scores to NCLC' }
+    ],
+    cefr: [],
+    extraSources: [{ url: SOURCE_URLS.IRCC_CITIZENSHIP, label: 'IRCC: Citizenship language proof, step 5 (tests we accept)' }],
+    faq: [
+      {
+        q: 'Does Express Entry accept both TEF Canada and TCF Canada?',
+        a: 'Yes. IRCC’s list of accepted tests names TEF Canada and TCF Canada for French. The general TCF (tout public), DELF and DALF are not on that list.'
+      },
+      {
+        q: 'What TEF Canada and TCF Canada scores equal NCLC 7?',
+        a: `On IRCC’s tables, NCLC 7 is TEF Canada ${levelSentence('TEF_EXPRESS_ENTRY', 7)} on the Express Entry scale, and TCF Canada ${levelSentence('TCF_CANADA', 7)}.`
+      },
+      {
+        q: 'What TEF Canada and TCF Canada scores equal NCLC 9?',
+        a: `On IRCC’s tables, NCLC 9 is TEF Canada ${levelSentence('TEF_EXPRESS_ENTRY', 9)} on the Express Entry scale, and TCF Canada ${levelSentence('TCF_CANADA', 9)}.`
+      },
+      {
+        q: 'Which TEF Canada score do I enter in my Express Entry profile?',
+        a: 'The “Équivalence ancien score” column of your TEF Canada results. IRCC says not to enter the “Score / 699” column in an Express Entry profile. The tables on this page use the Express Entry scale.'
+      },
+      {
+        q: 'How long are the TEF Canada and TCF Canada tests?',
+        a: 'CCI Paris lists TEF Canada reading at 1 hour, listening 40 minutes, writing 1 hour and speaking 15 minutes. France Éducation international gives TCF Canada a total of 2 hours 47 minutes: listening 35 minutes, reading 60 minutes, writing 60 minutes and speaking 12 minutes.'
+      },
+      {
+        q: 'Can I use TEF Canada or TCF Canada for Canadian citizenship?',
+        a: 'Yes. IRCC’s citizenship language-proof page accepts TEF Canada and TCF Canada with B1 or higher in listening and speaking.'
+      },
+      VALIDITY_FAQ,
+      NOT_AFFILIATED('CCI Paris Île-de-France (TEF Canada) or France Éducation international (TCF Canada)')
+    ],
+    guides: [
+      { href: '/exams/tef-canada', label: 'TEF Canada guide: format, scores and free official practice' },
+      { href: '/exams/tcf-canada', label: 'TCF Canada guide: format, timings and free official practice' }
+    ],
+    posts: [
+      { href: '/blog/tef-canada-vs-tcf-canada', label: 'TEF Canada vs TCF Canada: differences and which to take' },
+      { href: '/blog/tef-canada-clb-nclc-express-entry', label: 'TEF Canada scores to CLB and NCLC for Express Entry' },
+      { href: '/blog/tcf-canada-clb-nclc-express-entry', label: 'TCF Canada scores to CLB and NCLC for Express Entry' },
+      { href: '/blog/nclc-7-clb-7-express-entry-scores', label: 'NCLC 7 / CLB 7: what TEF Canada and TCF Canada scores you need' }
+    ],
+    otherCompare: [
+      { href: '/compare/delf-vs-tcf', label: 'DELF vs TCF: levels, validity and who accepts each' },
+      { href: '/compare/clb-equivalency-table', label: 'CLB and NCLC table for all five Express Entry tests' }
+    ]
+  },
+  {
+    slug: 'delf-vs-tcf',
+    label: 'DELF vs TCF',
+    title: 'DELF vs TCF: levels, validity, acceptance · OpenExam Hub',
+    description:
+      'DELF and DALF diplomas vs the TCF test: CEFR levels, how results work, validity, and what IRCC and the French authorities accept. Official sources only.',
+    h1: 'DELF vs TCF: CEFR levels, validity and who accepts each',
+    intro: [
+      'The DELF and DALF are French diplomas, each awarded at one CEFR level. The TCF is a test that places you on the CEFR scale at one moment, and it comes in versions such as TCF tout public and TCF Canada. This page compares them on CEFR level, how results work, how long they count, and what Canadian and French authorities accept.',
+      'There is no score conversion between a DELF and a TCF. The two are compared only by the CEFR level each one certifies, as the official pages describe them.'
+    ],
+    eyebrow: 'Side-by-side comparison · CEFR level only',
+    checkedNote: 'Checked against French government pages, Campus France and canada.ca on',
+    formats: ['DELF_DALF', 'TCF_FRENCH'],
+    formatRows: FRENCH_DIPLOMA_ROWS,
+    formatNote: 'From French government pages, Campus France Maroc and IRCC. France Éducation international’s own site blocked our automated checks, so fees, dates and full paper formats are not shown; check them on its site and with your exam centre.',
+    tabs: [],
+    cefr: [],
+    extraSources: [
+      { url: SOURCE_URLS.IRCC_LANGUAGE, label: 'IRCC: Express Entry, Language test results (accepted tests)' },
+      { url: SOURCE_URLS.IRCC_CITIZENSHIP, label: 'IRCC: Citizenship language proof, step 5 (tests we accept)' }
+    ],
+    faq: [
+      {
+        q: 'Does a DELF expire?',
+        a: 'No. The French government’s student site says a DELF is valid for life once obtained, and describes the DALF (C1 to C2) the same way. Campus France Maroc says a TCF attestation is valid for 2 years.'
+      },
+      {
+        q: 'Can I use a DELF or DALF for Express Entry?',
+        a: 'No. IRCC lists two French tests for Express Entry, TEF Canada and TCF Canada. DELF, DALF and the general TCF are not on that list.'
+      },
+      {
+        q: 'Can I use a DELF for Canadian citizenship?',
+        a: 'Yes. IRCC’s citizenship language-proof page accepts a DELF at B1 or higher and any DALF result, and TCF Canada with B1 or higher in listening and speaking.'
+      },
+      {
+        q: 'How is a DELF marked?',
+        a: 'Campus France Maroc says each DELF or DALF exam is marked out of 100, with 25 points per skill. You pass with 50/100 or more and at least 5/25 in every skill. A TCF instead gives an attestation of your level on the CEFR scale.'
+      },
+      {
+        q: 'Which one works for French naturalisation?',
+        a: 'Service-Public says naturalisation requires B2 in spoken and written French. It accepts any diploma attesting at least B2, and a TCF attestation issued less than 2 years ago by France Éducation international. DELF is not named on that page, so confirm a DELF B2 or DALF with your prefecture.'
+      },
+      NOT_AFFILIATED_CEFR('IRCC, France Éducation international, Campus France or the French government', 'étudiant.gouv.fr, Campus France Maroc, Service-Public and canada.ca')
+    ],
+    disclaimer: 'OpenExam Hub is independent and not affiliated with IRCC, France Éducation international, Campus France or the French government. This page is for information only and is not immigration advice. Rules change, so confirm with the authority that will read your result before you book.',
+    guides: [
+      { href: '/exams/delf', label: 'DELF and DALF guide: levels A1 to C2 and free official sample papers' },
+      { href: '/exams/tcf', label: 'TCF tout public guide: format, scoring and free official practice' },
+      { href: '/exams/tcf-canada', label: 'TCF Canada guide: the version IRCC accepts' }
+    ],
+    posts: [
+      { href: '/blog/delf-vs-tcf-which-french-test', label: 'DELF vs TCF: which French test should you take?' },
+      { href: '/blog/delf-dalf-express-entry', label: 'Can you use a DELF or DALF for Express Entry?' }
+    ],
+    otherCompare: [{ href: '/compare/tef-vs-tcf', label: 'TEF Canada vs TCF Canada: NCLC scores and test format' }]
+  },
+  {
+    slug: 'goethe-vs-telc',
+    label: 'Goethe vs telc',
+    title: 'Goethe vs telc: German exams by CEFR level · OpenExam Hub',
+    description:
+      'Goethe-Zertifikat vs telc Deutsch by CEFR level: which certificates BAMF and DAAD name for spouse visas, naturalisation and university. Official sources only.',
+    h1: 'Goethe-Zertifikat vs telc Deutsch: German exams by CEFR level',
+    intro: [
+      'The Goethe-Institut and telc gGmbH both run German exams at CEFR levels from A1 to C2. Authorities name certificates by level and by provider, so the useful question is which exam an authority lists for the level you need. This page lines the two up by CEFR level, using what BAMF, DAAD and telc publish.',
+      'It does not convert a Goethe result into a telc result. Both certify a CEFR level; the authority that reads your certificate decides what it accepts.'
+    ],
+    eyebrow: 'Side-by-side comparison · CEFR level only',
+    checkedNote: 'Checked against BAMF, DAAD and telc.net on',
+    formats: ['GOETHE', 'TELC'],
+    formatRows: GERMAN_EXAM_ROWS,
+    formatNote: 'From BAMF’s leaflet and B1 list, DAAD and telc.net. The Goethe-Institut’s site blocked our automated checks, so exam timings and fees are not shown; check them on goethe.de.',
+    tabs: [],
+    cefr: [],
+    extraSources: [
+      { url: SOURCE_URLS.BAMF_SPOUSE_A1, label: 'BAMF: Proof of basic German for spousal reunification (PDF, last revised 03/2023)' },
+      { url: SOURCE_URLS.BAMF_B1_LIST, label: 'BAMF: Recognised B1 language certificates (PDF, July 2023)' },
+      { url: SOURCE_URLS.DAAD_GERMAN, label: 'DAAD: The German language' }
+    ],
+    faq: [
+      {
+        q: 'Which A1 certificate do I need to join my spouse in Germany?',
+        a: 'BAMF’s leaflet (last revised March 2023) names “Start Deutsch 1” of the Goethe-Institut or of telc, “Grundstufe Deutsch 1” of ÖSD, and TestDaF. The German mission where you apply alone decides whether it accepts your proof.'
+      },
+      {
+        q: 'Are Goethe and telc B1 certificates accepted for naturalisation?',
+        a: 'BAMF’s list of recognised B1 proofs (dated July 2023) includes Goethe-Zertifikat B1 and several telc exams, among them Zertifikat Deutsch / telc Deutsch B1 and telc Deutsch A2-B1. BAMF says certificates from internal university or course-provider tests are not recognised.'
+      },
+      {
+        q: 'Which one do German universities accept?',
+        a: 'DAAD says the Goethe-Zertifikat C2 and telc Deutsch C1 Hochschule are usually recognised by universities, and that some programmes also recognise the Goethe-Zertifikat B2 and C1. DAAD also describes TestDaF and DSH, and says that reaching at least the intermediate level in all their parts meets the requirements of the vast majority of degree programmes. Ask your university which certificate your programme accepts.'
+      },
+      {
+        q: 'What is a telc dual-level exam?',
+        a: 'telc says its dual-level exams, such as telc Deutsch A2·B1, assess two CEFR levels, and you receive a certificate for either the lower or the higher level.'
+      },
+      NOT_AFFILIATED_CEFR('the Goethe-Institut, telc gGmbH, BAMF or DAAD', 'BAMF, DAAD and telc.net')
+    ],
+    disclaimer: 'OpenExam Hub is independent and not affiliated with the Goethe-Institut, telc gGmbH, BAMF or DAAD. This page is for information only and is not legal or immigration advice. Lists change, so confirm with the mission, authority or university that will read your certificate.',
+    guides: [
+      { href: '/exams/goethe', label: 'Goethe-Zertifikat guide: free official practice tests A1 to C2' },
+      { href: '/exams/telc', label: 'telc guide: official practice tests and handbooks' }
+    ],
+    posts: [
+      { href: '/blog/german-exams-visa-university-professional-recognition', label: 'Which German exam you need for a visa, university or professional recognition' },
+      { href: '/blog/germany-summer-2027-uni-assist-goethe', label: 'German university summer semester 2027: Goethe, TestDaF and the uni-assist window at FH Aachen' }
+    ],
+    otherCompare: []
   }
 ];
 
@@ -262,8 +441,8 @@ export const CLB_TABLE_PAGE = {
 export const COMPARE_HUB = {
   path: COMPARE_BASE,
   label: 'Compare tests',
-  title: 'Compare language tests for Canada · OpenExam Hub',
+  title: 'Compare language tests side by side · OpenExam Hub',
   description:
-    'Side-by-side comparisons of the English and French tests IRCC accepts for Express Entry, using IRCC’s own CLB and NCLC tables and the official test sites.',
-  h1: 'Compare the language tests IRCC accepts'
+    'IRCC’s CLB and NCLC tables for the Express Entry tests side by side, plus French diplomas and German exams compared by CEFR level. Official sources only.',
+  h1: 'Compare language tests side by side'
 };

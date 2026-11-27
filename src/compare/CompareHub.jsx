@@ -127,7 +127,7 @@ export function CompareHub() {
             <p className={eyebrow}>Comparisons · Official sources</p>
             <h1 className={`mt-4 font-display ${ink} text-[36px] sm:text-5xl tracking-[-0.03em] font-medium leading-[1.05]`}>{hub.h1}</h1>
             <p className={`mt-6 ${lead}`}>
-              IRCC accepts three English tests (IELTS General Training, CELPIP-General and PTE Core) and two French tests (TEF Canada and TCF Canada) for Express Entry. These pages line the tests up by the CLB or NCLC level IRCC gives each score, with test facts from the official test sites. They never convert one test’s score into another’s.
+              IRCC accepts three English tests (IELTS General Training, CELPIP-General and PTE Core) and two French tests (TEF Canada and TCF Canada) for Express Entry. These pages line the tests up by the CLB or NCLC level IRCC gives each score, with test facts from the official test sites. Other pages compare French diplomas and German exams by CEFR level, using what the authorities that read them publish. None of them converts one test’s score into another’s.
             </p>
           </header>
           <ul className="mt-10 grid gap-5 sm:grid-cols-2">
