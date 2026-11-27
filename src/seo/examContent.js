@@ -417,7 +417,44 @@ const CONTENT = {
       NOT_AFFILIATED('the Goethe-Institut')
     ],
     sources: [{ title: 'Goethe-Institut: German exams', url: 'https://www.goethe.de/de/spr/prf.html' }],
-    related: ['dele', 'toefl', 'ielts']
+    related: ['telc', 'dele', 'toefl']
+  }),
+
+  telc: () => ({
+    h1: 'telc Deutsch exams: official practice tests and handbooks',
+    runBy: { name: 'telc gGmbH', url: 'https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/' },
+    intro: [
+      'telc gGmbH, a non-profit educational company according to its “Wir sind telc” page, runs German certificate exams at CEFR levels. The official list includes general exams from Start Deutsch 1 / telc Deutsch A1 to telc Deutsch C2, dual-level exams such as telc Deutsch A2·B1, vocational exams such as telc Deutsch A2+ Beruf, and telc Deutsch C1 Hochschule, which telc describes as the exam for university admission (Hochschulzugang).',
+      'telc publishes free official mock examinations (Übungstests) with audio, plus handbooks and preparation tips for several of these exams, and the examination regulations in force from 15 April 2025. The links below go to those official files on telc.net; OpenExam Hub does not host them. Always confirm current requirements with the university, employer or authority that will see your certificate.'
+    ],
+    facts: [
+      ['Run by', 'telc gGmbH'],
+      ['Levels', 'CEFR A1 to C2; each exam is a named certificate'],
+      ['Parts', 'A written part and an oral part (see each official exam page for the exact tasks)'],
+      ['Official practice', 'Free mock exams (Übungstests) with audio, plus handbooks, on telc.net'],
+      ['Regulations', 'telc Prüfungsregularien in force from 15 April 2025']
+    ],
+    format: null,
+    examIds: ['TELC'],
+    faq: [
+      {
+        q: 'Where can I find official telc practice tests?',
+        a: 'On telc.net. telc publishes free official mock examinations (Übungstests) with audio for several German exams, and says on the Start Deutsch 1 / telc Deutsch A1 page that the mock exam and audio files can be downloaded free of charge. The official files we have checked are linked on this page.'
+      },
+      {
+        q: 'What is telc Deutsch C1 Hochschule?',
+        a: 'telc describes it as the exam for university admission (Hochschulzugang). The official page says it has a written part and an oral part, that it tests skills needed for university and an academic job, and that it is offered as a digital, hybrid or paper-based exam. Always ask the university which certificate and level it will accept.'
+      },
+      NOT_AFFILIATED('telc gGmbH')
+    ],
+    sources: [
+      { title: 'telc: German certificate exams', url: 'https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/' },
+      { title: 'Wir sind telc', url: 'https://www.telc.net/wir-sind-telc/' },
+      { title: 'Start Deutsch 1 / telc Deutsch A1', url: 'https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/start-deutsch-1-/-telc-deutsch-a1/' },
+      { title: 'telc Deutsch C1 Hochschule', url: 'https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/telc-deutsch-c1-hochschule/' },
+      { title: 'telc Prüfungsregularien, in force from 15 April 2025 (PDF)', url: 'https://www.telc.net/fileadmin/user_upload/pdfs/AGB_Pruefungsordnung/9994-P00-150010.pdf' }
+    ],
+    related: ['goethe', 'dele', 'ielts']
   }),
 
   dele: () => {

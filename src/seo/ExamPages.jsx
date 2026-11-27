@@ -288,6 +288,22 @@ const COMPARE = {
       anchor: 'CLB / NCLC score converter',
       tail: 'It uses IRCC’s official tables. For Canadian citizenship, IRCC’s language-proof page accepts a DELF at B1 or higher and any DALF result; always confirm on canada.ca.'
     }
+  ],
+  goethe: [
+    {
+      lead: 'telc gGmbH also runs German exams at CEFR levels, including telc Deutsch C1 Hochschule, which telc describes as an exam for university admission. See the',
+      slug: 'telc',
+      anchor: 'telc official practice tests and handbooks',
+      tail: 'Always check which certificate your university, employer or mission will accept.'
+    }
+  ],
+  telc: [
+    {
+      lead: 'The Goethe-Institut also runs German exams from A1 to C2. See the',
+      slug: 'goethe',
+      anchor: 'Goethe-Zertifikat official practice guide',
+      tail: 'Always check which certificate your university, employer or mission will accept.'
+    }
   ]
 };
 
@@ -341,6 +357,22 @@ const POST_NOTES = {
       lead: 'Also considering a French diploma? See',
       anchor: 'DELF vs TCF: which French test should you take?',
       tail: 'for how the two compare for citizenship, study and Canadian immigration.'
+    }
+  ],
+  goethe: [
+    {
+      slug: 'german-exams-visa-university-professional-recognition',
+      lead: 'Choosing a German exam for a visa, a degree or professional recognition? See',
+      anchor: 'Which German exam you need for a visa, university or professional recognition',
+      tail: 'for official CEFR levels and accepted exams, including Goethe-Zertifikat and telc Deutsch C1 Hochschule.'
+    }
+  ],
+  telc: [
+    {
+      slug: 'german-exams-visa-university-professional-recognition',
+      lead: 'For how German authorities and universities treat telc certificates, see',
+      anchor: 'Which German exam you need for a visa, university or professional recognition',
+      tail: 'It cites official sources on visas, university admission (including telc Deutsch C1 Hochschule) and naturalisation.'
     }
   ]
 };

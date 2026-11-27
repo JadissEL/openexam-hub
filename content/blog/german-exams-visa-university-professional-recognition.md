@@ -186,7 +186,7 @@ Match the certificate to the procedure, not to a general idea of “a German exa
 
 OpenExam Hub’s planner covers **Goethe**, not TestDaF, DSH or the Fachsprachenprüfung. A Goethe study plan is useful for the CEFR level those other procedures also use; it is not a substitute for their formats.
 
-This article is not a day-by-day plan. For the exam format and a 30-day Goethe B1 practice schedule that uses official material, see the [Goethe exam guide](/exams/goethe) and the [Goethe B1 30-day study plan](/exams/goethe/b1-30-day-study-plan).
+This article is not a day-by-day plan. For the exam format and a 30-day Goethe B1 practice schedule that uses official material, see the [Goethe exam guide](/exams/goethe) and the [Goethe B1 30-day study plan](/exams/goethe/b1-30-day-study-plan). For official telc mock exams, handbooks and regulations, see the [telc exam guide](/exams/telc).
 
 ## Preview a Goethe plan
 

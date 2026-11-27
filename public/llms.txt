@@ -11,6 +11,7 @@
 - [CELPIP](https://openexamhub.org/exams/celpip): test format, CLB scores and free official practice
 - [DELF and DALF](https://openexamhub.org/exams/delf): levels A1–C2 and free official sample papers
 - [Goethe-Zertifikat](https://openexamhub.org/exams/goethe): free official practice tests A1–C2
+- [telc](https://openexamhub.org/exams/telc): official practice tests and handbooks
 - [DELE](https://openexamhub.org/exams/dele): exam format by level and official resources
 
 ## Free tools

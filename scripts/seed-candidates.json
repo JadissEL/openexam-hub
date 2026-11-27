@@ -1699,6 +1699,320 @@
     "verified_at": "2026-11-27T16:15:26+02:00"
   },
   {
+    "exam": "TELC",
+    "title": "telc — official German certificate examinations (A1–C2 overview)",
+    "url": "https://www.telc.net/sprachpruefungen/zertifikatspruefung/deutsch/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch A1 / Start Deutsch 1 mock examination (Übungstest 1, PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_deutsch_a1.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch A2 / Start Deutsch 2 mock examination (Übungstest 1, PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_deutsch_a2_01.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch A2·B1 mock examination (Übungstest 1, PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_Deutsch_A2_B1.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch B1 / Zertifikat Deutsch mock examination (Übungstest 1, PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_deutsch_b1.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch B2 mock examination (Übungstest 1, PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_deutsch_b2.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch B2 handbook (Handbuch, PDF)",
+    "url": "https://www.telc.net/fileadmin/user_upload/pdfs/Handbuch_und_Tipps_fuer_Pruefungsvorbereitung/Deutsch_B2_Handbuch.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch B2 exam-preparation tips (PDF)",
+    "url": "https://www.telc.net/fileadmin/user_upload/pdfs/Handbuch_und_Tipps_fuer_Pruefungsvorbereitung/Deutsch_B2_tipps_zur_Pruefungsvorbereitung.pdf",
+    "category": "Self-study",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch C1 mock examination (Übungstest 1, 2016 format, PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_deutsch_c1.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch C2 mock examination (PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_deutsch_c2.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch C2 handbook (Handbuch, PDF)",
+    "url": "https://www.telc.net/fileadmin/user_upload/pdfs/Handbuch_und_Tipps_fuer_Pruefungsvorbereitung/Deutsch_c2_Handbuch.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official examination regulations (Prüfungsregularien, in force from 15 April 2025, PDF)",
+    "url": "https://www.telc.net/fileadmin/user_upload/pdfs/AGB_Pruefungsordnung/9994-P00-150010.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch A2+ Beruf mock examination (Übungstest 1, PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_deutsch_a2_beruf.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:15:54+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch A2+ Beruf handbook (Handbuch, PDF)",
+    "url": "https://www.telc.net/fileadmin/user_upload/pdfs/Handbuch_und_Tipps_fuer_Pruefungsvorbereitung/Deutsch_A2_Beruf_Handbuch.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A2",
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:15:54+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch C1 Hochschule mock examination (Übungstest 1, PDF and audio ZIP)",
+    "url": "https://www.telc.net/fileadmin/user_upload/mock_exams/Deutsch/telc_deutsch_c1_hochschule.zip",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:15:54+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch C1 Hochschule handbook (Handbuch, PDF)",
+    "url": "https://www.telc.net/fileadmin/user_upload/pdfs/Handbuch_und_Tipps_fuer_Pruefungsvorbereitung/Deutsch_c1_hochschule_Handbuch.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:15:54+02:00"
+  },
+  {
+    "exam": "TELC",
+    "title": "telc — official telc Deutsch C1 Hochschule exam-preparation tips (PDF)",
+    "url": "https://www.telc.net/fileadmin/user_upload/pdfs/Handbuch_und_Tipps_fuer_Pruefungsvorbereitung/Deutsch_c1_hochschule_tipps_zur_pruefungsvorbereitung.pdf",
+    "category": "Self-study",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "telc gGmbH",
+    "verified_at": "2026-11-27T17:15:54+02:00"
+  },
+  {
     "exam": "TESTDAF",
     "title": "TestDaF — official overview of the digital TestDaF",
     "url": "https://www.testdaf.de/de/teilnehmende/der-digitale-testdaf-ueberblick/",
