@@ -64,6 +64,8 @@ On the pages we checked on 26 November 2026, **both tests are listed for all thr
 
 [IRCC’s accepted-tests page](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html) names two French tests: **TEF Canada** and **TCF Canada**. It does not state a preference. Programme minimums are set by the programme, not the test. For example, the Federal Skilled Worker first-language minimum is NCLC 7 in all four abilities, and the Canadian Experience Class minimum is NCLC 7 for TEER 0 or 1 jobs and NCLC 5 for TEER 2 or 3.
 
+A DELF or DALF is not on that list. If you already hold one, see [Can you use a DELF or DALF for Express Entry?](/blog/delf-dalf-express-entry).
+
 IRCC also says results must be **less than two years old** when you complete your profile and when you submit your application. Expired results at application lead to refusal.
 
 If you want the conversion tables, we have one guide for each test: [TEF Canada scores to CLB and NCLC](/blog/tef-canada-clb-nclc-express-entry) and [TCF Canada scores to CLB and NCLC](/blog/tcf-canada-clb-nclc-express-entry). For the most common target, see [NCLC 7 / CLB 7: the TEF Canada and TCF Canada scores you need](/blog/nclc-7-clb-7-express-entry-scores). There is also a [CLB and NCLC converter](/tools/clb-converter) with TEF Canada and TCF Canada tabs (and IELTS General Training and CELPIP-General tabs) that applies IRCC’s official tables to your four scores, shows whether you meet NCLC 7 or 9, and lists first-official-language CRS points.

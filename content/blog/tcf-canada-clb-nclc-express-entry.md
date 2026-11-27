@@ -49,7 +49,7 @@ faq:
 
 Official tables change. Confirm your numbers on [IRCC’s language test results page](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html) and on your attestation before you submit a profile.
 
-TCF Canada and TEF Canada are both approved French tests for Express Entry, but they are scored on different scales. Use this guide for TCF Canada only. For TEF Canada, see [TEF Canada scores to CLB and NCLC for Express Entry](/blog/tef-canada-clb-nclc-express-entry). If you are specifically aiming at level 7, [NCLC 7 / CLB 7: the TEF and TCF scores you need](/blog/nclc-7-clb-7-express-entry-scores) puts both exams’ NCLC 7 bands side by side.
+TCF Canada and TEF Canada are both approved French tests for Express Entry, but they are scored on different scales. Use this guide for TCF Canada only. For TEF Canada, see [TEF Canada scores to CLB and NCLC for Express Entry](/blog/tef-canada-clb-nclc-express-entry). If you are specifically aiming at level 7, [NCLC 7 / CLB 7: the TEF and TCF scores you need](/blog/nclc-7-clb-7-express-entry-scores) puts both exams’ NCLC 7 bands side by side. IRCC does not list the DELF or DALF. If you already have a diploma and need TEF Canada or TCF Canada scores instead, see [Can you use a DELF or DALF for Express Entry?](/blog/delf-dalf-express-entry).
 
 ## TCF Canada scores for NCLC 7, skill by skill
 

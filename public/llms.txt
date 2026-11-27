@@ -24,6 +24,7 @@
 - [Goethe-Zertifikat B1 30-day study plan](https://openexamhub.org/exams/goethe/b1-30-day-study-plan)
 
 ## Blog guides
+- [Can you use a DELF or DALF for Express Entry?](https://openexamhub.org/blog/delf-dalf-express-entry): IRCC does not accept DELF or DALF for Express Entry. Official TEF Canada and TCF Canada scores, where a DELF still helps, and how to move from B2 toward an NCLC target.
 - [CELPIP to CLB: Express Entry scores explained](https://openexamhub.org/blog/celpip-to-clb-express-entry): How CELPIP-General levels map to CLB on IRCC’s Express Entry table, the minimum level for each program, and why CELPIP-General LS is not the test for Express Entry.
 - [DELF vs TCF: which French test should you take?](https://openexamhub.org/blog/delf-vs-tcf-which-french-test): A lifetime diploma or a score valid for two years? What the French government, universities and IRCC actually accept for citizenship, residence, study and Canadian immigration.
 - [IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2](https://openexamhub.org/blog/ielts-to-cefr): What IELTS.org and the British Council say about overall IELTS bands and CEFR levels, why 5.0, 6.5 and 8.0 are borderline, and what the UK Home Office asks per skill.
