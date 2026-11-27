@@ -129,7 +129,9 @@ CELPIP is one of three English tests IRCC accepts. If you took IELTS instead, re
 
 You can check your four CELPIP-General levels in the [OpenExam Hub CLB converter](/tools/clb-converter). It has a CELPIP-General tab built from the IRCC table above, and it also handles TEF Canada and TCF Canada if you add French. It is not an official IRCC tool, so confirm your result on IRCC’s page.
 
-OpenExam Hub does not have a CELPIP study plan. If you are also preparing a French test, you can [preview a free TCF Canada plan](https://openexamhub.org/app?exam=TCF_CANADA&level=B2&days=30) or a [TEF Canada plan](https://openexamhub.org/app?exam=TEF_CANADA&level=B2&days=30), set to **B2** over **30 days**. The link opens a plan preview when a matching cached plan exists. **Generating or saving a plan needs a free account** (email or Google).
+You can [preview a free CELPIP plan](https://openexamhub.org/app?exam=CELPIP&level=B2&days=30) on OpenExam Hub, set to CEFR **B2** over **30 days**. On CELPIP’s own chart, CELPIP 7, which is CLB 7, is CEFR B2. The link opens a plan preview when a matching cached plan exists. **Generating or saving a plan needs a free account** (email or Google). OpenExam Hub’s [CELPIP guide](/exams/celpip) has the format and the official practice links.
+
+If you are also preparing French, you can [preview a free TCF Canada plan](https://openexamhub.org/app?exam=TCF_CANADA&level=B2&days=30) or a [TEF Canada plan](https://openexamhub.org/app?exam=TEF_CANADA&level=B2&days=30) the same way.
 
 ## What we left out
 
