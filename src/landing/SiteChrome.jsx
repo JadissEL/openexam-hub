@@ -92,7 +92,7 @@ const FOOTER_COLS = [
     title: 'Product',
     links: [
       { href: '/exams', label: 'All exams' },
-      { href: '/tools/clb-converter', label: 'NCLC score converter' },
+      { href: '/tools/clb-converter', label: 'CLB score converter' },
       { href: LIBRARY_PATH, label: 'Library' },
       { href: APP_PATH, label: 'Dashboard' }
     ]

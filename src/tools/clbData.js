@@ -18,9 +18,30 @@
  *  - CRS_URL          Express Entry: Comprehensive Ranking System (CRS) criteria, "Official languages
  *    proficiency - first official language" (points per ability, with or without a spouse or partner)
  *    and "Additional points" (French language skills).
+ *
+ * IELTS General Training and CELPIP-General (IELTS_GT, CELPIP_G below) come from the same EE_LANGUAGE_URL
+ * page (canada.ca, "Express Entry: Language test results"). IRCC's page date modified is
+ * EE_LANGUAGE_MODIFIED (its dcterms.modified meta tag) and the values were transcribed on
+ * ENGLISH_LAST_VERIFIED:
+ *  - IELTS, CLB 7 to 10: the "Federal Skilled Worker Program > IELTS" table (first official language).
+ *    CLB 4 to 10: the "Federal Skilled Trades Program > IELTS" table. The Canadian Experience Class table
+ *    (CLB 5 to 10) prints the same numbers. IRCC lists ONE score per level (the lowest that earns it), and
+ *    the top row as a range ("7.5-9.0").
+ *  - CELPIP-General, CLB 4 to 9: "Federal Skilled Trades Program > CELPIP" (CLB level = score).
+ *    CLB 10 ("10 and above CELPIP-G, 10+") is on the Federal Skilled Worker table. The top of the scale,
+ *    12, is the upper end of IRCC's "5-12" second-official-language row.
+ *  - Only IELTS General Training is accepted for Express Entry (not Academic, not One Skill Retake) and
+ *    only CELPIP-General: IRCC's "Language tests we accept" table on the same page.
+ *  - IRCC does not say what to do with an IELTS score that sits between two listed values (for example
+ *    Listening 7.0, between 6.0 for CLB 7 and 7.5 for CLB 8). This tool puts it at the lower level, the
+ *    highest level whose listed score has been reached. The page tells users to confirm on canada.ca.
  */
 
 export const LAST_VERIFIED = '2026-11-26';
+/** IELTS and CELPIP tables: transcribed from canada.ca on this date. */
+export const ENGLISH_LAST_VERIFIED = '2026-11-27';
+/** Date modified of EE_LANGUAGE_URL on the day it was read (the dcterms.modified meta tag in its HTML). */
+export const EE_LANGUAGE_MODIFIED = '2026-10-16';
 
 export const EE_LANGUAGE_URL =
   'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html';
@@ -41,11 +62,22 @@ export const SKILL_LABELS = {
 /** [level, min, max] rows per skill, NCLC 4 up to 10 (10 is the top band: "10 and above"). */
 const band = (...rows) => rows.map(([level, min, max]) => ({ level, min, max }));
 
+/**
+ * Tables where IRCC lists the lowest score that earns each level (IELTS bands, CELPIP levels). Each band
+ * runs from its listed score up to one step below the next level's listed score; the top band ends at
+ * `top`. `rows` are [level, listedMinimum] pairs, CLB 4 up to 10.
+ */
+const ladder = (step, top, ...rows) =>
+  rows.map(([level, min], i) => ({ level, min, max: i === rows.length - 1 ? top : Number((rows[i + 1][1] - step).toFixed(1)) }));
+
 export const TABLES = {
   // IRCC: Express Entry > Language test results > TEF Canada ("Équivalence ancien score").
   TEF_EXPRESS_ENTRY: {
     id: 'TEF_EXPRESS_ENTRY',
     exam: 'TEF_CANADA',
+    language: 'fr',
+    scheme: 'NCLC',
+    step: 1,
     tab: 'TEF Canada',
     label: 'TEF Canada · Express Entry scale (“Équivalence ancien score”)',
     short: 'Express Entry scale',
@@ -64,6 +96,9 @@ export const TABLES = {
   TEF_NEW_699: {
     id: 'TEF_NEW_699',
     exam: 'TEF_CANADA',
+    language: 'fr',
+    scheme: 'NCLC',
+    step: 1,
     tab: 'TEF Canada',
     label: 'TEF Canada · new “Score / 699” scale (tests after 10 Dec 2023, not for Express Entry)',
     short: 'New score /699',
@@ -81,6 +116,9 @@ export const TABLES = {
   TCF_CANADA: {
     id: 'TCF_CANADA',
     exam: 'TCF_CANADA',
+    language: 'fr',
+    scheme: 'NCLC',
+    step: 1,
     tab: 'TCF Canada',
     label: 'TCF Canada',
     short: 'TCF Canada',
@@ -92,6 +130,53 @@ export const TABLES = {
       listening: band([4, 331, 368], [5, 369, 397], [6, 398, 457], [7, 458, 502], [8, 503, 522], [9, 523, 548], [10, 549, 699]),
       writing: band([4, 4, 5], [5, 6, 6], [6, 7, 9], [7, 10, 11], [8, 12, 13], [9, 14, 15], [10, 16, 20]),
       speaking: band([4, 4, 5], [5, 6, 6], [6, 7, 9], [7, 10, 11], [8, 12, 13], [9, 14, 15], [10, 16, 20])
+    }
+  },
+  // IRCC: Express Entry > Language test results > IELTS (General Training only). See the header comment.
+  IELTS_GT: {
+    id: 'IELTS_GT',
+    exam: 'IELTS',
+    examName: 'IELTS',
+    language: 'en',
+    scheme: 'CLB',
+    step: 0.5,
+    listed: true,
+    tab: 'IELTS General Training',
+    label: 'IELTS General Training',
+    short: 'IELTS General Training',
+    expressEntry: true,
+    sourceUrl: EE_LANGUAGE_URL,
+    sourceLabel: 'IRCC: Express Entry, Language test results (IELTS General Training)',
+    notice:
+      'Express Entry accepts IELTS General Training only. IELTS Academic and IELTS One Skill Retake are not accepted, so enter General Training scores.',
+    bands: {
+      reading: ladder(0.5, 9, [4, 3.5], [5, 4.0], [6, 5.0], [7, 6.0], [8, 6.5], [9, 7.0], [10, 8.0]),
+      listening: ladder(0.5, 9, [4, 4.5], [5, 5.0], [6, 5.5], [7, 6.0], [8, 7.5], [9, 8.0], [10, 8.5]),
+      writing: ladder(0.5, 9, [4, 4.0], [5, 5.0], [6, 5.5], [7, 6.0], [8, 6.5], [9, 7.0], [10, 7.5]),
+      speaking: ladder(0.5, 9, [4, 4.0], [5, 5.0], [6, 5.5], [7, 6.0], [8, 6.5], [9, 7.0], [10, 7.5])
+    }
+  },
+  // IRCC: Express Entry > Language test results > CELPIP (CELPIP-General only). See the header comment.
+  CELPIP_G: {
+    id: 'CELPIP_G',
+    exam: 'CELPIP',
+    examName: 'CELPIP',
+    language: 'en',
+    scheme: 'CLB',
+    step: 1,
+    listed: true,
+    tab: 'CELPIP-General',
+    label: 'CELPIP-General',
+    short: 'CELPIP-General',
+    expressEntry: true,
+    sourceUrl: EE_LANGUAGE_URL,
+    sourceLabel: 'IRCC: Express Entry, Language test results (CELPIP-General)',
+    notice: 'Express Entry accepts the CELPIP-General test. On IRCC’s table, a CELPIP-General level equals the CLB level.',
+    bands: {
+      reading: ladder(1, 12, [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10]),
+      listening: ladder(1, 12, [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10]),
+      writing: ladder(1, 12, [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10]),
+      speaking: ladder(1, 12, [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10])
     }
   }
 };
@@ -109,21 +194,33 @@ export function minScore(tableId, skill) {
   return TABLES[tableId].bands[skill][0].min;
 }
 
+/** Show a score the way the test reports it: IELTS bands with one decimal (6.0), everything else as a whole number. */
+export function formatScore(tableId, n) {
+  return TABLES[tableId].step === 0.5 ? Number(n).toFixed(1) : String(n);
+}
+
 /**
- * Parse what the user typed. Returns { ok:true, value } for a whole number inside the table's
+ * Parse what the user typed. Returns { ok:true, value } for a score on the table's scale and inside its
  * range, { ok:false, empty:true } for a blank field, otherwise { ok:false, error }.
+ * Whole-number tests take digits only. IELTS also takes a half-band such as 6.5 (a comma works too).
  */
 export function parseScore(tableId, skill, raw) {
   const s = String(raw ?? '').trim();
   if (s === '') return { ok: false, empty: true };
-  if (!/^\d{1,4}$/.test(s)) return { ok: false, error: 'Enter a whole number, digits only.' };
-  const value = Number(s);
+  const half = TABLES[tableId].step === 0.5;
+  if (half) {
+    if (!/^\d{1,2}([.,]\d)?$/.test(s)) return { ok: false, error: 'Enter a band such as 6 or 6.5.' };
+  } else if (!/^\d{1,4}$/.test(s)) {
+    return { ok: false, error: 'Enter a whole number, digits only.' };
+  }
+  const value = Number(s.replace(',', '.'));
+  if (half && Math.round(value * 2) !== value * 2) return { ok: false, error: 'IELTS bands go up in steps of 0.5, for example 6.0 or 6.5.' };
   const max = maxScore(tableId, skill);
-  if (value > max) return { ok: false, error: `The highest score on IRCC’s table is ${max}.` };
+  if (value > max) return { ok: false, error: `The highest score on IRCC’s table is ${formatScore(tableId, max)}.` };
   return { ok: true, value };
 }
 
-/** NCLC level (4 to 10) for a score, or 0 when the score is under the NCLC 4 band. */
+/** NCLC or CLB level (4 to 10) for a score, or 0 when the score is under the level 4 band. */
 export function levelFor(tableId, skill, score) {
   const rows = TABLES[tableId].bands[skill];
   const n = Number(score);
@@ -190,7 +287,7 @@ export function convert(tableId, scores, { withSpouse = false } = {}) {
     below7: below(7),
     below9: below(9),
     crs: complete && TABLES[tableId].expressEntry ? { total: crsTotal, max: withSpouse ? 128 : 136, withSpouse } : null,
-    frenchBonusEligible: complete && TABLES[tableId].expressEntry ? lowestLevel >= 7 : false
+    frenchBonusEligible: complete && TABLES[tableId].expressEntry && TABLES[tableId].language === 'fr' ? lowestLevel >= 7 : false
   };
 }
 
@@ -200,13 +297,15 @@ export function recommendedLevel(lowest) {
   return lowest < 7 ? 'B2' : 'C1';
 }
 
+/** Planner deep link for the CTA, or null when OpenExam Hub has no plan for that test (CELPIP). */
 export function plannerHref(tableId, lowest) {
+  if (tableId === 'CELPIP_G') return null;
   const exam = TABLES[tableId].exam;
   return `/app?exam=${exam}&level=${recommendedLevel(lowest)}&days=30&utm_source=clb-tool`;
 }
 
-export function levelLabel(level) {
+export function levelLabel(level, scheme = 'NCLC') {
   if (level === null || level === undefined) return '';
-  if (level < 4) return 'Below NCLC 4';
-  return level >= 10 ? 'NCLC 10' : `NCLC ${level}`;
+  if (level < 4) return `Below ${scheme} 4`;
+  return level >= 10 ? `${scheme} 10` : `${scheme} ${level}`;
 }

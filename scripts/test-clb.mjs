@@ -7,7 +7,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   TABLES, TABLE_IDS, SKILLS, levelFor, parseScore, maxScore, minScore, convert, crsPointsFor,
-  plannerHref, recommendedLevel, levelLabel, LAST_VERIFIED, EE_LANGUAGE_URL, START_UP_URL, CRS_URL
+  plannerHref, recommendedLevel, levelLabel, formatScore, LAST_VERIFIED, ENGLISH_LAST_VERIFIED, EE_LANGUAGE_MODIFIED,
+  EE_LANGUAGE_URL, START_UP_URL, CRS_URL
 } from '../src/tools/clbData.js';
 import { TOOL_FAQ, TOOL_PATH } from '../src/tools/clbContent.js';
 import { isPlannerDeepLink, parsePlannerQuery, parsePlannerDays, parsePlannerVariant } from '../lib/exams.js';
@@ -71,6 +72,25 @@ const CASES = {
     ['speaking', 3, 0], ['speaking', 4, 4], ['speaking', 5, 4], ['speaking', 6, 5], ['speaking', 7, 6], ['speaking', 9, 6], ['speaking', 10, 7],
     ['speaking', 11, 7], ['speaking', 12, 8], ['speaking', 13, 8], ['speaking', 14, 9], ['speaking', 15, 9], ['speaking', 16, 10],
     ['speaking', 20, 10], ['speaking', 21, null]
+  ],
+  // IELTS General Training, from IRCC's Express Entry language test results page (date modified 2026-10-16).
+  // IRCC lists one score per level; 0.5 steps between two listed scores stay at the lower level.
+  IELTS_GT: [
+    ['reading', 3.0, 0], ['reading', 3.5, 4], ['reading', 4.0, 5], ['reading', 4.5, 5], ['reading', 5.0, 6], ['reading', 5.5, 6],
+    ['reading', 6.0, 7], ['reading', 6.5, 8], ['reading', 7.0, 9], ['reading', 7.5, 9], ['reading', 8.0, 10], ['reading', 9.0, 10], ['reading', 9.5, null],
+    ['listening', 4.0, 0], ['listening', 4.5, 4], ['listening', 5.0, 5], ['listening', 5.5, 6], ['listening', 6.0, 7], ['listening', 6.5, 7],
+    ['listening', 7.0, 7], ['listening', 7.5, 8], ['listening', 8.0, 9], ['listening', 8.5, 10], ['listening', 9.0, 10],
+    ['writing', 3.5, 0], ['writing', 4.0, 4], ['writing', 4.5, 4], ['writing', 5.0, 5], ['writing', 5.5, 6], ['writing', 6.0, 7],
+    ['writing', 6.5, 8], ['writing', 7.0, 9], ['writing', 7.5, 10], ['writing', 9.0, 10],
+    ['speaking', 3.5, 0], ['speaking', 4.0, 4], ['speaking', 5.0, 5], ['speaking', 5.5, 6], ['speaking', 6.0, 7], ['speaking', 6.5, 8],
+    ['speaking', 7.0, 9], ['speaking', 7.5, 10], ['speaking', 9.0, 10]
+  ],
+  // CELPIP-General: IRCC lists CLB level = CELPIP level for 4 to 9, and "10+" for CLB 10 (scale tops out at 12).
+  CELPIP_G: [
+    ...['reading', 'listening', 'writing', 'speaking'].flatMap((skill) => [
+      [skill, 0, 0], [skill, 3, 0], [skill, 4, 4], [skill, 5, 5], [skill, 6, 6], [skill, 7, 7], [skill, 8, 8], [skill, 9, 9],
+      [skill, 10, 10], [skill, 11, 10], [skill, 12, 10], [skill, 13, null]
+    ])
   ]
 };
 
@@ -83,7 +103,7 @@ test('boundary values on every IRCC table (hand-copied from canada.ca)', () => {
       n += 1;
     }
   }
-  assert.ok(n > 170, `expected 170+ boundary checks, ran ${n}`);
+  assert.ok(n > 260, `expected 260+ boundary checks, ran ${n}`);
 });
 
 test('each table has seven contiguous bands (NCLC 4 to 10) per skill, no gaps or overlaps', () => {
@@ -93,7 +113,7 @@ test('each table has seven contiguous bands (NCLC 4 to 10) per skill, no gaps or
       assert.deepEqual(rows.map((r) => r.level), [4, 5, 6, 7, 8, 9, 10], `${id} ${skill} levels`);
       rows.forEach((r, i) => {
         assert.ok(r.min <= r.max, `${id} ${skill} L${r.level} min<=max`);
-        if (i > 0) assert.equal(r.min, rows[i - 1].max + 1, `${id} ${skill} L${r.level} follows L${rows[i - 1].level} with no gap`);
+        if (i > 0) assert.equal(r.min, Number((rows[i - 1].max + TABLES[id].step).toFixed(1)), `${id} ${skill} L${r.level} follows L${rows[i - 1].level} with no gap`);
       });
     }
   }
@@ -103,13 +123,15 @@ test('every score between 0 and the table maximum maps to exactly one answer (mo
   for (const id of TABLE_IDS) {
     for (const skill of SKILLS) {
       let prev = 0;
-      for (let s = 0; s <= maxScore(id, skill); s++) {
-        const l = levelFor(id, skill, s);
-        assert.ok(l !== null && l >= prev, `${id} ${skill} ${s}`);
+      const step = TABLES[id].step;
+      for (let i = 0; i * step <= maxScore(id, skill); i++) {
+        const sc = Number((i * step).toFixed(1));
+        const l = levelFor(id, skill, sc);
+        assert.ok(l !== null && l >= prev, `${id} ${skill} ${sc}`);
         prev = l;
       }
-      assert.equal(levelFor(id, skill, minScore(id, skill) - 1), 0);
-      assert.equal(levelFor(id, skill, maxScore(id, skill) + 1), null);
+      assert.equal(levelFor(id, skill, minScore(id, skill) - step), 0);
+      assert.equal(levelFor(id, skill, maxScore(id, skill) + step), null);
     }
   }
 });
@@ -118,6 +140,8 @@ test('table maxima and the TEF speaking = writing rule match IRCC', () => {
   assert.deepEqual(SKILLS.map((s) => maxScore('TEF_EXPRESS_ENTRY', s)), [300, 360, 450, 450]);
   assert.deepEqual(SKILLS.map((s) => maxScore('TEF_NEW_699', s)), [699, 699, 699, 699]);
   assert.deepEqual(SKILLS.map((s) => maxScore('TCF_CANADA', s)), [699, 699, 20, 20]);
+  assert.deepEqual(SKILLS.map((s) => maxScore('IELTS_GT', s)), [9, 9, 9, 9]);
+  assert.deepEqual(SKILLS.map((s) => maxScore('CELPIP_G', s)), [12, 12, 12, 12]);
   assert.deepEqual(TABLES.TEF_EXPRESS_ENTRY.bands.speaking, TABLES.TEF_EXPRESS_ENTRY.bands.writing);
   assert.deepEqual(TABLES.TEF_NEW_699.bands.reading, TABLES.TEF_NEW_699.bands.listening);
 });
@@ -129,6 +153,69 @@ test('the Express Entry TEF table is the "ancien score" scale, not the /699 scal
   assert.equal(levelFor('TEF_NEW_699', 'reading', 500), 8);
   assert.equal(levelFor('TEF_EXPRESS_ENTRY', 'reading', 500), null);
   assert.equal(convert('TEF_NEW_699', { reading: 500, listening: 500, writing: 500, speaking: 500 }).crs, null);
+});
+
+test('IELTS General Training: IRCC rows for CLB 7, 8, 9 and 10 per skill (hand-copied)', () => {
+  // [CLB, speaking, listening, reading, writing] as IRCC lists them (CLB 10 = lowest score of "7.5-9.0" etc).
+  const rows = [[7, 6.0, 6.0, 6.0, 6.0], [8, 6.5, 7.5, 6.5, 6.5], [9, 7.0, 8.0, 7.0, 7.0], [10, 7.5, 8.5, 8.0, 7.5]];
+  for (const [clb, sp, li, re, wr] of rows) {
+    const a = convert('IELTS_GT', { speaking: sp, listening: li, reading: re, writing: wr });
+    assert.equal(a.complete, true);
+    assert.deepEqual(SKILLS.map((s) => a.perSkill[s].level), [clb, clb, clb, clb], `all four at the listed score give CLB ${clb}`);
+    // One half-band under the listed score drops that skill below the level (CLB 8 listening: 7.0 is still CLB 7).
+    const under = convert('IELTS_GT', { speaking: sp - 0.5, listening: li, reading: re, writing: wr });
+    assert.ok(under.perSkill.speaking.level < clb, `speaking ${sp - 0.5} is under CLB ${clb}`);
+  }
+  assert.equal(TABLES.IELTS_GT.bands.listening.find((b) => b.level === 10).min, 8.5);
+  assert.equal(TABLES.IELTS_GT.bands.reading.find((b) => b.level === 4).min, 3.5);
+  assert.equal(convert('IELTS_GT', { speaking: 6, listening: 7, reading: 6.5, writing: 6.5 }).perSkill.listening.level, 7);
+});
+
+test('CELPIP-General: CLB equals the CELPIP level from 4 to 9, 10 and above is CLB 10', () => {
+  for (const s of SKILLS) {
+    for (const l of [4, 5, 6, 7, 8, 9]) assert.equal(levelFor('CELPIP_G', s, l), l);
+    assert.equal(levelFor('CELPIP_G', s, 12), 10);
+  }
+});
+
+test('English tables: IELTS and CELPIP are Express Entry tables, use CLB wording and no French bonus', () => {
+  for (const id of ['IELTS_GT', 'CELPIP_G']) {
+    assert.equal(TABLES[id].expressEntry, true);
+    assert.equal(TABLES[id].scheme, 'CLB');
+    assert.equal(TABLES[id].language, 'en');
+    assert.match(TABLES[id].notice, /Express Entry accepts/);
+    assert.equal(convert(id, { reading: 9, listening: 9, writing: 9, speaking: 9 }).frenchBonusEligible, false);
+  }
+  assert.match(TABLES.IELTS_GT.notice, /General Training only/);
+  assert.match(TABLES.IELTS_GT.notice, /Academic/);
+  assert.equal(levelLabel(7, 'CLB'), 'CLB 7');
+  assert.equal(levelLabel(12, 'CLB'), 'CLB 10');
+  assert.equal(levelLabel(0, 'CLB'), 'Below CLB 4');
+  assert.equal(levelLabel(7), 'NCLC 7');
+  assert.equal(formatScore('IELTS_GT', 6), '6.0');
+  assert.equal(formatScore('CELPIP_G', 9), '9');
+  const a = convert('CELPIP_G', { reading: 9, listening: 9, writing: 9, speaking: 9 }, { withSpouse: true });
+  assert.equal(a.lowest, 9);
+  assert.equal(a.meets9, true);
+  assert.equal(a.crs.total, 29 * 4);
+  assert.equal(a.crs.max, 128);
+  const b = convert('IELTS_GT', { reading: 6.5, listening: 7.5, writing: 6.5, speaking: 6.5 });
+  assert.equal(b.lowest, 8);
+  assert.equal(b.crs.total, 23 * 4);
+  assert.equal(b.crs.max, 136);
+});
+
+test('parseScore for IELTS takes half-bands (dot or comma) and CELPIP takes whole numbers only', () => {
+  assert.equal(parseScore('IELTS_GT', 'reading', '6.5').value, 6.5);
+  assert.equal(parseScore('IELTS_GT', 'reading', '6,5').value, 6.5);
+  assert.equal(parseScore('IELTS_GT', 'reading', '7').value, 7);
+  assert.equal(parseScore('IELTS_GT', 'reading', '9').ok, true);
+  for (const bad of ['6.3', '6.25', '9.5', '10', 'abc', '-1', '6.', '.5']) assert.equal(parseScore('IELTS_GT', 'reading', bad).ok, false, bad);
+  assert.match(parseScore('IELTS_GT', 'reading', '9.5').error, /9\.0/);
+  assert.deepEqual(parseScore('IELTS_GT', 'reading', ''), { ok: false, empty: true });
+  assert.equal(parseScore('CELPIP_G', 'speaking', '12').ok, true);
+  for (const bad of ['13', '7.5', '7,5', 'x']) assert.equal(parseScore('CELPIP_G', 'speaking', bad).ok, false, bad);
+  assert.match(parseScore('CELPIP_G', 'speaking', '13').error, /12/);
 });
 
 test('CRS first-official-language points per ability: spouse vs single, every level', () => {
@@ -207,7 +294,10 @@ test('CTA picks the planner level from the gap and is a valid planner deep link'
   assert.equal(plannerHref('TEF_NEW_699', 8), '/app?exam=TEF_CANADA&level=C1&days=30&utm_source=clb-tool');
   assert.equal(plannerHref('TCF_CANADA', 7), '/app?exam=TCF_CANADA&level=C1&days=30&utm_source=clb-tool');
   assert.equal(plannerHref('TCF_CANADA', null), '/app?exam=TCF_CANADA&level=B2&days=30&utm_source=clb-tool');
-  for (const id of TABLE_IDS) {
+  assert.equal(plannerHref('IELTS_GT', 6), '/app?exam=IELTS&level=B2&days=30&utm_source=clb-tool');
+  assert.equal(plannerHref('IELTS_GT', 8), '/app?exam=IELTS&level=C1&days=30&utm_source=clb-tool');
+  assert.equal(plannerHref('CELPIP_G', 6), null, 'no CELPIP plan exists, so no planner link');
+  for (const id of TABLE_IDS.filter((t) => t !== 'CELPIP_G')) {
     for (const lvl of [null, 5, 7, 9]) {
       const qs = plannerHref(id, lvl).split('?')[1];
       assert.equal(isPlannerDeepLink(qs), true, `${id} ${lvl}`);
@@ -223,6 +313,13 @@ test('CTA picks the planner level from the gap and is a valid planner deep link'
 test('sources are canada.ca and the verified date is a real, not-future date', () => {
   for (const u of [EE_LANGUAGE_URL, START_UP_URL, CRS_URL]) assert.match(u, /^https:\/\/www\.canada\.ca\/en\/immigration-refugees-citizenship\//);
   for (const id of TABLE_IDS) assert.match(TABLES[id].sourceUrl, /^https:\/\/www\.canada\.ca\//);
+  assert.equal(TABLES.IELTS_GT.sourceUrl, EE_LANGUAGE_URL);
+  assert.equal(TABLES.CELPIP_G.sourceUrl, EE_LANGUAGE_URL);
+  for (const date of [ENGLISH_LAST_VERIFIED, EE_LANGUAGE_MODIFIED]) {
+    assert.match(date, /^\d{4}-\d{2}-\d{2}$/);
+    assert.ok(new Date(`${date}T00:00:00Z`).getTime() <= Date.now() + 864e5, `${date} must not be in the future`);
+  }
+  assert.ok(EE_LANGUAGE_MODIFIED <= ENGLISH_LAST_VERIFIED, 'page modified date is not after the day it was read');
   assert.match(LAST_VERIFIED, /^\d{4}-\d{2}-\d{2}$/);
   const d = new Date(`${LAST_VERIFIED}T00:00:00Z`);
   assert.ok(!Number.isNaN(d.getTime()) && d.getTime() <= Date.now() + 864e5, 'LAST_VERIFIED must not be in the future');
@@ -234,6 +331,8 @@ test('route, meta, sitemap and cookieless counter are wired', () => {
   assert.ok(meta, 'routeMeta knows the tool');
   assert.equal(meta.canonical, 'https://openexamhub.org/tools/clb-converter');
   assert.ok(meta.title.length <= 75, `title length ${meta.title.length}`);
+  assert.match(meta.title, /IELTS.*CELPIP/);
+  assert.match(meta.description, /IELTS General Training, CELPIP-General/);
   assert.ok(meta.description.length <= 200, `description length ${meta.description.length}`);
   assert.ok(SITEMAP_PATHS.includes(TOOL_PATH), 'sitemap paths include the tool');
   assert.ok(HIT_EVENTS.includes('clb_tool_used'));
@@ -268,17 +367,23 @@ if (process.argv.includes('--built')) {
     assert.match(html, new RegExp(`<link rel="canonical" href="${url}"`));
     assert.match(html, new RegExp(`<meta property="og:url" content="${url}"`));
     assert.doesNotMatch(html, /name="robots"[^>]*noindex/);
-    assert.match(html, /<title>TEF Canada &amp; TCF Canada to CLB \(NCLC\) score converter · OpenExam Hub<\/title>/);
-    assert.match(html, /<h1[^>]*>TEF Canada and TCF Canada to CLB \(NCLC\) score converter<\/h1>/);
+    assert.match(html, /<title>IELTS, CELPIP, TEF &amp; TCF to CLB \(NCLC\) converter · OpenExam Hub<\/title>/);
+    assert.match(html, /<h1[^>]*>IELTS, CELPIP, TEF Canada and TCF Canada to CLB \(NCLC\) score converter<\/h1>/);
     assert.match(html, /<script type="module"/, 'interactive page keeps its module script so React takes over');
     const text = visibleText(html);
     for (const needle of [
       'Not affiliated with IRCC', 'Verify your level on canada.ca', 'Tables checked on', 'Équivalence ancien score',
       'Get a free study plan to reach CLB 7/9', '263–300', '316–360', '393–450', '549–699', '16–20', '546–699', '558–699',
-      'CRS points for the first official language', 'canada.ca'
+      'CRS points for the first official language', 'canada.ca',
+      // IELTS General Training and CELPIP-General rows, their IRCC source date and the scope notes
+      'IELTS General Training', 'CELPIP-General', '7.5–9.0', '8.5–9.0', '8.0–9.0', '10+', 'was last modified on 16 October 2026',
+      'Express Entry accepts IELTS General Training only, not IELTS Academic', 'The tool gives no score guarantees',
+      'IELTS and CELPIP tables last verified on'
     ]) assert.ok(text.includes(needle) || html.includes(needle), `page text missing: ${needle}`);
     assert.ok(html.includes('href="/app?exam=TEF_CANADA&amp;level=B2&amp;days=30&amp;utm_source=clb-tool"'), 'default CTA link');
     for (const u of [EE_LANGUAGE_URL, START_UP_URL, CRS_URL]) assert.ok(html.includes(u), `source link ${u}`);
+    assert.match(html, /<time dateTime="2026-10-16">|<time datetime="2026-10-16">/, 'IRCC page modified date is marked up');
+    assert.ok(html.includes('href="/exams/ielts"'), 'converter links to the IELTS guide');
     const blocks = jsonLdBlocks(html);
     const all = blocks.flatMap((b) => (b['@graph'] ? b['@graph'] : [b]));
     const types = all.map((b) => b['@type']);
@@ -294,13 +399,18 @@ if (process.argv.includes('--built')) {
 
   test('built sitemap lists the tool; guides and footer link to it', () => {
     assert.ok(read('sitemap.xml').includes('<loc>https://openexamhub.org/tools/clb-converter</loc>'));
-    for (const rel of ['exams/tef-canada/index.html', 'exams/tcf-canada/index.html']) {
+    for (const rel of ['exams/tef-canada/index.html', 'exams/tcf-canada/index.html', 'exams/ielts/index.html']) {
       assert.ok(read(rel).includes('href="/tools/clb-converter"'), `${rel} links to the tool`);
     }
+    assert.ok(visibleText(read('exams/ielts/index.html')).includes('Express Entry accepts IELTS General Training only, not Academic'), 'IELTS guide card states the General Training rule');
+    assert.ok(fs.readFileSync(path.join(root, 'public/llms.txt'), 'utf8').includes('IELTS, CELPIP, TEF Canada and TCF Canada to CLB (NCLC) score converter'), 'llms.txt describes the new scope');
     for (const rel of ['index.html', 'exams/tef-canada/index.html', 'blog/index.html', 'tools/clb-converter/index.html']) {
       assert.ok(read(rel).includes('href="/tools/clb-converter"'), `${rel} footer/tool link`);
     }
-    assert.ok(!read('exams/ielts/index.html').includes('Convert your'), 'the tool card is only on the TEF/TCF Canada guides');
+    assert.ok(visibleText(read('exams/ielts/index.html')).includes('Convert your IELTS scores to CLB'), 'IELTS guide has the tool card');
+    for (const rel of ['exams/toefl/index.html', 'exams/delf/index.html', 'exams/goethe/index.html']) {
+      assert.ok(!read(rel).includes('Convert your'), `${rel}: the tool card is only on the TEF/TCF Canada and IELTS guides`);
+    }
     assert.ok(read('llms.txt').includes('/tools/clb-converter'));
   });
 }
