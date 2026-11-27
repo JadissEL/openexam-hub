@@ -22,13 +22,25 @@ const NOT_AFFILIATED = (bodies) => ({
   a: `No. OpenExam Hub is an independent, free project. It is not affiliated with, endorsed by or sponsored by ${bodies}. It only links to material they publish for free.`
 });
 
-const CATEGORY_ORDER = ['Official exam info', 'Practice tests', 'Sample tests', 'Self-study', 'Oral comprehension'];
+const CATEGORY_ORDER = [
+  'Official exam info',
+  'Practice tests',
+  'Sample tests',
+  'Self-study',
+  'Official webinars',
+  'Official video lessons',
+  'Oral comprehension',
+  'Listening & grammar'
+];
 const CATEGORY_LABEL = {
   'Official exam info': 'Official exam information',
   'Practice tests': 'Free official practice',
   'Sample tests': 'Official sample papers',
   'Self-study': 'Free self-study',
-  'Oral comprehension': 'Listening practice'
+  'Official webinars': 'Official webinars',
+  'Official video lessons': 'Official video lessons',
+  'Oral comprehension': 'Listening practice',
+  'Listening & grammar': 'Listening and grammar'
 };
 
 function resourcesFor(examIds, { include = null } = {}) {

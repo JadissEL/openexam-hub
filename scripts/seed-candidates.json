@@ -750,6 +750,307 @@
     "verified_at": "2026-11-20T18:24:52+02:00"
   },
   {
+    "exam": "CELPIP",
+    "title": "CELPIP — official Writing Pro: Target 9+ Study Pack (2026, PDF)",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/10/Writing-Pro-Target-9-Study-Pack-2026.pdf",
+    "category": "Self-study",
+    "skills": [
+      "writing",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official free webinars and workshops (live 2-hour sessions; sign-up required)",
+    "url": "https://www.celpip.ca/webinars-workshops/",
+    "category": "Official webinars",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official recorded webinar: CELPIP Reading Pro (YouTube)",
+    "url": "https://www.youtube.com/watch?v=11BYHd6mzfY",
+    "category": "Official video lessons",
+    "skills": [
+      "reading",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "IRCC — how to find your CLB or NCLC language level from test results (including CELPIP General)",
+    "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/after-graduation/eligibility/language-results.html",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Government of Canada official page (free public access)",
+    "source_org": "Immigration, Refugees and Citizenship Canada (IRCC)",
+    "verified_at": "2026-11-27T12:13:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official Reading Pro Study Pack (2026, PDF)",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/10/Reading-Pro-Study-Pack-2026.pdf",
+    "category": "Self-study",
+    "skills": [
+      "reading",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official General Overview Study Pack (October 2026, PDF)",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/10/CELPIP-General-Overview-Study-Pack-2026-1.pdf",
+    "category": "Self-study",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T12:13:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official Speaking Pro: Target 9+ Study Pack (2026, PDF)",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/10/Speaking-Pro-Target-9-Study-Pack-2026.pdf",
+    "category": "Self-study",
+    "skills": [
+      "speaking",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official Writing Pro: Target 5 Study Pack (2026, PDF)",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/10/Writing-Pro-Target-5-Study-Pack-2026.pdf",
+    "category": "Self-study",
+    "skills": [
+      "writing",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official YouTube channel (CELPIP Test / @CELPIPOfficial)",
+    "url": "https://www.youtube.com/@CELPIPOfficial",
+    "category": "Official video lessons",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official Path to Success free study map and checklist (April 2026, PDF). The map itself is free; it also links to paid store items.",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/06/CELPIP-Path-to-Success-Final-April-2026-1.pdf",
+    "category": "Self-study",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T12:42:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official test format and scoring (including CLB comparison)",
+    "url": "https://www.celpip.ca/test-format-scoring/",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T12:13:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official recorded webinar: CELPIP-General Overview (YouTube)",
+    "url": "https://www.youtube.com/watch?v=9YpA3MRjLFg",
+    "category": "Official video lessons",
+    "skills": [
+      "exam_format",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official score comparison chart (speaking and writing descriptors, samples and analysis)",
+    "url": "https://www.celpip.ca/score-comparison-chart/",
+    "category": "Official exam info",
+    "skills": [
+      "speaking",
+      "writing",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T12:42:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official recorded webinar: CELPIP Listening Pro (YouTube)",
+    "url": "https://www.youtube.com/watch?v=YsFtmYT4t-E",
+    "category": "Official video lessons",
+    "skills": [
+      "listening",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official level descriptors for speaking and writing (February 2026, PDF)",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/03/CELPIP-Level-Descriptors-Feb2026.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "speaking",
+      "writing"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T12:42:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official Listening Pro Study Pack (2026, PDF)",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/10/Listening-Pro-Study-Pack-2026.pdf",
+    "category": "Self-study",
+    "skills": [
+      "listening",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official free practice tests (free email signup required)",
+    "url": "https://www.celpip.ca/free-practice-tests/",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "Paragon Testing — official CELPIP-General free online sample test",
+    "url": "https://instructionalproducts.paragontesting.ca/InstructionalProducts/FreeOnlineSampleTest/FOST/View/f7a98ff3-49db-4a69-a39f-541038e50a73",
+    "category": "Sample tests",
+    "skills": [
+      "listening",
+      "reading",
+      "writing",
+      "speaking",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T12:13:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official free resources: tips and skill study packs",
+    "url": "https://www.celpip.ca/free-resources/",
+    "category": "Self-study",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T15:26:00+02:00"
+  },
+  {
+    "exam": "CELPIP",
+    "title": "CELPIP — official Guidebook for Test Takers (June 2026, PDF)",
+    "url": "https://www.celpip.ca/wp-content/uploads/2026/06/Guidebook-CELPIP-Test-Takers-June-2026-3.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Paragon Testing Enterprises (CELPIP)",
+    "verified_at": "2026-11-27T12:13:00+02:00"
+  },
+  {
     "exam": "GOETHE",
     "title": "Goethe-Institut — official Prüfungstrainings hub (A1–C2)",
     "url": "https://www.goethe.de/de/spr/prf/ueb.html",
@@ -897,6 +1198,401 @@
     "license": "Official exam-board page (free public access)",
     "source_org": "Goethe-Institut",
     "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat B2 Modellsatz for adults (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/B2/b2_modellsatz_erwachsene.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-21T08:22:09+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat C1 Modellsatz (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/C1_modular/c1-modular_modellsatz.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-21T08:22:09+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat C2 Modellsatz (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/C2/c2_modellsatz.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "C2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-21T08:22:09+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat A2 Wortliste (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/Goethe-Zertifikat_A2_Wortliste.pdf",
+    "category": "Self-study",
+    "skills": [
+      "vocabulary"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-21T08:22:09+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat B1 Wortliste (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/Goethe-Zertifikat_B1_Wortliste.pdf",
+    "category": "Self-study",
+    "skills": [
+      "vocabulary"
+    ],
+    "levels": [
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-21T08:22:09+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "DW Learn German — Nicos Weg (free A1–B1 course)",
+    "url": "https://learngerman.dw.com/de/nicos-weg/a-61693467",
+    "category": "Listening & grammar",
+    "skills": [
+      "listening",
+      "grammar",
+      "vocabulary",
+      "reading"
+    ],
+    "levels": [
+      "A1",
+      "A2",
+      "B1"
+    ],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "Deutsche Welle",
+    "verified_at": "2026-11-21T08:22:09+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "DW Learn German — free German courses (Deutsche Welle)",
+    "url": "https://learngerman.dw.com/en/learn-german/s-9528",
+    "category": "Listening & grammar",
+    "skills": [
+      "listening",
+      "grammar",
+      "vocabulary"
+    ],
+    "levels": [],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "Deutsche Welle",
+    "verified_at": "2026-11-20T18:05:49+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official exams overview",
+    "url": "https://www.goethe.de/de/spr/prf.html",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "mock_exam"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-20T18:05:49+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "VHS Lernportal — free German courses (Deutscher Volkshochschul-Verband)",
+    "url": "https://www.vhs-lernportal.de/",
+    "category": "Self-study",
+    "skills": [
+      "reading",
+      "writing",
+      "grammar"
+    ],
+    "levels": [],
+    "license": "Public broadcaster / EU educational page (free access)",
+    "source_org": "Deutscher Volkshochschul-Verband (VHS Lernportal)",
+    "verified_at": "2026-11-20T18:05:49+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat A1 Start Deutsch 1 Übungssatz 01 (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/A1_sd1/sd_1_uebungssatz01.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat A1 Start Deutsch 1 Modellsatz (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/A1_sd1/sd_1_modellsatz.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat A2 Übungssatz 01 for adults (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/A2/A2_Uebungssatz_Erwachsene.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat A2 Fit in Deutsch Modellsatz for young learners (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/A2_fit/A2_Modellsatz_Jugendliche.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat A2 Fit in Deutsch Übungssatz 01 for young learners (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/A2_fit/A2_Uebungssatz_Jugendliche.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat B1 Übungssatz for adults (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/B1/B1_Uebungssatz_Erwachsene.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat B1 Übungssatz for young learners (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/B1/B1_Uebungssatz_Jugendliche.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat B1 Modellsatz for adults (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/B1/b1_modellsatz_erwachsene.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official Goethe-Zertifikat B2 Modellsatz for young learners (PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/materialien/B2/b2_modellsatz_jugendliche.pdf",
+    "category": "Practice tests",
+    "skills": [
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official exam guidelines (Prüfungsordnung, 2025, PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/Pruefungsordnung.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official terms for administering Goethe-Zertifikat B1 (Durchführungsbestimmungen, PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/Durchfuehrungsbestimmungen_B1.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "B1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official terms for administering Goethe-Zertifikat B2 (Durchführungsbestimmungen, PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/Durchfuehrungsbestimmungen_B2.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "B2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:14:00+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official terms for administering Goethe-Zertifikat A2 and A2 Fit in Deutsch (Durchführungsbestimmungen, PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/Durchfuehrungsbestimmungen_A2.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:15:26+02:00"
+  },
+  {
+    "exam": "GOETHE",
+    "title": "Goethe-Institut — official terms for administering Goethe-Zertifikat A1 Fit in Deutsch 1 (Durchführungsbestimmungen, PDF)",
+    "url": "https://www.goethe.de/pro/relaunch/prf/de/Durchfuehrungsbestimmungen_A1-A2_Fit_in_Deutsch_1.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "A1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Goethe-Institut",
+    "verified_at": "2026-11-27T16:15:26+02:00"
   },
   {
     "exam": "TESTDAF",
@@ -1154,6 +1850,192 @@
     "license": "Official exam-board page (free public access)",
     "source_org": "Instituto Cervantes",
     "verified_at": "2026-11-20T18:24:52+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Berlin — official DELE levels and exam formats",
+    "url": "https://berlin.cervantes.es/es/diplomas_espanol_dele/formato_niveles_examen_dele.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T08:18:17+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Paris — official DELE levels and exams",
+    "url": "https://paris.cervantes.es/es/diplomas_espanol/niveles_diplomas_espanol.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T08:18:17+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes London — official DELE exam format",
+    "url": "https://londres.cervantes.es/es/cursos_espanol/estudiantes_espanol/dele_diploma_info_esp/formato_examen.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T08:18:17+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE A1 for school candidates, complete Modelo 0 (PDF)",
+    "url": "https://www.cervantes.es/imagenes/File/lengua/diplomas/a1-escolar/A1E_modelo_0.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "mock_exam",
+      "reading",
+      "listening",
+      "writing",
+      "speaking"
+    ],
+    "levels": [
+      "A1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE para escolares information and 2027 exam dates",
+    "url": "https://cervantes.org/es/examenes/dele-escolares",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "A1",
+      "A2",
+      "B1",
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes Atenas — official DELE school exam formats and timings (A1, A2/B1 and B2/C1)",
+    "url": "https://atenas.cervantes.es/es/examenes_espanol/diplomas_espanol/diplomas_escolares.htm",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [
+      "A1",
+      "A2",
+      "B1",
+      "B2",
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE A2 reading answer key (November 2010 session, not a full model exam, PDF)",
+    "url": "https://www.cervantes.es/imagenes/File/lengua/diplomas/a2/A2_LECTURA_CLAVES.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "reading"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE A2 listening task 1 (2010 session, single task, PDF)",
+    "url": "https://www.cervantes.es/imagenes/File/lengua/diplomas/a2/A2_AUDICION_TAREA1.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "listening"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE A2 listening task 2 (2010 session, single task, PDF)",
+    "url": "https://www.cervantes.es/imagenes/File/lengua/diplomas/a2/A2_AUDICION_TAREA2.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "listening"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE A2 reading task 5 (2010 session, single task, PDF)",
+    "url": "https://www.cervantes.es/imagenes/File/lengua/diplomas/a2/A2_LECTURA_TAREA5.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "reading"
+    ],
+    "levels": [
+      "A2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE C1 writing task 2 (older session, single task, PDF)",
+    "url": "https://www.cervantes.es/imagenes/File/lengua/diplomas/c1/C1_EXPINTER_TAREA2.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "writing"
+    ],
+    "levels": [
+      "C1"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
+  },
+  {
+    "exam": "DELE",
+    "title": "Instituto Cervantes — official DELE C2 writing task 2 (older session, single task, PDF)",
+    "url": "https://www.cervantes.es/imagenes/File/lengua/diplomas/c2/C2_EXPINTER_TAREA2.pdf",
+    "category": "Sample tests",
+    "skills": [
+      "writing"
+    ],
+    "levels": [
+      "C2"
+    ],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "Instituto Cervantes",
+    "verified_at": "2026-11-27T16:23:07+02:00"
   },
   {
     "exam": "CAMBRIDGE",
