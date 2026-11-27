@@ -88,7 +88,7 @@ The British Council is explicit: “[Test fees vary by country and test type](ht
 
 We did not find an official, single IELTS calendar that lists every 2027 session worldwide. Official bodies publish dates **per centre**, through the tools above. If a 2027 date is open at your centre, it will appear there; if it is not listed yet, it has not been opened for booking at that centre.
 
-Do not rely on unofficial “IELTS 2027 dates” blogs. Use ielts.org or the British Council or IDP portal for your country.
+Do not rely on unofficial “IELTS 2027 dates” blogs. Use ielts.org or the British Council or IDP portal for your country. If you are booking around a Canadian university deadline, [English tests for Canada’s fall 2027 intake: IELTS, TOEFL and the mid-January deadlines](/blog/english-tests-canada-fall-2027-deadlines) gathers the official undergraduate dates at U of T, uOttawa and TMU.
 
 ## Fees vary — including inside the same country
 

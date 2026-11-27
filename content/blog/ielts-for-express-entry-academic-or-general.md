@@ -99,7 +99,7 @@ The [Academic test page](https://ielts.org/take-a-test/test-types/ielts-academic
 
 The official [Guide for Test Takers](https://ielts.org/cdn/ielts-downloadable-assets/ielts-guidance-and-support/ielts-guides/ielts-guide-for-test-takers.pdf) puts this in a table. Academic is marked **Yes** for undergraduate or postgraduate study and for registering with a professional body; General Training is marked **No** for both of those. For training or study below degree level, and for migrating to an English-speaking country, the guide marks **Yes** for both tests — then tells you to check directly with the institution or organisation. For Canadian Express Entry, that organisation is IRCC, and it requires General Training.
 
-Always confirm the test type and the score with the university or the professional body before you pay. IELTS itself says you should check entry requirements for your target country, institution or association.
+Always confirm the test type and the score with the university or the professional body before you pay. IELTS itself says you should check entry requirements for your target country, institution or association. For official fall 2027 undergraduate dates and IELTS Academic scores at U of T, uOttawa and TMU, see [English tests for Canada’s fall 2027 intake: IELTS, TOEFL and the mid-January deadlines](/blog/english-tests-canada-fall-2027-deadlines).
 
 ![A four-row chart matching purpose to test: Express Entry and other IRCC programs to General Training; degree-level study to Academic; professional registration usually to Academic; below-degree study to either if the institution agrees](/blog/ielts-for-express-entry-academic-or-general/which-ielts-to-book.webp)
 

@@ -43,6 +43,11 @@
 - [IELTS fees, registration and 2027 test dates](https://openexamhub.org/blog/ielts-fees-registration-2027-test-dates): How to find official IELTS fees and 2027 dates for your country and centre, how to register, and which test Express Entry and universities actually accept.
 - [TEF Canada scores to CLB and NCLC for Express Entry](https://openexamhub.org/blog/tef-canada-clb-nclc-express-entry): How to read a TEF Canada certificate, which score column to enter in an Express Entry profile, and the official IRCC and CCI tables that convert those scores to NCLC.
 
+- [English tests for Canada’s fall 2027 intake: IELTS, TOEFL and the mid-January deadlines](https://openexamhub.org/blog/english-tests-canada-fall-2027-deadlines): Official undergraduate dates at U of T (15 January), uOttawa (recommended 15 January) and TMU (1 February guaranteed consideration), plus each university’s IELTS and TOEFL scores. Express Entry uses a different English test.
+- [German university summer semester 2027: Goethe, TestDaF and the uni-assist window at FH Aachen](https://openexamhub.org/blog/germany-summer-2027-uni-assist-goethe): FH Aachen’s summer-semester uni-assist deadline is 15 January. German-language proofs such as TestDaF, DSH and Goethe C2 are programme-specific; this is a confirmed example, not a national date.
+- [France Excellence Eiffel 2027: the 6 January Campus France deadline, and why you cannot apply yourself](https://openexamhub.org/blog/eiffel-scholarship-2027-deadline): Students cannot apply for the Eiffel scholarship directly. French institutions must submit files to Campus France by 6 January 2027; results are published from 12 April 2027.
+- [How to read a DELF-DALF centre calendar: January and March 2027 sessions](https://openexamhub.org/blog/delf-dalf-2027-january-march-sessions): France Éducation international sets national group-exam dates; each centre chooses levels and registration windows. A worked example from Université Clermont Auvergne.
+
 ## Site
 - [Study planner](https://openexamhub.org/app): free account required to generate a plan
 - [Blog](https://openexamhub.org/blog): guides on exam fees, dates, score conversions and requirements ([RSS](https://openexamhub.org/blog/rss.xml))

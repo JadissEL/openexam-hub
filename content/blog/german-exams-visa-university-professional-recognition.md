@@ -144,7 +144,7 @@ DAAD adds that some programmes also recognise **Goethe-Zertifikat B2 or C1**, an
 
 TestDaF exists in a digital and a paper-based version. The framework says both measure the same levels. Fees depend on the country (TestDaF) or the institution (DSH); this article does not quote a price, because it varies.
 
-English-taught programmes usually do not ask for German, but they do ask for English. Check the admissions page for the exact certificate and score.
+English-taught programmes usually do not ask for German, but they do ask for English. Check the admissions page for the exact certificate and score. For a confirmed summer-semester example, including FH Aachen’s 15 January uni-assist deadline and the German certificates that university names, see [German university summer semester 2027: Goethe, TestDaF and the uni-assist window at FH Aachen](/blog/germany-summer-2027-uni-assist-goethe).
 
 ## Professional recognition, doctors and nurses
 
