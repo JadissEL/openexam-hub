@@ -2,7 +2,7 @@
 title: "TEF Canada scores to CLB and NCLC for Express Entry"
 description: "How to read a TEF Canada certificate, which score column to enter in an Express Entry profile, and the official IRCC and CCI tables that convert those scores to NCLC."
 date: "2026-11-20"
-updated: "2026-11-26"
+updated: "2026-11-27"
 lastVerified: "2026-11-21"
 exams:
   - TEF_CANADA
@@ -136,7 +136,7 @@ IRCC requires results to be less than **two years old** when you complete your E
 
 For TCF Canada, which uses a different scale, see [TCF Canada scores to CLB and NCLC for Express Entry](/blog/tcf-canada-clb-nclc-express-entry). If you are specifically aiming at level 7, [NCLC 7 / CLB 7: the TEF and TCF scores you need](/blog/nclc-7-clb-7-express-entry-scores) puts both exams side by side.
 
-To check all four of your Équivalence ancien score figures at once — your NCLC level in each skill, whether you meet NCLC 7 or 9, and the first-official-language CRS points they earn — use the [TEF Canada and TCF Canada to NCLC converter](/tools/clb-converter). It applies IRCC’s published tables; it is not an official IRCC tool, and it does not replace confirming your scores on canada.ca.
+To check all four of your Équivalence ancien score figures at once — your NCLC level in each skill, whether you meet NCLC 7 or 9, and the first-official-language CRS points they earn — use the [OpenExam Hub CLB and NCLC converter](/tools/clb-converter) (TEF Canada tab; it also has TCF Canada, IELTS General Training and CELPIP-General tabs). It applies IRCC’s published tables; it is not an official IRCC tool, and it does not replace confirming your scores on canada.ca.
 
 ## Preview a study plan
 

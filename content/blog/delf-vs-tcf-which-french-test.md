@@ -123,7 +123,7 @@ If you already hold a DELF B2, you skip the TCF for the DAP. If you do not, the 
 
 IRCC's Express Entry page lists the approved French tests as **TEF Canada** and **TCF Canada**. No DELF, DALF or general TCF is listed. Results must be **less than 2 years old** when you complete your profile and when you submit your application for permanent residence.
 
-If Express Entry is your goal, read [TEF Canada vs TCF Canada](/blog/tef-canada-vs-tcf-canada) and convert your results with the [CLB and NCLC converter](/tools/clb-converter), which handles TEF Canada and TCF Canada scores.
+If Express Entry is your goal, read [TEF Canada vs TCF Canada](/blog/tef-canada-vs-tcf-canada) and convert your results with the [CLB and NCLC converter](/tools/clb-converter). It has TEF Canada and TCF Canada tabs for the French tests, plus IELTS General Training and CELPIP-General tabs for English.
 
 ### Canadian citizenship
 

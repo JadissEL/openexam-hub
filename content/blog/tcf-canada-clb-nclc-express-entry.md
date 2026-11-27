@@ -1,9 +1,9 @@
 ---
-title: "TCF Canada scores to CLB and NCLC for Express Entry"
-description: "Official IRCC tables that convert TCF Canada speaking, listening, reading and writing scores to NCLC, plus programme minimums, result validity and the CRS French bonus."
+title: "TCF Canada scores to NCLC for Express Entry: NCLC 7 by skill, and the full table"
+description: "The TCF Canada score you need in each skill for NCLC 7, from IRCC’s table, plus the full NCLC 4–10 bands, programme minimums, the French-language category, CRS points and result validity."
 date: "2026-11-21"
-updated: "2026-11-26"
-lastVerified: "2026-11-21"
+updated: "2026-11-27"
+lastVerified: "2026-11-27"
 exams:
   - TCF_CANADA
 audience:
@@ -19,9 +19,17 @@ sources:
     url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html"
   - title: "IRCC — Comprehensive Ranking System (CRS) criteria"
     url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html"
+  - title: "IRCC — Express Entry: category-based selection (who is eligible for the French-language proficiency category)"
+    url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html"
   - title: "France Éducation international — TCF Canada"
     url: "https://www.france-education-international.fr/test/tcf-canada"
 faq:
+  - q: "What is the lowest TCF Canada score that counts as NCLC 7?"
+    a: "On IRCC’s table the lowest scores are speaking 10 (out of 20), listening 458, reading 453 and writing 10 (out of 20). Each skill must reach its own NCLC 7 band. For example, reading 452 is NCLC 6. Confirm on IRCC (https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html)."
+  - q: "Is NCLC 7 enough for the French-language proficiency category draws?"
+    a: "It is the minimum, not a guarantee. IRCC says you need French test results of at least 7 in all four abilities, plus the round’s own requirements, and eligible candidates are then ranked by CRS score (https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html). You must also be eligible for one of the Express Entry programmes."
+  - q: "How many CRS points does NCLC 7 in French give?"
+    a: "IRCC’s CRS page lists first-official-language points in CLB: CLB 7 earns 16 points per ability with a spouse or partner, 17 without. Separately, NCLC 7 or higher in all four French skills adds 25 points with English at CLB 4 or lower (or no English test), or 50 points with CLB 5 or higher in all four English skills (https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html)."
   - q: "What TCF Canada scores count as NCLC 7?"
     a: "On IRCC’s table, NCLC 7 is speaking 10–11, listening 458–502, reading 453–498 and writing 10–11. You need the matching band in each skill. Confirm on IRCC (https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html)."
   - q: "Does IRCC accept TCF tout public for Express Entry?"
@@ -36,9 +44,45 @@ faq:
     a: "In the TEF Canada scores to CLB and NCLC guide (https://openexamhub.org/blog/tef-canada-clb-nclc-express-entry). TEF uses a different scale; do not reuse the TCF numbers there."
 ---
 
+**Jump to:** [TCF Canada scores for NCLC 7, skill by skill](#tcf-canada-scores-for-nclc-7-skill-by-skill) · [the full NCLC 4–10 table](#irccs-tcf-canada-tables) · [what level you need](#what-level-do-you-need)
+
 Official tables change. Confirm your numbers on [IRCC’s language test results page](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html) and on your attestation before you submit a profile.
 
 TCF Canada and TEF Canada are both approved French tests for Express Entry, but they are scored on different scales. Use this guide for TCF Canada only. For TEF Canada, see [TEF Canada scores to CLB and NCLC for Express Entry](/blog/tef-canada-clb-nclc-express-entry). If you are specifically aiming at level 7, [NCLC 7 / CLB 7: the TEF and TCF scores you need](/blog/nclc-7-clb-7-express-entry-scores) puts both exams’ NCLC 7 bands side by side.
+
+## TCF Canada scores for NCLC 7, skill by skill
+
+NCLC 7 is the French level that opens the most doors on IRCC’s pages. These are the scores that reach it on IRCC’s TCF Canada table. Each skill is converted on its own.
+
+![Four cards showing the lowest TCF Canada score for NCLC 7 in speaking (10), listening (458), reading (453) and writing (10)](/blog/tcf-canada-clb-nclc-express-entry/nclc-7-by-skill.webp)
+
+*Chart by OpenExam Hub. Source: IRCC, Language test results (Express Entry), checked 27 November 2026.*
+
+| Skill | Score scale | Lowest score for NCLC 7 | NCLC 7 band | NCLC 8 starts at |
+|---|---|---|---|---|
+| Speaking (expression orale) | out of 20 | 10 | 10–11 | 12 |
+| Listening (compréhension de l’oral) | out of 699 | 458 | 458–502 | 503 |
+| Reading (compréhension de l’écrit) | out of 699 | 453 | 453–498 | 499 |
+| Writing (expression écrite) | out of 20 | 10 | 10–11 | 12 |
+
+To count as NCLC 7 you need **at least** the band shown in **every** skill. A strong result in one skill does not make up for another. For instance, a reading score of 452 is NCLC 6 on IRCC’s table, even if your other three skills are higher.
+
+**Check your own four scores in the [OpenExam Hub CLB and NCLC converter](/tools/clb-converter).** Pick the TCF Canada tab. It applies IRCC’s tables to each skill, tells you whether you reach NCLC 7 or 9, and shows the first-official-language CRS points. The same tool also has tabs for TEF Canada, IELTS General Training and CELPIP-General. It is not an official IRCC tool and does not replace the IRCC page or your certificate.
+
+### Where NCLC 7 matters
+
+IRCC’s language page, CRS page and category-based selection page, all checked on 27 November 2026, use NCLC 7 in these places:
+
+- **Federal Skilled Worker (FSW).** NCLC 7 in all four abilities is the minimum for French as your first official language. On IRCC’s FSW grid, a TCF Canada result at NCLC 7 earns 4 points per ability, NCLC 8 earns 5, and NCLC 9 or above earns 6 (first official language is worth a maximum of 24 points). For NCLC 9 or above the TCF Canada scores are speaking 14 or more, listening 523 or more, reading 524 or more and writing 14 or more. A second official language at NCLC 5 in all four abilities adds 4 points.
+- **Canadian Experience Class (CEC).** NCLC 7 in all four abilities for TEER 0 or 1 jobs. For TEER 2 or 3, the minimum is NCLC 5, so you do not need 7 to be eligible.
+- **Federal Skilled Trades (FST).** Lower French minimums: NCLC 5 in speaking and listening, NCLC 4 in reading and writing.
+- **French-language proficiency category draws.** IRCC lists this as a current category. To be eligible you need French test results of at least 7 in all four abilities and the other requirements in each round’s instructions, and you must be eligible for one of the three Express Entry programmes. Eligible candidates are ranked by CRS score, so NCLC 7 is a condition, not a guarantee of an invitation. IRCC posts the instructions for each round, so read those before you plan around one.
+- **CRS French bonus.** NCLC 7 or higher in all four French skills adds **25 points** if your English is CLB 4 or lower (or you did not take an English test), or **50 points** if you also have CLB 5 or higher in all four English skills.
+- **CRS first official language.** The grid is written in CLB. CLB 7 is 16 points per ability with a spouse or partner, 17 without (up to 32 or 34 at CLB 10 or more).
+
+IRCC’s CRS page notes that from 3 November 2026 it changed how points are awarded for Canadian work experience and job offers. The language and French-bonus points quoted here are as they appear on the page on 27 November 2026.
+
+Results must be less than two years old when you complete your profile and when you apply (see [Validity](#validity)).
 
 ## What TCF Canada is
 
@@ -52,11 +96,11 @@ OpenExam Hub’s [TCF Canada exam guide](/exams/tcf-canada) summarises the offic
 
 ## IRCC’s TCF Canada tables
 
-These bands are from [IRCC’s language test results page](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html), checked 21 November 2026. The most complete grid on that page — including NCLC 4 through 10 — sits under the Federal Skilled Trades Program. The same NCLC 7, 8 and 9-and-above bands appear in the Federal Skilled Worker first-official-language table, and the same NCLC 5 to 10 bands appear for the Canadian Experience Class. Speaking and writing are scored out of 20; listening and reading are scored out of 699.
+These bands are from [IRCC’s language test results page](https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html), checked 27 November 2026. The most complete grid on that page — including NCLC 4 through 10 — sits under the Federal Skilled Trades Program. The same NCLC 7, 8 and 9-and-above bands appear in the Federal Skilled Worker first-official-language table, and the same NCLC 5 to 10 bands appear for the Canadian Experience Class. Speaking and writing are scored out of 20; listening and reading are scored out of 699.
 
 ![Table of official IRCC TCF Canada score ranges that map speaking, listening, reading and writing to NCLC levels 4 to 10, with NCLC 7 highlighted](/blog/tcf-canada-clb-nclc-express-entry/tcf-canada-nclc-table.webp)
 
-*Chart by OpenExam Hub. Source: IRCC, Language test results (Express Entry), Federal Skilled Trades table, checked 21 November 2026.*
+*Chart by OpenExam Hub. Source: IRCC, Language test results (Express Entry), Federal Skilled Trades table, checked 27 November 2026.*
 
 | NCLC | Speaking (/20) | Listening (/699) | Reading (/699) | Writing (/20) |
 |---|---|---|---|---|
@@ -87,11 +131,11 @@ Meeting a minimum only makes you eligible. [CRS points](https://www.canada.ca/en
 
 ![Four cards summarising IRCC programme minima for TCF Canada and the CRS French-language bonus at NCLC 7](/blog/tcf-canada-clb-nclc-express-entry/why-nclc-level-matters.webp)
 
-*Chart by OpenExam Hub. Source: IRCC language test results and CRS criteria pages, checked 21 November 2026.*
+*Chart by OpenExam Hub. Source: IRCC language test results and CRS criteria pages, checked 27 November 2026.*
 
 For a closer look at why level 7 is the figure people search for, and for the matching TEF Canada bands, see [NCLC 7 / CLB 7: the TEF and TCF scores you need](/blog/nclc-7-clb-7-express-entry-scores).
 
-You can also enter your four TCF Canada scores in the [TEF Canada and TCF Canada to NCLC converter](/tools/clb-converter). It maps each skill to an NCLC level, shows whether you meet NCLC 7 or 9, and adds first-official-language CRS points from IRCC’s tables. Confirm the figures on IRCC before you submit.
+You can also enter your four TCF Canada scores in the [CLB and NCLC converter](/tools/clb-converter) (TCF Canada tab; it also covers TEF Canada, IELTS General Training and CELPIP-General). It maps each skill to an NCLC level, shows whether you meet NCLC 7 or 9, and adds first-official-language CRS points from IRCC’s tables. Confirm the figures on IRCC before you submit.
 
 If you also need an English test, IRCC accepts IELTS **General Training** (not Academic, and not One Skill Retake) among other English tests. See [IELTS fees, registration and 2027 dates](/blog/ielts-fees-registration-2027-test-dates).
 
