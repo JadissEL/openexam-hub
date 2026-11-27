@@ -543,6 +543,35 @@ if (process.argv.includes('--built')) {
     [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
   const types = (blocks) => blocks.flatMap((b) => (b['@graph'] ? b['@graph'] : [b])).map((b) => b['@type']);
 
+  test('TCF, DELF and the TCF B2 plan link to the CLB converter in context', () => {
+    const tcf = read('exams/tcf/index.html').split('aria-label="Comparing tests"')[1] || '';
+    assert.ok(tcf.includes('href="/tools/clb-converter"'), 'TCF tout public comparing-tests note links to the CLB converter');
+    assert.ok(tcf.includes('CLB / NCLC score converter'), 'TCF note uses the converter as anchor text');
+    assert.ok(tcf.includes('TCF tout public is not the test IRCC lists for Express Entry'), 'TCF note states the Express Entry list fact');
+    assert.ok(tcf.includes('does not convert TCF tout public scores'), 'TCF note says the converter is not for TCF tout public');
+
+    const delf = read('exams/delf/index.html').split('aria-label="Comparing tests"')[1] || '';
+    assert.ok(delf.includes('href="/tools/clb-converter"'), 'DELF comparing-tests note links to the CLB converter');
+    assert.ok(delf.includes('CLB / NCLC score converter'), 'DELF note uses the converter as anchor text');
+    assert.ok(
+      delf.includes('not on IRCC') && delf.includes('Express Entry language-test list'),
+      'DELF note states that DELF/DALF are not on the Express Entry list'
+    );
+    assert.ok(
+      delf.includes('language-proof page accepts a DELF at B1 or higher') && delf.includes('any DALF result'),
+      'DELF note still mentions IRCC citizenship language proof'
+    );
+
+    const plan = read('exams/tcf/b2-30-day-study-plan/index.html');
+    const marker = 'Convert TCF Canada scores with the';
+    const idx = plan.indexOf(marker);
+    assert.ok(idx !== -1, 'TCF B2 plan has the converter note');
+    const around = plan.slice(idx, idx + 400);
+    assert.ok(around.includes('href="/tools/clb-converter"'), 'TCF B2 plan note links to the CLB converter');
+    assert.ok(around.includes('CLB / NCLC score converter'), 'TCF B2 plan uses the converter as anchor text');
+    assert.ok(plan.includes('does not convert TCF tout public scores'), 'TCF B2 plan says the converter is not for TCF tout public');
+  });
+
   test('exam guides link to the comparison posts they are relevant to', () => {
     const published = new Set(loadBlogPosts({ includeDrafts: false }).map((p) => p.slug));
     const expected = {
