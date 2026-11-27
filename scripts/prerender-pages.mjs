@@ -165,6 +165,53 @@ export async function prerenderPages(distDir, template, { applyHead, injectRoot,
     written.push(p);
   }
 
+  {
+    const page = ssr.CLB_TABLE_PAGE;
+    const p = page.path;
+    const url = `${SITE_ORIGIN}${p}`;
+    const csvUrl = `${SITE_ORIGIN}${page.csvPath}`;
+    const jsonLd = [
+      breadcrumbJsonLd(ssr.compareBreadcrumbs(page)),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        '@id': `${url}#dataset`,
+        name: page.h1,
+        description: page.description,
+        url,
+        inLanguage: 'en',
+        isAccessibleForFree: true,
+        dateModified: ssr.COMPARE_LAST_VERIFIED,
+        isBasedOn: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html',
+        creator: { '@id': `${SITE_ORIGIN}/#organization` },
+        distribution: [{ '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: csvUrl }]
+      }
+    ];
+    const faq = faqPageJsonLd(page.faq);
+    if (faq) jsonLd.push(faq);
+    writePage(distDir, p, stripModuleScripts(injectRoot(headFor(p, jsonLd), ssr.renderPage(p, posts))));
+    written.push(p);
+    fs.writeFileSync(path.join(distDir, page.csvPath.slice(1)), ssr.clbCsv());
+  }
+  {
+    const p = ssr.COMPARE_HUB.path;
+    const jsonLd = [
+      breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: ssr.COMPARE_HUB.label, path: p }]),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        '@id': `${SITE_ORIGIN}${p}#webpage`,
+        url: `${SITE_ORIGIN}${p}`,
+        name: ssr.COMPARE_HUB.h1,
+        description: ssr.COMPARE_HUB.description,
+        inLanguage: 'en',
+        isPartOf: { '@id': `${SITE_ORIGIN}/#website` }
+      }
+    ];
+    writePage(distDir, p, stripModuleScripts(injectRoot(headFor(p, jsonLd), ssr.renderPage(p, posts))));
+    written.push(p);
+  }
+
   writePage(distDir, '/app', headFor('/app'));
   written.push('/app');
 

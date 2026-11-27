@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { COMPARE_PAGES, comparePath, comparePageBySlug } from '../src/compare/comparePages.js';
-import { TABLES, TEST_FORMATS, COMPARE_LAST_VERIFIED, SOURCE_URLS, PTE_ACADEMIC_CEFR, clbRows } from '../src/compare/compareData.js';
+import { COMPARE_PAGES, comparePath, comparePageBySlug, CLB_TABLE_PAGE, COMPARE_HUB } from '../src/compare/comparePages.js';
+import { TABLES, TEST_FORMATS, COMPARE_LAST_VERIFIED, SOURCE_URLS, PTE_ACADEMIC_CEFR, clbRows, clbCsv, EQUIVALENCY_TESTS, tableVerified, CSV_PATH } from '../src/compare/compareData.js';
 import { routeMeta, indexablePaths } from '../src/seo/site.js';
 import { normPath } from '../lib/analytics/hits.js';
 
@@ -111,6 +111,48 @@ test('routes: meta, canonical, sitemap and the cookieless counter know every com
   assert.equal(routeMeta('/compare/not-a-page'), null);
 });
 
+test('equivalency table covers the five IRCC Express Entry tests, TEF on the Express Entry scale', () => {
+  assert.deepEqual(EQUIVALENCY_TESTS, ['IELTS_GT', 'CELPIP_G', 'PTE_CORE', 'TEF_EXPRESS_ENTRY', 'TCF_CANADA']);
+  for (const id of EQUIVALENCY_TESTS) {
+    assert.equal(TABLES[id].expressEntry === false, false, `${id} is an Express Entry table`);
+    assert.match(tableVerified(id), /^\d{4}-\d{2}-\d{2}$/);
+  }
+  assert.ok(!EQUIVALENCY_TESTS.includes('TEF_NEW_699'), 'the /699 scale is not for Express Entry');
+});
+
+test('CSV: header, 5 tests x 4 skills x 7 levels, cells match the tables, source and date on every row', () => {
+  const lines = clbCsv().trim().split('\n');
+  assert.equal(lines[0], 'test,scale,skill,level,score,cell_type,source_url,last_verified');
+  assert.equal(lines.length, 1 + 5 * 4 * 7);
+  const parse = (l) => l.match(/("([^"]|"")*"|[^,]*)(,|$)/g).map((c) => c.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"')).slice(0, 8);
+  const rows = lines.slice(1).map(parse);
+  for (const r of rows) {
+    assert.equal(r.length, 8);
+    assert.match(r[6], /^https:\/\/www\.canada\.ca\//, 'source is canada.ca');
+    assert.match(r[7], /^2026-\d{2}-\d{2}$/);
+  }
+  const find = (test, skill, level) => rows.find((r) => r[0] === test && r[2] === skill && r[3] === level)[4];
+  // Hand-copied from canada.ca, independent of the tables.
+  assert.equal(find('PTE Core', 'listening', 'CLB 7'), '60–70');
+  assert.equal(find('PTE Core', 'writing', 'CLB 10+'), '90+');
+  assert.equal(find('IELTS General Training', 'listening', 'CLB 9'), '8.0');
+  assert.equal(find('CELPIP-General', 'reading', 'CLB 7'), '7');
+  assert.equal(find('TCF Canada', 'reading', 'NCLC 7'), '453–498');
+  assert.equal(find(TABLES.TEF_EXPRESS_ENTRY.label, 'speaking', 'NCLC 7'), '310–348');
+  assert.equal(CSV_PATH, '/compare/clb-equivalency-table.csv');
+});
+
+test('hub and table page have meta, canonical and sitemap entries', () => {
+  for (const c of [COMPARE_HUB, CLB_TABLE_PAGE]) {
+    const meta = routeMeta(c.path);
+    assert.equal(meta.title, c.title);
+    assert.ok(c.title.length <= 60 && c.description.length <= 160, `${c.path} lengths`);
+    assert.equal(meta.canonical, `https://openexamhub.org${c.path}`);
+    assert.ok(indexablePaths().includes(c.path));
+    assert.equal(normPath(c.path), c.path);
+  }
+});
+
 if (built) {
   const dist = path.join(root, 'dist');
   const read = (rel) => fs.readFileSync(path.join(dist, rel), 'utf8');
@@ -156,12 +198,42 @@ if (built) {
     assert.ok(read('exams/celpip/index.html').includes('href="/compare/ielts-vs-celpip"'));
   });
 
+  for (const [p, types] of [[CLB_TABLE_PAGE.path, ['BreadcrumbList', 'Dataset', 'FAQPage']], [COMPARE_HUB.path, ['BreadcrumbList', 'CollectionPage']]]) {
+    test(`built ${p}: static HTML, JSON-LD, no ads, links resolve`, () => {
+      const html = read(`${p.slice(1)}/index.html`);
+      assert.ok(html.includes(`<link rel="canonical" href="https://openexamhub.org${p}" />`));
+      assert.doesNotMatch(html, /<script type="module"/);
+      assert.doesNotMatch(html, /adsbygoogle|googlesyndication|data-ad-slot/i);
+      const ld = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1])['@type'] || 'graph');
+      for (const t of types) assert.ok(ld.includes(t), `JSON-LD ${t}`);
+      const hrefs = [...html.matchAll(/href="(\/[^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, '&'));
+      for (const h of hrefs) {
+        if (h.startsWith('/assets/') || /\.(ico|svg|png|webmanifest|xml|css|js)$/.test(h.split('?')[0]) || h.startsWith('/app')) continue;
+        assert.ok(exists(h), `internal link ${h} resolves in dist/`);
+      }
+    });
+  }
+
+  test('built CSV equals clbCsv() and the table page shows every test and the download link', () => {
+    assert.equal(read(CSV_PATH.slice(1)), clbCsv());
+    const html = read('compare/clb-equivalency-table/index.html');
+    assert.ok(html.includes(`href="${CSV_PATH}"`));
+    const body = text(html);
+    for (const id of EQUIVALENCY_TESTS) assert.ok(body.includes(TABLES[id].label.replace(/&/g, '&')), `column ${id}`);
+    for (const n of ['453–498', '310–348', '60–70', '6.0']) assert.ok(body.includes(n), `cell ${n}`);
+    const hub = read('compare/index.html');
+    for (const page of COMPARE_PAGES) assert.ok(hub.includes(`href="${comparePath(page)}"`), `hub links ${page.slug}`);
+    assert.ok(hub.includes(`href="${CLB_TABLE_PAGE.path}"`));
+    assert.ok(read('index.html').includes('href="/compare"'), 'footer links the hub');
+  });
+
   test('built sitemap and llms.txt list the compare pages', () => {
     const sm = read('sitemap.xml');
     for (const page of COMPARE_PAGES) {
       assert.ok(sm.includes(`<loc>https://openexamhub.org${comparePath(page)}</loc>`), `sitemap ${page.slug}`);
       assert.ok(read('llms.txt').includes(`https://openexamhub.org${comparePath(page)}`), `llms.txt ${page.slug}`);
     }
+    for (const p of [COMPARE_HUB.path, CLB_TABLE_PAGE.path]) assert.ok(sm.includes(`<loc>https://openexamhub.org${p}</loc>`), `sitemap ${p}`);
   });
 }
 

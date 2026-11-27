@@ -16,16 +16,16 @@ import {
 } from './compareData.js';
 import { comparePageBySlug, compareBreadcrumbs } from './comparePages.js';
 
-function dateLabel(iso) {
+export function dateLabel(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
-const linkCls = 'text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]';
+export const linkCls = 'text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]';
 const regionCls =
   'mt-3 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714] focus-visible:ring-offset-2';
 
-function SectionTitle({ id, children }) {
+export function SectionTitle({ id, children }) {
   return (
     <h2 id={id} className={`font-display ${ink} text-[26px] sm:text-[32px] tracking-[-0.02em] font-medium`}>
       {children}
@@ -33,18 +33,18 @@ function SectionTitle({ id, children }) {
   );
 }
 
-function SkillTable({ tests, skill }) {
+export function SkillTable({ tests, skill, levelHeader = 'CLB' }) {
   const label = SKILL_LABELS[skill].en;
   const names = tests.map((id) => TABLES[id].label);
   return (
     <div>
       <h3 className={`font-display ${ink} text-[20px] tracking-[-0.01em] font-medium`}>{label}</h3>
-      <div className={regionCls} tabIndex={0} role="region" aria-label={`${label}: IRCC CLB table, ${names.join(' and ')}`}>
+      <div className={regionCls} tabIndex={0} role="region" aria-label={`${label}: IRCC ${levelHeader} table, ${names.join(' and ')}`}>
         <table className="w-full text-left text-[15px] leading-snug">
-          <caption className="sr-only">{label}: score IRCC gives for each CLB level, {names.join(' and ')}</caption>
+          <caption className="sr-only">{label}: score IRCC gives for each {levelHeader} level, {names.join(' and ')}</caption>
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">CLB</th>
+              <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">{levelHeader}</th>
               {names.map((n) => (
                 <th key={n} scope="col" className="px-4 py-3 font-semibold">{n}</th>
               ))}

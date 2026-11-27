@@ -21,6 +21,10 @@
 - [IELTS vs CELPIP](https://openexamhub.org/compare/ielts-vs-celpip): IRCC's CLB table for IELTS General Training and CELPIP-General side by side, test format and each test's own CEFR chart
 - [IELTS vs PTE Core](https://openexamhub.org/compare/ielts-vs-pte): IRCC's CLB table for IELTS General Training and PTE Core side by side, test format, and why PTE Academic is not accepted for Express Entry
 
+- [CELPIP vs PTE Core](https://openexamhub.org/compare/celpip-vs-pte): IRCC's CLB table for CELPIP-General and PTE Core side by side, and test format
+- [CLB and NCLC equivalency table](https://openexamhub.org/compare/clb-equivalency-table): IRCC's tables for all five Express Entry tests (IELTS General Training, CELPIP-General, PTE Core, TEF Canada, TCF Canada) per skill, with a CSV download ([CSV](https://openexamhub.org/compare/clb-equivalency-table.csv))
+- [All comparisons](https://openexamhub.org/compare)
+
 ## Study plans
 - [TCF Canada official practice and 30-day study path](https://openexamhub.org/exams/tcf-canada/official-practice-study-path)
 - [TEF Canada 30-day study plan](https://openexamhub.org/exams/tef-canada/30-day-study-plan)
