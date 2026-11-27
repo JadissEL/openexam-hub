@@ -180,6 +180,15 @@ function Resources({ groups, lastChecked }) {
 const TOOL_GUIDES = ['tef-canada', 'tcf-canada', 'ielts', 'celpip'];
 
 /** Free-tool card on the TEF Canada, TCF Canada, IELTS and CELPIP guides (deep-links the matching converter tab). */
+// Side-by-side /compare pages (src/compare/comparePages.js) linked from the English guide cards.
+const GUIDE_COMPARE_LINKS = {
+  ielts: [
+    { href: '/compare/ielts-vs-celpip', label: 'IELTS vs CELPIP: CLB scores and test format' },
+    { href: '/compare/ielts-vs-pte', label: 'IELTS vs PTE Core: CLB scores and test format' }
+  ],
+  celpip: [{ href: '/compare/ielts-vs-celpip', label: 'IELTS vs CELPIP: CLB scores and test format' }]
+};
+
 function RelatedTool({ guide }) {
   if (!TOOL_GUIDES.includes(guide)) return null;
   const name = { 'tcf-canada': 'TCF Canada', ielts: 'IELTS', celpip: 'CELPIP' }[guide] || 'TEF Canada';
@@ -196,6 +205,15 @@ function RelatedTool({ guide }) {
       <a href={toolPathForGuide(guide)} className="mt-4 inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
         Open the CLB / NCLC score converter <ArrowRight className="w-4 h-4" aria-hidden="true" />
       </a>
+      {GUIDE_COMPARE_LINKS[guide] ? (
+        <ul className="mt-4 space-y-2 text-[16px] leading-snug">
+          {GUIDE_COMPARE_LINKS[guide].map((l) => (
+            <li key={l.href}>
+              <a href={l.href} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{l.label}</a>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }

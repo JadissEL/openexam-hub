@@ -141,6 +141,30 @@ export async function prerenderPages(distDir, template, { applyHead, injectRoot,
     written.push(p);
   }
 
+  // /compare/<slug>: static comparison pages (IDEA-13). Full HTML, no module script, no ads.
+  for (const page of ssr.COMPARE_PAGES) {
+    const p = ssr.comparePath(page);
+    const url = `${SITE_ORIGIN}${p}`;
+    const jsonLd = [
+      breadcrumbJsonLd(ssr.compareBreadcrumbs(page)),
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        '@id': `${url}#webpage`,
+        url,
+        name: page.h1,
+        description: page.description,
+        inLanguage: 'en',
+        isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+        lastReviewed: ssr.COMPARE_LAST_VERIFIED
+      }
+    ];
+    const faq = faqPageJsonLd(page.faq);
+    if (faq) jsonLd.push(faq);
+    writePage(distDir, p, stripModuleScripts(injectRoot(headFor(p, jsonLd), ssr.renderPage(p, posts))));
+    written.push(p);
+  }
+
   writePage(distDir, '/app', headFor('/app'));
   written.push('/app');
 

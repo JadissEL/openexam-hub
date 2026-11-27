@@ -8,6 +8,9 @@ import { PLAN_PAGES, planPath } from './planPages.js';
 import { examContent } from './examContent.js';
 import { FAQ } from '../landing/content.js';
 import ClbConverter from '../tools/ClbConverter.jsx';
+import ComparePage from '../compare/ComparePage.jsx';
+import { COMPARE_PAGES, comparePath, compareBreadcrumbs, comparePageBySlug } from '../compare/comparePages.js';
+import { COMPARE_LAST_VERIFIED } from '../compare/compareData.js';
 import { TOOL_FAQ, TOOL_H1, TOOL_DESCRIPTION, TOOL_LAST_VERIFIED, TOOL_PATH } from '../tools/clbContent.js';
 
 /** Build-time HTML for marketing and exam-guide routes (see scripts/prerender-pages.mjs). */
@@ -20,6 +23,8 @@ export function renderPage(pathname, posts = []) {
   if (p === '/privacy') return renderToString(<LegalPage kind="privacy" />);
   if (p === '/terms') return renderToString(<LegalPage kind="terms" />);
   if (p === '/tools/clb-converter') return renderToString(<ClbConverter />);
+  const cm = p.match(/^\/compare\/([a-z0-9-]+)$/);
+  if (cm && comparePageBySlug(cm[1])) return renderToString(<ComparePage slug={cm[1]} />);
   if (p === '/exams') return renderToString(<ExamsIndex posts={posts} />);
   const m = p.match(/^\/exams\/([a-z0-9-]+)$/);
   if (m) return renderToString(<ExamPage slug={m[1]} posts={posts} />);
@@ -28,4 +33,5 @@ export function renderPage(pathname, posts = []) {
   return null;
 }
 
+export { COMPARE_PAGES, comparePath, compareBreadcrumbs, COMPARE_LAST_VERIFIED };
 export { examContent, FAQ, PLAN_PAGES, planPath, TOOL_FAQ, TOOL_H1, TOOL_DESCRIPTION, TOOL_LAST_VERIFIED, TOOL_PATH };

@@ -230,9 +230,9 @@ function Converter() {
   const cta = plannerHref(tableId, level);
   const ctaLevel = recommendedLevel(level);
   const examName = table.examName || (table.exam === 'TCF_CANADA' ? 'TCF Canada' : 'TEF Canada');
-  const tableVerified = french ? LAST_VERIFIED : tableId === 'PTE_CORE' ? PTE_LAST_VERIFIED : ENGLISH_LAST_VERIFIED;
   const scheme = table.scheme;
   const french = table.language === 'fr';
+  const tableVerified = french ? LAST_VERIFIED : tableId === 'PTE_CORE' ? PTE_LAST_VERIFIED : ENGLISH_LAST_VERIFIED;
   const activeTab = mode === 'TEF_NEW_699' ? 'TEF_EXPRESS_ENTRY' : mode;
 
   return (

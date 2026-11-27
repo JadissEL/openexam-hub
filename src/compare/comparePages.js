@@ -21,7 +21,7 @@ export const COMPARE_PAGES = [
     label: 'IELTS vs CELPIP',
     title: 'IELTS vs CELPIP: CLB scores and test format · OpenExam Hub',
     description:
-      'IELTS General Training and CELPIP-General side by side: IRCC’s CLB table for each skill, test format and timings, and CEFR as each test publishes it. Sources cited.',
+      'IELTS General Training vs CELPIP-General: IRCC’s CLB table per skill, test format and timings, and the CEFR chart each test publishes. Sources cited.',
     h1: 'IELTS vs CELPIP for Canada: CLB scores and test format',
     intro: [
       'IRCC accepts both IELTS General Training and CELPIP-General for Express Entry. It publishes a separate table for each test that shows which score earns each Canadian Language Benchmark (CLB) level. This page puts those two tables next to each other, skill by skill, with the test format from the official IELTS and CELPIP sites.',
