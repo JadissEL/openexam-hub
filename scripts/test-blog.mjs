@@ -10,7 +10,10 @@ import {
   buildSitemapXml,
   buildRssXml,
   articleJsonLd,
+  blogIndexJsonLd,
   faqJsonLd,
+  BLOG_INDEX_TITLE,
+  BLOG_INDEX_DESCRIPTION,
   normalizeCover,
   firstBodyImage,
   resolveImageUrl,
@@ -24,6 +27,8 @@ import { parsePlannerQuery, parsePlannerDays, parsePlannerVariant, DEFAULT_PICKE
 import * as siteModule from '../src/seo/site.js';
 import { PLAN_PAGES, planPath } from '../src/seo/planPages.js';
 import { DONATION_COPY, DONATION_LINKS, DONATION_PLATFORMS } from '../src/donations.js';
+import { FAQ } from '../src/landing/content.js';
+import { relatedPostsFor, RELATED_POST_SLUGS } from '../src/blog/related.js';
 
 // Exam bodies, public broadcasters and governments only (study plans link nothing else).
 const PLAN_LINK_HOSTS = [
@@ -254,6 +259,34 @@ test('RSS lists posts and has a self link', () => {
   assert.match(rss, /atom:link href="https:\/\/openexamhub\.org\/blog\/rss\.xml"/);
   assert.match(rss, /example-when-to-start-preparing/);
   assert.match(rss, /<pubDate>/);
+});
+
+test('blog index JSON-LD is a CollectionPage with an ItemList of posts', () => {
+  const ld = blogIndexJsonLd([example]);
+  assert.equal(ld['@context'], 'https://schema.org');
+  assert.equal(ld['@type'], 'CollectionPage');
+  assert.equal(ld.name, BLOG_INDEX_TITLE);
+  assert.equal(ld.description, BLOG_INDEX_DESCRIPTION);
+  assert.equal(ld.url, `${SITE_ORIGIN}/blog`);
+  assert.equal(ld.isPartOf['@type'], 'Blog');
+  assert.equal(ld.isPartOf['@id'], `${SITE_ORIGIN}/blog#blog`);
+  assert.equal(ld.mainEntity['@type'], 'ItemList');
+  assert.equal(ld.mainEntity.numberOfItems, 1);
+  assert.equal(ld.mainEntity.itemListElement[0]['@type'], 'ListItem');
+  assert.equal(ld.mainEntity.itemListElement[0].position, 1);
+  assert.equal(ld.mainEntity.itemListElement[0].name, example.title);
+  assert.equal(ld.mainEntity.itemListElement[0].url, example.canonical);
+  assert.equal(blogIndexJsonLd([]).mainEntity.numberOfItems, 0);
+});
+
+test('relatedPostsFor prefers curated slugs and only returns published posts', () => {
+  const current = { slug: 'ielts-6-5-in-30-days', exams: ['IELTS'], draft: false };
+  const cefr = { slug: 'ielts-to-cefr', title: 'IELTS to CEFR', url: '/blog/ielts-to-cefr', exams: ['IELTS'], draft: false, date: '2026-11-27' };
+  const clb = { slug: 'ielts-to-clb-express-entry', title: 'IELTS to CLB', url: '/blog/ielts-to-clb-express-entry', exams: ['IELTS'], draft: false, date: '2026-11-26' };
+  const draft = { slug: 'ielts-to-cefr', title: 'draft', exams: ['IELTS'], draft: true, date: '2026-11-27' };
+  const related = relatedPostsFor(current, [current, cefr, clb, draft]);
+  assert.deepEqual(related.map((p) => p.slug), RELATED_POST_SLUGS['ielts-6-5-in-30-days']);
+  assert.deepEqual(relatedPostsFor(current, [current, draft]).map((p) => p.slug), []);
 });
 
 test('BlogPosting and FAQPage JSON-LD are valid', () => {
@@ -542,6 +575,17 @@ if (process.argv.includes('--built')) {
   const jsonLdBlocks = (html) =>
     [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
   const types = (blocks) => blocks.flatMap((b) => (b['@graph'] ? b['@graph'] : [b])).map((b) => b['@type']);
+  const visibleText = (html) =>
+    html
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&#x27;|&#39;|&apos;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, ' ')
+      .trim();
 
   test('TCF, DELF and the TCF B2 plan link to the CLB converter in context', () => {
     const tcf = read('exams/tcf/index.html').split('aria-label="Comparing tests"')[1] || '';
@@ -576,11 +620,12 @@ if (process.argv.includes('--built')) {
   test('exam guides link to the comparison posts they are relevant to', () => {
     const published = new Set(loadBlogPosts({ includeDrafts: false }).map((p) => p.slug));
     const expected = {
-      ielts: ['toefl-vs-ielts', 'ielts-to-cefr'],
+      ielts: ['toefl-vs-ielts', 'ielts-to-cefr', 'ielts-to-clb-express-entry'],
       toefl: ['toefl-vs-ielts'],
       delf: ['delf-vs-tcf-which-french-test'],
       tcf: ['delf-vs-tcf-which-french-test'],
-      'tcf-canada': ['delf-vs-tcf-which-french-test']
+      'tcf-canada': ['delf-vs-tcf-which-french-test'],
+      'tef-canada': ['delf-vs-tcf-which-french-test']
     };
     for (const [guide, slugs] of Object.entries(expected)) {
       const html = read(`exams/${guide}/index.html`);
@@ -772,8 +817,21 @@ if (process.argv.includes('--built')) {
       assert.match(html, /<script type="module"/, `${p} keeps the app script`);
       assert.ok(types(jsonLdBlocks(html)).includes('BreadcrumbList'));
     }
-    const faq = jsonLdBlocks(read('faq/index.html')).find((b) => b['@type'] === 'FAQPage');
+    const faqHtml = read('faq/index.html');
+    const faq = jsonLdBlocks(faqHtml).find((b) => b['@type'] === 'FAQPage');
     assert.ok(faq && faq.mainEntity.length >= 5);
+    assert.equal(faq.mainEntity.length, FAQ.length);
+    const faqTypes = types(jsonLdBlocks(faqHtml));
+    assert.equal(faqTypes.filter((t) => t === 'FAQPage').length, 1, '/faq must not duplicate FAQPage');
+    assert.ok(!faqTypes.includes('HowTo'), '/faq must not use retired HowTo markup');
+    const faqText = visibleText(faqHtml);
+    const squash = (s) => s.replace(/\s+/g, ' ').trim();
+    faq.mainEntity.forEach((q, i) => {
+      assert.equal(q.name, FAQ[i].q);
+      assert.equal(q.acceptedAnswer.text, FAQ[i].a);
+      assert.ok(squash(faqText).includes(squash(q.name)), `FAQ question visible: ${q.name}`);
+      assert.ok(squash(faqText).includes(squash(q.acceptedAnswer.text)), `FAQ answer visible: ${q.name}`);
+    });
     const app = read('app/index.html');
     assert.match(app, /<link rel="canonical" href="https:\/\/openexamhub\.org\/app"/);
     assert.match(app, /<title>Study planner · OpenExam Hub<\/title>/);
@@ -802,6 +860,124 @@ if (process.argv.includes('--built')) {
     }
   });
 
+
+  test('blog index has CollectionPage and ItemList JSON-LD matching the visible posts', () => {
+    const html = read('blog/index.html');
+    const blocks = jsonLdBlocks(html);
+    const t = types(blocks);
+    assert.ok(t.includes('CollectionPage'), '/blog missing CollectionPage JSON-LD');
+    assert.ok(t.includes('BreadcrumbList'), '/blog missing BreadcrumbList JSON-LD');
+    assert.ok(!t.includes('HowTo'), '/blog must not use retired HowTo markup');
+    assert.equal(t.filter((x) => x === 'CollectionPage').length, 1);
+    const page = blocks.find((b) => b['@type'] === 'CollectionPage');
+    assert.ok(page?.mainEntity, '/blog CollectionPage missing mainEntity ItemList');
+    assert.equal(page.url, 'https://openexamhub.org/blog');
+    assert.equal(page.name, BLOG_INDEX_TITLE);
+    assert.equal(page.description, BLOG_INDEX_DESCRIPTION);
+    assert.equal(page.isPartOf['@type'], 'Blog');
+    assert.equal(page.isPartOf['@id'], 'https://openexamhub.org/blog#blog');
+    const list = page.mainEntity;
+    assert.equal(list['@type'], 'ItemList');
+    const published = loadBlogPosts({ includeDrafts: includeDraftsFromEnv() });
+    assert.equal(list.numberOfItems, published.length);
+    assert.deepEqual(
+      list.itemListElement.map((item) => ({ position: item.position, name: item.name, url: item.url })),
+      published.map((post, i) => ({ position: i + 1, name: post.title, url: post.canonical }))
+    );
+    const text = visibleText(html);
+    for (const post of published) {
+      assert.ok(html.includes(`href="${post.url}"`), `/blog lists ${post.slug}`);
+      assert.ok(text.includes(post.title), `/blog shows title for ${post.slug}`);
+    }
+  });
+
+  test('the four comparison posts keep one BlogPosting, BreadcrumbList and FAQPage each', () => {
+    const slugs = [
+      'delf-vs-tcf-which-french-test',
+      'toefl-vs-ielts',
+      'ielts-to-clb-express-entry',
+      'ielts-to-cefr'
+    ];
+    const published = new Map(loadBlogPosts({ includeDrafts: false }).map((p) => [p.slug, p]));
+    const squash = (s) => s.replace(/\s+/g, ' ').trim();
+    for (const slug of slugs) {
+      const post = published.get(slug);
+      assert.ok(post, `missing published post ${slug}`);
+      const html = read(`blog/${slug}/index.html`);
+      const blocks = jsonLdBlocks(html);
+      const t = types(blocks);
+      assert.ok(!t.includes('HowTo'), `${slug} must not use retired HowTo markup`);
+      assert.equal(t.filter((x) => x === 'BlogPosting').length, 1, `${slug} should have exactly one BlogPosting`);
+      assert.equal(t.filter((x) => x === 'BreadcrumbList').length, 1, `${slug} should have exactly one BreadcrumbList`);
+      assert.equal(t.filter((x) => x === 'FAQPage').length, 1, `${slug} should have exactly one FAQPage`);
+      const article = blocks.find((b) => b['@type'] === 'BlogPosting');
+      assert.equal(article.headline, post.title);
+      assert.equal(article.url, post.canonical);
+      const faq = blocks.find((b) => b['@type'] === 'FAQPage');
+      assert.ok(post.faq?.length, `${slug} frontmatter should include visible FAQ`);
+      assert.equal(faq.mainEntity.length, post.faq.length);
+      const text = visibleText(html);
+      faq.mainEntity.forEach((q, i) => {
+        assert.equal(q.name, post.faq[i].q);
+        assert.equal(q.acceptedAnswer.text, post.faq[i].a);
+        assert.ok(squash(text).includes(squash(q.name)), `${slug} FAQ question visible: ${q.name}`);
+        assert.ok(squash(text).includes(squash(q.acceptedAnswer.text)), `${slug} FAQ answer visible: ${q.name}`);
+      });
+    }
+  });
+
+  test('unindexed pages gain new in-content inbound links from already-published pages', () => {
+    const published = new Set(loadBlogPosts({ includeDrafts: false }).map((p) => p.slug));
+    const href = (slug) => `href="/blog/${slug}"`;
+
+    const ieltsPlan = read('exams/ielts/8-week-study-plan/index.html');
+    if (published.has('ielts-to-cefr')) {
+      assert.ok(ieltsPlan.includes(href('ielts-to-cefr')), 'IELTS 8-week plan links to ielts-to-cefr');
+    }
+    if (published.has('ielts-to-clb-express-entry')) {
+      assert.ok(ieltsPlan.includes(href('ielts-to-clb-express-entry')), 'IELTS 8-week plan links to ielts-to-clb');
+    }
+    const tcfPlan = read('exams/tcf/b2-30-day-study-plan/index.html');
+    if (published.has('delf-vs-tcf-which-french-test')) {
+      assert.ok(tcfPlan.includes(href('delf-vs-tcf-which-french-test')), 'TCF B2 plan links to delf-vs-tcf');
+    }
+
+    const pairs = [
+      ['ielts-6-5-in-30-days', 'ielts-to-cefr'],
+      ['ielts-6-5-in-30-days', 'ielts-to-clb-express-entry'],
+      ['ielts-for-express-entry-academic-or-general', 'ielts-to-clb-express-entry'],
+      ['ielts-for-express-entry-academic-or-general', 'toefl-vs-ielts'],
+      ['ielts-fees-registration-2027-test-dates', 'toefl-vs-ielts'],
+      ['ielts-fees-registration-2027-test-dates', 'ielts-to-cefr'],
+      ['tef-canada-vs-tcf-canada', 'delf-vs-tcf-which-french-test'],
+      ['tcf-canada-clb-nclc-express-entry', 'delf-vs-tcf-which-french-test']
+    ];
+    for (const [from, to] of pairs) {
+      if (!published.has(from) || !published.has(to)) continue;
+      const html = read(`blog/${from}/index.html`);
+      const related = html.split('id="related-posts-title"')[1] || '';
+      assert.ok(related.includes(href(to)), `/blog/${from} related reading links to /blog/${to}`);
+    }
+
+    const about = read('about/index.html');
+    assert.ok(about.includes('href="/faq"') && about.includes('More to read'), '/about links to /faq in content');
+    assert.ok(about.includes('href="/blog"'), '/about links to /blog in content');
+    const funding = read('funding/index.html');
+    assert.ok(funding.includes('href="/faq"'), '/funding links to /faq in content');
+    assert.ok(funding.includes('href="/blog"'), '/funding links to /blog in content');
+
+    const sitemap = read('sitemap.xml');
+    for (const loc of [
+      'https://openexamhub.org/faq',
+      'https://openexamhub.org/blog',
+      'https://openexamhub.org/blog/delf-vs-tcf-which-french-test',
+      'https://openexamhub.org/blog/toefl-vs-ielts',
+      'https://openexamhub.org/blog/ielts-to-clb-express-entry',
+      'https://openexamhub.org/blog/ielts-to-cefr'
+    ]) {
+      assert.ok(sitemap.includes(`<loc>${loc}</loc>`), `sitemap missing ${loc}`);
+    }
+  });
 
   test('funding page and site footer include the PayPal funding link', () => {
     const funding = read('funding/index.html');

@@ -308,6 +308,12 @@ const POST_NOTES = {
       lead: 'For the CEFR side, see',
       anchor: 'IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2',
       tail: 'for what IELTS.org says about bands and levels.'
+    },
+    {
+      slug: 'ielts-to-clb-express-entry',
+      lead: 'Applying to Canada through Express Entry? See',
+      anchor: 'IELTS to CLB for Express Entry',
+      tail: 'for IRCC’s official IELTS General Training to CLB table and what CLB 7 requires in each skill.'
     }
   ],
   toefl: [
@@ -341,8 +347,66 @@ const POST_NOTES = {
       anchor: 'DELF vs TCF: which French test should you take?',
       tail: 'for how the two compare for citizenship, study and Canadian immigration.'
     }
+  ],
+  'tef-canada': [
+    {
+      slug: 'delf-vs-tcf-which-french-test',
+      lead: 'Comparing a lifetime diploma with a scored test? See',
+      anchor: 'DELF vs TCF: which French test should you take?',
+      tail: 'for what the French government, universities and IRCC accept. IRCC’s Express Entry list names TEF Canada and TCF Canada, not the DELF.'
+    }
   ]
 };
+
+/**
+ * Contextual pointers from a study-plan page to a relevant blog post (matched by slug).
+ * A link is only rendered when the post exists and is published.
+ */
+const PLAN_POST_NOTES = {
+  'ielts/8-week-study-plan': [
+    {
+      slug: 'ielts-to-cefr',
+      lead: 'This plan works toward an overall IELTS 6.5. For how overall bands relate to CEFR levels, see',
+      anchor: 'IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2',
+      tail: 'IELTS treats 6.5 as borderline between B2 and C1.'
+    },
+    {
+      slug: 'ielts-to-clb-express-entry',
+      lead: 'If you need IELTS for Express Entry, IRCC uses its own CLB table, not the CEFR mapping. See',
+      anchor: 'IELTS to CLB for Express Entry',
+      tail: 'Express Entry accepts IELTS General Training only, not Academic.'
+    }
+  ],
+  'tcf/b2-30-day-study-plan': [
+    {
+      slug: 'delf-vs-tcf-which-french-test',
+      lead: 'Still choosing between a TCF attestation and a DELF diploma? See',
+      anchor: 'DELF vs TCF: which French test should you take?',
+      tail: 'This plan is for TCF tout public, not TCF Canada or the DELF.'
+    }
+  ]
+};
+
+function planPostNotesFor(plan, posts = []) {
+  const key = `${plan.guide}/${plan.slug}`;
+  return (PLAN_POST_NOTES[key] || [])
+    .map((n) => ({ ...n, post: posts.find((p) => p.slug === n.slug && !p.draft) }))
+    .filter((n) => n.post);
+}
+
+function PlanPostNotes({ plan, posts = [] }) {
+  const notes = planPostNotesFor(plan, posts);
+  if (!notes.length) return null;
+  return (
+    <div className="mt-4 space-y-3">
+      {notes.map((n) => (
+        <p key={n.slug} className={`text-[16px] leading-[1.7] ${muted}`}>
+          {n.lead} <a href={n.post.url} className="text-[#C2410C] underline underline-offset-4">{n.anchor}</a>. {n.tail}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 function compareNotesFor(guide) {
   const raw = COMPARE[guide];
@@ -504,6 +568,7 @@ export function PlanPage({ guide, slug, posts = [] }) {
               {plan.toolNote.lead} <a href={plan.toolNote.href} className="text-[#C2410C] underline underline-offset-4">{plan.toolNote.anchor}</a>. {plan.toolNote.tail}
             </p>
           ) : null}
+          <PlanPostNotes plan={plan} posts={posts} />
         </section>
 
         <section aria-labelledby="facts-title" className="mt-14 max-w-4xl">

@@ -486,7 +486,19 @@ if (process.argv.includes('--built')) {
     assert.doesNotMatch(html, /pagead2\.googlesyndication|adsbygoogle/);
   });
 
+  test('CLB converter related guides link to the IELTS CLB, CEFR and TOEFL comparison posts', () => {
+    const html = read('tools/clb-converter/index.html');
+    const related = html.split('id="related-title"')[1] || '';
+    assert.ok(related.includes('href="/blog/ielts-to-clb-express-entry"'), 'converter links to IELTS to CLB');
+    assert.ok(related.includes('href="/blog/ielts-to-cefr"'), 'converter links to IELTS to CEFR');
+    assert.ok(related.includes('href="/blog/toefl-vs-ielts"'), 'converter links to TOEFL vs IELTS');
+    assert.ok(related.includes('CEFR is not the same scale as CLB'), 'converter notes that CEFR is not CLB');
+    assert.ok(related.includes('TOEFL is not on IRCC’s Express Entry list'), 'converter notes TOEFL is not on the Express Entry list');
+    assert.ok(related.includes('href="/blog"'), 'converter still links to the blog index');
+  });
+
   test('built pages carry the Clarity id and the consent script; privacy names Clarity', () => {
+
     for (const rel of ['index.html', 'privacy/index.html', 'app/index.html', 'exams/ielts/index.html', 'blog/index.html', 'tools/clb-converter/index.html']) {
       const html = read(rel);
       assert.match(html, /<meta name="oeh-clarity-id" content="zk5viik44t"\s*\/>/, rel);

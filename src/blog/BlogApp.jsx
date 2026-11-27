@@ -3,6 +3,7 @@ import { ArrowRight, Rss } from 'lucide-react';
 import { SiteHeader, SiteFooter } from '../landing/SiteChrome.jsx';
 import { ink, muted, eyebrow, lead, pageFont } from '../landing/theme.js';
 import { examPagesForTag } from '../seo/site.js';
+import { relatedPostsFor } from './related.js';
 
 export const EXAM_LABELS = {
   TCF: 'TCF',
@@ -293,7 +294,26 @@ function RoadmapCta({ exams }) {
   );
 }
 
-export function BlogPost({ post }) {
+function RelatedPosts({ post, posts }) {
+  const related = relatedPostsFor(post, posts);
+  if (!related.length) return null;
+  return (
+    <section aria-labelledby="related-posts-title" className="mt-14 pt-10 border-t border-[#E7E1D7]">
+      <h2 id="related-posts-title" className={`font-display ${ink} text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium`}>
+        Related reading
+      </h2>
+      <ul className="mt-5 space-y-3 text-[16px] leading-snug">
+        {related.map((p) => (
+          <li key={p.slug}>
+            <a href={p.url} className="text-[#C2410C] underline underline-offset-4">{p.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function BlogPost({ post, posts = [] }) {
   if (!post) return <BlogNotFound />;
   const verified = formatDate(post.lastVerified);
   const published = formatDate(post.date);
@@ -408,6 +428,8 @@ export function BlogPost({ post }) {
               </section>
             ) : null}
 
+            <RelatedPosts post={post} posts={posts} />
+
             <section aria-labelledby="cta-title" className="mt-14 rounded-3xl bg-[#1A1714] text-white px-6 sm:px-8 py-8 sm:py-10">
               <h2 id="cta-title" className="font-display text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium">
                 Turn this into a day-by-day plan
@@ -463,5 +485,5 @@ export default function BlogApp({ pathname, posts }) {
   if (route.kind === 'index') return <BlogIndex posts={posts} />;
   if (route.kind === 'tag') return <BlogIndex posts={posts} exam={route.exam} />;
   const post = posts.find((p) => p.slug === route.slug);
-  return <BlogPost post={post} />;
+  return <BlogPost post={post} posts={posts} />;
 }

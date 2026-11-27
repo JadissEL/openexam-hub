@@ -531,6 +531,15 @@ export default function ClbConverter() {
               <li><a href="/exams/celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CELPIP guide: test format, CLB scores and free official practice</a></li>
               <li><a href="/exams/tef-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TEF Canada guide: format, NCLC scores and free official practice</a></li>
               <li><a href="/exams/tcf-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TCF Canada guide: format, timings and free official practice</a></li>
+              <li><a href="/blog/ielts-to-clb-express-entry" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS to CLB for Express Entry</a></li>
+              <li>
+                <a href="/blog/ielts-to-cefr" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2</a>
+                <span className="text-[#6B635A]"> — CEFR is not the same scale as CLB.</span>
+              </li>
+              <li>
+                <a href="/blog/toefl-vs-ielts" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TOEFL vs IELTS in 2026: which English test should you take?</a>
+                <span className="text-[#6B635A]"> — TOEFL is not on IRCC’s Express Entry list.</span>
+              </li>
               <li><a href="/blog" className="text-[#C2410C] underline underline-offset-4">Read the blog</a></li>
             </ul>
           </section>

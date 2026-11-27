@@ -14,11 +14,14 @@ import {
   buildRssXml,
   articleJsonLd,
   blogBreadcrumbJsonLd,
+  blogIndexJsonLd,
   faqJsonLd,
   examLabel,
   SITE_ORIGIN,
   REPO_ROOT,
-  postHeadTitle
+  postHeadTitle,
+  BLOG_INDEX_TITLE,
+  BLOG_INDEX_DESCRIPTION
 } from './blog-data.mjs';
 import { prerenderPages } from './prerender-pages.mjs';
 import { TAG_INDEX_MIN_POSTS } from './blog-data.mjs';
@@ -135,17 +138,14 @@ async function prerender(distDir) {
   const ssrFile = await bundleSsr();
   const { renderBlog } = await import(pathToFileURL(ssrFile).href);
 
-  const indexTitle = 'Blog · OpenExam Hub';
-  const indexDesc =
-    'Guides on language exams for students, professionals and immigration applicants: what they are used for, who asks for them, and when to start preparing.';
   const indexHtml = stripModuleScripts(
     injectRoot(
       applyHead(template, {
-        title: indexTitle,
-        description: indexDesc,
+        title: BLOG_INDEX_TITLE,
+        description: BLOG_INDEX_DESCRIPTION,
         canonical: `${SITE_ORIGIN}/blog`,
         type: 'website',
-        jsonLd: [blogBreadcrumbJsonLd()]
+        jsonLd: [blogIndexJsonLd(posts), blogBreadcrumbJsonLd()]
       }),
       renderBlog('/blog', posts)
     )
