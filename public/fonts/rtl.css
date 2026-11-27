@@ -1,0 +1,31 @@
+/* Arabic and Urdu pages only. Linked from those HTML files, not from LTR pages.
+   Noto Sans Arabic and Noto Nastaliq Urdu are used under the SIL Open Font License 1.1.
+   Copyright 2024 The Noto Project Authors. https://github.com/notofonts/arabic
+   https://github.com/notofonts/nastaliq
+*/
+@font-face {
+  font-family: "Noto Sans Arabic";
+  src: url("/fonts/noto-sans-arabic.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Nastaliq Urdu";
+  src: url("/fonts/noto-nastaliq-urdu.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+html[lang="ar"] body,
+html[lang="ar"] #root,
+html[lang="ar"] #root [style*="font-family"],
+html[lang="ar"] .font-display {
+  font-family: "Noto Sans Arabic", sans-serif !important;
+}
+html[lang="ur"] body,
+html[lang="ur"] #root,
+html[lang="ur"] #root [style*="font-family"],
+html[lang="ur"] .font-display {
+  font-family: "Noto Nastaliq Urdu", serif !important;
+}

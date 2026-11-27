@@ -8,7 +8,7 @@
  * No pass rates, no score promises, no testimonials.
  */
 import { officialProfile, LEVELS } from '../../lib/exams.js';
-import seed from '../../scripts/seed-candidates.json';
+import seed from '../../scripts/seed-candidates.json' with { type: 'json' };
 import { EXAM_PAGES, examPageBySlug } from './site.js';
 
 const IRCC_LANGUAGE_TESTS =

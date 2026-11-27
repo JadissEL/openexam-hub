@@ -5,9 +5,13 @@
  */
 export const FIRST_LEARNERS_MAX = 4;
 
-export function learnersProof(count) {
+export function learnersProof(count, templates) {
   if (count == null || !Number.isFinite(Number(count)) || Number(count) < 0) return null;
   const n = Math.floor(Number(count));
-  if (n <= FIRST_LEARNERS_MAX) return 'Be one of the first learners.';
-  return `Join ${n.toLocaleString('en-GB')} learners.`;
+  if (!templates) {
+    if (n <= FIRST_LEARNERS_MAX) return 'Be one of the first learners.';
+    return `Join ${n.toLocaleString('en-GB')} learners.`;
+  }
+  if (n <= FIRST_LEARNERS_MAX) return templates.first;
+  return String(templates.join).replaceAll('{count}', n.toLocaleString('en-GB'));
 }

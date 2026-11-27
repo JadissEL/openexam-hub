@@ -25,6 +25,10 @@ test('view beacon keeps only path, referrer host, utm_source and in-app name', (
 
 test('paths and referrers are normalised and bounded', () => {
   assert.equal(normPath('/blog/tef-canada-clb-nclc-express-entry/'), '/blog/tef-canada-clb-nclc-express-entry');
+  assert.equal(normPath('/fr/about'), '/fr/about');
+  assert.equal(normPath('/ar/blog/tef-canada-vs-tcf-canada'), '/ar/blog/tef-canada-vs-tcf-canada');
+  assert.equal(normPath('/ur/tools/clb-converter'), '/ur/tools/clb-converter');
+  assert.equal(normPath('/french'), '(other)');
   assert.equal(normPath('/.env'), '(other)');
   assert.equal(normPath('/wp-admin/x/y/z'), '(other)');
   assert.equal(refHost('https://old.reddit.com/r/IELTS'), 'reddit.com');

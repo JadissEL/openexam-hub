@@ -150,3 +150,83 @@ export const CRS_TOOL_FAQ = [
     a: 'From IRCC’s “Comprehensive Ranking System (CRS) criteria” page on canada.ca, copied by hand and checked on the date shown on this page. To turn your test scores into CLB or NCLC levels first, use the CLB converter, which uses IRCC’s own test tables.'
   }
 ];
+
+/** Page chrome. Dates and the numbers already computed by the calculator stay as {placeholders}. */
+export const CRS_CHROME = {
+  crumb: 'CRS language points',
+  eyebrow: 'Free tool · IRCC’s CRS grid',
+  lead: 'Express Entry gives CRS points for your first official language and, separately, for your second. French at NCLC 7 or higher also earns additional points. Choose your CLB (English) and NCLC (French) level for each skill and see the points from IRCC’s CRS grid, checked on {date}.',
+  calcTitle: 'Calculator',
+  stepSituation: '1. Your situation',
+  spouseLabel: 'Spouse or common-law partner coming with you',
+  spouseNo: 'Single, or partner not coming',
+  spouseYes: 'Partner coming with me',
+  firstLangLabel: 'First official language',
+  firstEn: 'First language: English',
+  firstFr: 'First language: French',
+  langName: { en: 'English', fr: 'French' },
+  stepFirst: '2. {name} ({scheme}), first official language',
+  stepSecond: '3. {name} ({scheme}), second official language',
+  haveTest: 'Do you have a {name} test result?',
+  haveResult: 'I have a {name} result',
+  noSecond: 'No second language test',
+  chooseLevel: 'Choose your {scheme} level',
+  below: 'Below {scheme} 4',
+  top: '{scheme} 10 or more',
+  levelN: '{scheme} {n}',
+  pts: '{n} pts',
+  resultTitle: 'Your official-language CRS points',
+  firstOfficial: 'First official language',
+  secondOfficial: 'Second official language',
+  frenchExtra: 'French additional points',
+  languageTotal: 'Language total: {total} points ({core} of {max} for official languages {extra}).',
+  languageExtra: ', plus {bonus} French additional points',
+  cap: 'Your four second-language skills add up to {raw}, but IRCC caps the second official language at {max} points {with} a spouse or partner.',
+  withSpouse: 'with',
+  withoutSpouse: 'without',
+  onlyLanguage: 'Only the language parts of the CRS grid. Age, education, work experience, skill transferability and your partner’s factors aren’t calculated here.',
+  bonus: {
+    strongEnglish: 'NCLC 7 or higher in all four French skills and CLB 5 or higher in all four English skills: 50 additional points.',
+    lowEnglish: 'NCLC 7 or higher in all four French skills and CLB 4 or lower in English: 25 additional points.',
+    noEnglish: 'NCLC 7 or higher in all four French skills and no English test: 25 additional points.',
+    mixedEnglish: 'NCLC 7 or higher in all four French skills, with English at CLB 5 or higher in only some skills. IRCC’s table lists 50 points for CLB 5 or higher in all four English skills and 25 for CLB 4 or lower, so check this case with IRCC; no number is shown.',
+    incomplete: 'You reach NCLC 7 in all four French skills. Enter all four English levels to see whether the 25 or 50-point case applies.',
+    none: 'French additional points need NCLC 7 or higher in all four French skills.'
+  },
+  unknownTitle: 'Don’t know your CLB or NCLC level yet?',
+  unknownBody: 'Enter your IELTS, CELPIP, PTE Core, TEF Canada or TCF Canada scores in the converter. It uses IRCC’s own tables and shows the level for each skill.',
+  unknownButton: 'Convert my scores to CLB',
+  fine: 'Not affiliated with IRCC. Points checked against canada.ca on {date}. No guarantee about your CRS score or an invitation. Nothing you type leaves your device.',
+  secondTitle: 'Second official language points',
+  secondLead: 'IRCC gives up to 6 points per ability for the second official language, with a combined maximum of {withSpouse} points with a spouse or common-law partner and {without} without. Four skills at CLB 9 or more add up to 24, so with a partner the {withSpouse}-point cap applies.',
+  secondCaption: 'CRS points per ability for the second official language',
+  secondRegion: 'IRCC CRS second official language points table',
+  firstTitle: 'First official language points',
+  firstLead: 'For comparison, the first official language earns far more per ability: up to 32 with a spouse or partner and 34 without, for a maximum of {firstWith} or {firstWithout}. With the second language, official languages are worth up to {coreWith} or {coreWithout} core CRS points.',
+  firstCaption: 'CRS points per ability for the first official language',
+  firstRegion: 'IRCC CRS first official language points table',
+  levelPer: 'Level per ability',
+  withCol: 'With a spouse or partner',
+  withoutCol: 'Without a spouse or partner',
+  maximum: 'Maximum',
+  bonusTitle: 'French additional points',
+  bonusItems: [
+    { before: 'NCLC 7 or higher on all four French skills and CLB 4 or lower in English (or no English test): ', strong: '25 points', after: '.' },
+    { before: 'NCLC 7 or higher on all four French skills and CLB 5 or higher on all four English skills: ', strong: '50 points', after: '.' }
+  ],
+  bonusNote: 'These come from IRCC’s “Additional points” table and are added on top of the language points above.',
+  faqTitle: 'Questions people ask',
+  sourcesTitle: 'Sources',
+  sources: [
+    { urlKey: 'crs', label: 'IRCC: Comprehensive Ranking System (CRS) criteria (first and second official language points, additional points)' },
+    { urlKey: 'ee', label: 'IRCC: Express Entry language test results and CLB/NCLC tables' }
+  ],
+  checked: 'Checked on {date}. OpenExam Hub is independent and not affiliated with IRCC.',
+  relatedTitle: 'Related',
+  related: [
+    { href: '/tools/clb-converter', label: 'CLB / NCLC score converter: IELTS, CELPIP, PTE Core, TEF Canada, TCF Canada' },
+    { href: '/compare/tef-vs-tcf', label: 'TEF Canada vs TCF Canada: NCLC scores side by side' },
+    { href: '/compare/clb-equivalency-table', label: 'CLB equivalency table for all five IRCC tests' },
+    { href: '/compare', label: 'All comparisons' }
+  ]
+};

@@ -26,6 +26,11 @@ import {
 import { prerenderPages } from './prerender-pages.mjs';
 import { TAG_INDEX_MIN_POSTS } from './blog-data.mjs';
 import { organizationJsonLd, websiteJsonLd } from '../src/seo/site.js';
+import { localeHead, isPagePublished } from '../src/i18n/publish.js';
+import { ENABLED_LOCALES } from '../src/i18n/locales.js';
+import { registerCatalog } from '../src/i18n/runtime.js';
+import { loadCatalog } from './load-catalog.mjs';
+import { postsForLocale } from './blog-data.mjs';
 
 const VIRTUAL_ID = 'virtual:blog-posts';
 const RESOLVED_VIRTUAL_ID = '\0' + VIRTUAL_ID;
@@ -54,9 +59,9 @@ function jsonLdScript(data) {
   return `    <script type="application/ld+json">${json}</script>`;
 }
 
-export function applyHead(template, { title, description, canonical, type = 'website', jsonLd = [], lang = 'en', image = null, imageAlt = null, rss = true }) {
+export function applyHead(template, { title, description, canonical, type = 'website', jsonLd = [], lang = 'en', dir = 'ltr', image = null, imageAlt = null, rss = true, alternates = [], ogLocale = null, ogLocaleAlternates = [], fontHref = null }) {
   let html = template;
-  html = html.replace(/<html\s+lang="[^"]*"/, `<html lang="${escapeAttr(lang)}"`);
+  html = html.replace(/<html\b[^>]*>/, `<html lang="${escapeAttr(lang)}" dir="${escapeAttr(dir)}">`);
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeAttr(title)}</title>`);
   html = html.replace(
     /<meta name="description" content="[^"]*"\s*\/>/,
@@ -85,8 +90,15 @@ export function applyHead(template, { title, description, canonical, type = 'web
       html = html.replace(/<meta property="og:image:alt" content="[^"]*"\s*\/>/, `<meta property="og:image:alt" content="${escapeAttr(imageAlt)}" />`);
     }
   }
+  const alternateLinks = [
+    ...alternates.map((alt) => `    <link rel="alternate" hreflang="${escapeAttr(alt.hreflang)}" href="${escapeAttr(alt.href)}" />`),
+    ...(ogLocale ? [`    <meta property="og:locale" content="${escapeAttr(ogLocale)}" />`] : []),
+    ...ogLocaleAlternates.map((value) => `    <meta property="og:locale:alternate" content="${escapeAttr(value)}" />`),
+    ...(fontHref ? [`    <link rel="stylesheet" href="${escapeAttr(fontHref)}" />`] : [])
+  ];
   const extra = [
     ...(rss ? [`    <link rel="alternate" type="application/rss+xml" title="OpenExam Hub Blog" href="${SITE_ORIGIN}/blog/rss.xml" />`] : []),
+    ...alternateLinks,
     ...jsonLd.filter(Boolean).map(jsonLdScript)
   ].join('\n');
   html = html.replace('</head>', `${extra}\n  </head>`);
@@ -106,7 +118,8 @@ export function injectRoot(template, bodyHtml) {
 }
 
 export function writePage(distDir, urlPath, html) {
-  const rel = urlPath === '/blog' ? 'blog/index.html' : `${urlPath.replace(/^\//, '')}/index.html`;
+  const clean = String(urlPath || '/').replace(/\/+$/, '') || '/';
+  const rel = clean === '/' ? 'index.html' : `${clean.replace(/^\//, '')}/index.html`;
   const file = path.join(distDir, rel);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, html);
@@ -136,18 +149,26 @@ async function prerender(distDir) {
   const posts = loadBlogPosts({ includeDrafts: includeDrafts() });
 
   const ssrFile = await bundleSsr();
-  const { renderBlog } = await import(pathToFileURL(ssrFile).href);
+  const ssr = await import(pathToFileURL(ssrFile).href);
+  const { renderBlog } = ssr;
+  for (const code of ENABLED_LOCALES) {
+    const cat = loadCatalog(code);
+    if (!cat) continue;
+    registerCatalog(code, cat);
+    if (ssr.registerCatalog) ssr.registerCatalog(code, cat);
+  }
 
+  const blogHead = (locale, path, title, description) => localeHead(locale, path, title, description);
+  const indexHead = blogHead('en', '/blog', BLOG_INDEX_TITLE, BLOG_INDEX_DESCRIPTION);
   const indexHtml = stripModuleScripts(
     injectRoot(
       applyHead(template, {
-        title: BLOG_INDEX_TITLE,
-        description: BLOG_INDEX_DESCRIPTION,
-        canonical: `${SITE_ORIGIN}/blog`,
+        ...indexHead,
         type: 'website',
-        jsonLd: [blogIndexJsonLd(posts), blogBreadcrumbJsonLd()]
+        jsonLd: [blogIndexJsonLd(posts), blogBreadcrumbJsonLd()],
+        rss: true
       }),
-      renderBlog('/blog', posts)
+      renderBlog('/blog', posts, 'en')
     )
   );
   writePage(distDir, '/blog', indexHtml);
@@ -165,7 +186,7 @@ async function prerender(distDir) {
           type: 'website',
           jsonLd: [blogBreadcrumbJsonLd({ exam })]
         }),
-        renderBlog(`/blog/tag/${exam}`, posts)
+        renderBlog(`/blog/tag/${exam}`, posts, 'en')
       )
     );
     // Thin tag pages stay crawlable (follow) but out of the index until they list enough posts.
@@ -178,22 +199,49 @@ async function prerender(distDir) {
     const jsonLd = [articleJsonLd(post), blogBreadcrumbJsonLd({ post, exam: post.exams[0] || null })];
     const faq = faqJsonLd(post);
     if (faq) jsonLd.push(faq);
+    const postHead = blogHead('en', post.url, postHeadTitle(post), post.description);
     const html = stripModuleScripts(
       injectRoot(
         applyHead(template, {
-          title: postHeadTitle(post),
-          description: post.description,
-          canonical: post.canonical,
+          ...postHead,
           type: 'article',
           jsonLd,
-          lang: post.lang,
           image: post.cover?.imageUrl || `${SITE_ORIGIN}/og-image.jpg`,
-          imageAlt: post.cover?.alt || null
+          imageAlt: post.cover?.alt || null,
+          rss: true
         }),
-        renderBlog(post.url, posts)
+        renderBlog(post.url, posts, 'en')
       )
     );
     writePage(distDir, post.url, html);
+  }
+
+  for (const code of ENABLED_LOCALES) {
+    if (!isPagePublished(code, '/blog')) continue;
+    const localized = postsForLocale(posts, code);
+    if (!localized.length) continue;
+    const head = blogHead(code, '/blog', BLOG_INDEX_TITLE, BLOG_INDEX_DESCRIPTION);
+    writePage(distDir, `/${code}/blog`, stripModuleScripts(injectRoot(
+      applyHead(template, { ...head, type: 'website', jsonLd: [blogIndexJsonLd(localized, { url: head.canonical, name: head.title, description: head.description }), blogBreadcrumbJsonLd()], rss: false }),
+      renderBlog('/blog', localized, code)
+    )));
+    for (const post of localized) {
+      const jsonLd = [articleJsonLd(post), blogBreadcrumbJsonLd({ post, exam: post.exams[0] || null })];
+      const faq = faqJsonLd(post);
+      if (faq) jsonLd.push(faq);
+      const one = blogHead(code, `/blog/${post.slug}`, postHeadTitle(post), post.description);
+      writePage(distDir, post.url, stripModuleScripts(injectRoot(
+        applyHead(template, {
+          ...one,
+          type: 'article',
+          jsonLd,
+          image: post.cover?.imageUrl || `${SITE_ORIGIN}/og-image.jpg`,
+          imageAlt: post.cover?.alt || null,
+          rss: false
+        }),
+        renderBlog(`/blog/${post.slug}`, localized, code)
+      )));
+    }
   }
 
   const pages = await prerenderPages(distDir, template, { applyHead, injectRoot, stripModuleScripts, writePage, posts });

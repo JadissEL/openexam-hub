@@ -6,19 +6,24 @@ import { Breadcrumbs } from '../seo/ExamPages.jsx';
 import {
   TABLES,
   SKILLS,
-  SKILL_LABELS,
   EE_LANGUAGE_URL,
   EE_LANGUAGE_MODIFIED,
   COMPARE_LAST_VERIFIED,
-  TEST_FORMATS,
-  FORMAT_ROW_LABELS,
   clbRows
 } from './compareData.js';
-import { comparePageBySlug, compareBreadcrumbs } from './comparePages.js';
+import { compareBreadcrumbs } from './comparePages.js';
+import { useHref, useLocale, useT, useUnit } from '../i18n/LocaleContext.jsx';
+import { localeMeta } from '../i18n/locales.js';
 
-export function dateLabel(iso) {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const arrow = 'w-4 h-4 rtl:-scale-x-100';
+
+function fill(template, vars) {
+  return String(template ?? '').replace(/\{([a-zA-Z0-9]+)\}/g, (m, k) => (vars && vars[k] != null ? String(vars[k]) : m));
+}
+
+export function dateLabel(iso, locale = 'en') {
+  const [y, m, d] = String(iso).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(localeMeta(locale).dateLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 export const linkCls = 'text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]';
@@ -34,14 +39,17 @@ export function SectionTitle({ id, children }) {
 }
 
 export function SkillTable({ tests, skill, levelHeader = 'CLB' }) {
-  const label = SKILL_LABELS[skill].en;
+  const t = useT();
+  const shared = useUnit('compareData:shared');
+  const label = t(`skill.${skill}`);
   const names = tests.map((id) => TABLES[id].label);
+  const joined = names.join(shared.joinAnd);
   return (
     <div>
       <h3 className={`font-display ${ink} text-[20px] tracking-[-0.01em] font-medium`}>{label}</h3>
-      <div className={regionCls} tabIndex={0} role="region" aria-label={`${label}: IRCC ${levelHeader} table, ${names.join(' and ')}`}>
+      <div className={regionCls} tabIndex={0} role="region" aria-label={fill(shared.skillRegion, { label, level: levelHeader, names: joined })}>
         <table className="w-full text-left text-[15px] leading-snug">
-          <caption className="sr-only">{label}: score IRCC gives for each {levelHeader} level, {names.join(' and ')}</caption>
+          <caption className="sr-only">{fill(shared.skillCaption, { label, level: levelHeader, names: joined })}</caption>
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
             <tr>
               <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">{levelHeader}</th>
@@ -66,26 +74,29 @@ export function SkillTable({ tests, skill, levelHeader = 'CLB' }) {
   );
 }
 
-function FormatTable({ tests, rowLabels = FORMAT_ROW_LABELS }) {
-  const formats = tests.map((id) => TEST_FORMATS[id]);
+function FormatTable({ tests, rowLabels }) {
+  const shared = useUnit('compareData:shared');
+  const labels = rowLabels || shared.rowLabels;
+  const formats = tests.map((id) => shared.formats[id]).filter(Boolean);
+  const joined = formats.map((f) => f.name).join(shared.joinAnd);
   return (
-    <div className={regionCls} tabIndex={0} role="region" aria-label={`Test format: ${formats.map((f) => f.name).join(' and ')}`}>
+    <div className={regionCls} tabIndex={0} role="region" aria-label={fill(shared.formatRegion, { names: joined })}>
       <table className="w-full text-left text-[15px] leading-snug">
-        <caption className="sr-only">Test format, from the official test websites</caption>
+        <caption className="sr-only">{shared.formatCaption}</caption>
         <thead className="bg-[#F1EDE5] text-[#3B352F]">
           <tr>
-            <th scope="col" className="px-4 py-3 font-semibold"><span className="sr-only">Detail</span></th>
+            <th scope="col" className="px-4 py-3 font-semibold"><span className="sr-only">{shared.detail}</span></th>
             {formats.map((f) => (
               <th key={f.name} scope="col" className="px-4 py-3 font-semibold">{f.name}</th>
             ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-[#E7E1D7] align-top">
-          {rowLabels.map(([key, label]) => (
-            <tr key={key}>
-              <th scope="row" className={`px-4 py-3 font-semibold ${ink} whitespace-nowrap`}>{label}</th>
+          {labels.map((row) => (
+            <tr key={row.id}>
+              <th scope="row" className={`px-4 py-3 font-semibold ${ink} whitespace-nowrap`}>{row.label}</th>
               {formats.map((f) => (
-                <td key={f.name} className={`px-4 py-3 min-w-[14rem] ${muted}`}>{f.rows[key]}</td>
+                <td key={f.name} className={`px-4 py-3 min-w-[14rem] ${muted}`}>{f.rows[row.id]}</td>
               ))}
             </tr>
           ))}
@@ -96,15 +107,18 @@ function FormatTable({ tests, rowLabels = FORMAT_ROW_LABELS }) {
 }
 
 function CefrTable({ map }) {
+  const shared = useUnit('compareData:shared');
+  const heading = fill(shared.cefrHeading, { exam: map.exam });
+  const region = fill(shared.cefrRegion, { exam: map.exam });
   return (
     <div>
-      <h3 className={`font-display ${ink} text-[20px] tracking-[-0.01em] font-medium`}>{map.exam} and the CEFR</h3>
-      <div className={regionCls} tabIndex={0} role="region" aria-label={`${map.exam} to CEFR, as published by the test owner`}>
+      <h3 className={`font-display ${ink} text-[20px] tracking-[-0.01em] font-medium`}>{heading}</h3>
+      <div className={regionCls} tabIndex={0} role="region" aria-label={region}>
         <table className="w-full text-left text-[15px] leading-snug">
-          <caption className="sr-only">{map.exam} to CEFR, as published by the test owner</caption>
+          <caption className="sr-only">{region}</caption>
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">CEFR</th>
+              <th scope="col" className="px-4 py-3 font-semibold">{shared.cefrCol}</th>
               <th scope="col" className="px-4 py-3 font-semibold">{map.scoreLabel}</th>
             </tr>
           </thead>
@@ -119,7 +133,7 @@ function CefrTable({ map }) {
         </table>
       </div>
       <p className={`mt-3 text-[14px] leading-relaxed ${muted}`}>
-        {map.note} Source:{' '}
+        {map.note} {shared.sourceWord}{' '}
         {map.sources.map((s, i) => (
           <React.Fragment key={s.url}>
             {i > 0 ? '; ' : ''}
@@ -132,16 +146,26 @@ function CefrTable({ map }) {
   );
 }
 
+function rowLabelsFor(page, shared) {
+  if (page.slug === 'delf-vs-tcf') return shared.frenchRows;
+  if (page.slug === 'goethe-vs-telc') return shared.germanRows;
+  return shared.rowLabels;
+}
+
 export function ComparePage({ slug }) {
-  const page = comparePageBySlug(slug);
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
+  const page = useUnit(`compare:${slug}`);
+  const shared = useUnit('compareData:shared');
   if (!page) return null;
   const tests = page.tests || [];
   const formatIds = page.formats || tests;
-  const formats = formatIds.map((id) => TEST_FORMATS[id]);
+  const formats = formatIds.map((id) => shared.formats[id]).filter(Boolean);
   const cefr = page.cefr || [];
   const scheme = page.scheme || 'CLB';
   const sources = [
-    ...(tests.length ? [{ url: EE_LANGUAGE_URL, label: `IRCC: Express Entry, Language test results (${tests.map((id) => TABLES[id].label).join(' and ')} tables, accepted tests)` }] : []),
+    ...(tests.length ? [{ url: EE_LANGUAGE_URL, label: fill(shared.irccSource, { tests: tests.map((id) => TABLES[id].label).join(shared.joinAnd) }) }] : []),
     ...formats.flatMap((f) => [{ url: f.sourceUrl, label: f.sourceLabel }, ...(f.extraSources || [])]),
     ...cefr.flatMap((m) => m.sources),
     ...(page.extraSources || [])
@@ -152,23 +176,25 @@ export function ComparePage({ slug }) {
       <SiteHeader />
       <main id="main">
         <article className="mx-auto max-w-5xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
-          <Breadcrumbs items={compareBreadcrumbs(page)} />
+          <Breadcrumbs items={compareBreadcrumbs(page).map((item, i, all) => (
+            i === 0 ? { ...item, name: t('crumb.home') } : i === 1 && i < all.length - 1 ? { ...item, name: t('footer.compare') } : item
+          ))} />
           <header className="mt-6 max-w-3xl">
-            <p className={eyebrow}>{page.eyebrow || 'Side-by-side comparison · Official sources'}</p>
+            <p className={eyebrow}>{page.eyebrow || shared.eyebrow}</p>
             <h1 className={`mt-4 font-display ${ink} text-[36px] sm:text-5xl lg:text-[56px] tracking-[-0.03em] font-medium leading-[1.05]`}>{page.h1}</h1>
             {page.intro.map((p) => (
               <p key={p.slice(0, 32)} className={`mt-6 ${lead}`}>{p}</p>
             ))}
             <p className={`mt-4 text-[14px] ${muted}`}>
-              {page.checkedNote || 'Checked against canada.ca and the official test sites on'} <time dateTime={COMPARE_LAST_VERIFIED}>{dateLabel(COMPARE_LAST_VERIFIED)}</time>.
+              {page.checkedNote || shared.checked} <time dateTime={COMPARE_LAST_VERIFIED}>{dateLabel(COMPARE_LAST_VERIFIED, locale)}</time>.
             </p>
           </header>
 
           {tests.length ? (
           <section aria-labelledby="clb-title" className="mt-12">
-            <SectionTitle id="clb-title">{scheme} level by skill, side by side</SectionTitle>
+            <SectionTitle id="clb-title">{fill(shared.levelTitle, { scheme })}</SectionTitle>
             <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>
-              Each row is one {scheme} level. Each cell is the score IRCC gives for that level on that test, copied from IRCC’s Express Entry language page (last modified <time dateTime={EE_LANGUAGE_MODIFIED}>{dateLabel(EE_LANGUAGE_MODIFIED)}</time>). {page.tableNote || 'For IELTS and CELPIP, IRCC lists the score that earns each level; PTE Core rows are score ranges.'} {scheme} 10 is the top level on IRCC’s tables.
+              {fill(shared.rowBefore, { scheme })}<time dateTime={EE_LANGUAGE_MODIFIED}>{dateLabel(EE_LANGUAGE_MODIFIED, locale)}</time>{shared.rowAfter}{page.tableNote || shared.tableNote} {fill(shared.topLevel, { scheme })}
             </p>
             <div className="mt-6 grid gap-8 md:grid-cols-2">
               {SKILLS.map((s) => (
@@ -176,9 +202,9 @@ export function ComparePage({ slug }) {
               ))}
             </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              {page.tabs.map((t) => (
-                <a key={t.href} href={t.href} className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold">
-                  {t.label} <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              {page.tabs.map((tab) => (
+                <a key={tab.href} href={href(tab.href)} className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold">
+                  {tab.label} <ArrowRight className={arrow} aria-hidden="true" />
                 </a>
               ))}
             </div>
@@ -197,18 +223,18 @@ export function ComparePage({ slug }) {
           ) : null}
 
           <section aria-labelledby="format-title" className="mt-14">
-            <SectionTitle id="format-title">Test format</SectionTitle>
+            <SectionTitle id="format-title">{shared.testFormat}</SectionTitle>
             <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>
-              {page.formatNote || 'From each test owner’s official page, for the version IRCC accepts for Express Entry. The validity row is IRCC’s rule.'}
+              {page.formatNote || shared.formatNote}
             </p>
-            <FormatTable tests={formatIds} rowLabels={page.formatRows || FORMAT_ROW_LABELS} />
+            <FormatTable tests={formatIds} rowLabels={rowLabelsFor(page, shared)} />
           </section>
 
           {cefr.length ? (
           <section aria-labelledby="cefr-title" className="mt-14">
-            <SectionTitle id="cefr-title">CEFR, as each test owner publishes it</SectionTitle>
+            <SectionTitle id="cefr-title">{shared.cefrTitle}</SectionTitle>
             <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>
-              CEFR is a different scale from CLB, and IRCC uses CLB for Express Entry. These are the test owners’ own CEFR tables, shown separately. They are not used to line the two tests up.
+              {shared.cefrLead}
             </p>
             <div className="mt-6 grid gap-8 md:grid-cols-2">
               {cefr.map((m) => (
@@ -219,7 +245,7 @@ export function ComparePage({ slug }) {
           ) : null}
 
           <section aria-labelledby="exam-faq-title" className="mt-14">
-            <SectionTitle id="exam-faq-title">Questions people ask</SectionTitle>
+            <SectionTitle id="exam-faq-title">{shared.faq}</SectionTitle>
             <div className="mt-4 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7] max-w-3xl">
               {page.faq.map((item) => (
                 <details key={item.q} className="group py-5">
@@ -234,7 +260,7 @@ export function ComparePage({ slug }) {
           </section>
 
           <section aria-labelledby="sources-title" className="mt-14 pt-10 border-t border-[#E7E1D7] max-w-3xl">
-            <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Sources and disclaimer</h2>
+            <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>{shared.sources}</h2>
             <ol className="mt-4 space-y-2 text-[16px] leading-snug">
               {sources.map((s) => (
                 <li key={s.url}>
@@ -245,15 +271,15 @@ export function ComparePage({ slug }) {
               ))}
             </ol>
             <p className="mt-4 text-[14px] leading-relaxed text-[#6B635A]">
-              {page.disclaimer || 'OpenExam Hub is independent and not affiliated with IRCC or any test owner named on this page. This page is for information only and is not immigration advice, and it gives no score guarantees. IRCC and the test owners can change their tables, formats and rules at any time, so confirm on canada.ca and the official test site before you book or apply.'}
+              {page.disclaimer || shared.disclaimer}
             </p>
           </section>
 
           <section aria-labelledby="related-title" className="mt-14 max-w-3xl">
-            <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Related tools and guides</h2>
+            <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>{shared.related}</h2>
             <ul className="mt-4 space-y-3 text-[16px] leading-snug">
-              {[...page.tabs, ...page.otherCompare, ...page.guides, ...page.posts].map((l) => (
-                <li key={l.href}><a href={l.href} className={linkCls}>{l.label}</a></li>
+              {[...(page.tabs || []), ...(page.otherCompare || []), ...(page.guides || []), ...(page.posts || [])].map((l) => (
+                <li key={l.href}><a href={href(l.href)} className={linkCls}>{l.label}</a></li>
               ))}
             </ul>
           </section>

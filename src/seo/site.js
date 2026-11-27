@@ -228,7 +228,6 @@ export function websiteJsonLd() {
     '@id': WEBSITE_ID,
     name: SITE_NAME,
     url: `${SITE_ORIGIN}/`,
-    inLanguage: 'en',
     publisher: { '@id': ORG_ID }
   };
 }

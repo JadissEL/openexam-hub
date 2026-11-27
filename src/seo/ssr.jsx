@@ -18,28 +18,36 @@ import { clbCsv } from '../compare/compareData.js';
 import { COMPARE_PAGES, comparePath, compareBreadcrumbs, comparePageBySlug, CLB_TABLE_PAGE, COMPARE_HUB } from '../compare/comparePages.js';
 import { COMPARE_LAST_VERIFIED } from '../compare/compareData.js';
 import { TOOL_FAQ, TOOL_H1, TOOL_DESCRIPTION, TOOL_LAST_VERIFIED, TOOL_PATH } from '../tools/clbContent.js';
+import { LocaleProvider } from '../i18n/LocaleContext.jsx';
+import { splitLocale } from '../i18n/paths.js';
+
+function page(locale, path, node) {
+  return renderToString(<LocaleProvider locale={locale} path={path}>{node}</LocaleProvider>);
+}
 
 /** Build-time HTML for marketing and exam-guide routes (see scripts/prerender-pages.mjs). */
-export function renderPage(pathname, posts = []) {
-  const p = String(pathname).replace(/\/+$/, '') || '/';
-  if (p === '/') return renderToString(<Landing />);
-  if (p === '/about') return renderToString(<InfoPage kind="about" />);
-  if (p === '/faq') return renderToString(<InfoPage kind="faq" />);
-  if (p === '/funding') return renderToString(<InfoPage kind="funding" />);
-  if (p === '/privacy') return renderToString(<LegalPage kind="privacy" />);
-  if (p === '/terms') return renderToString(<LegalPage kind="terms" />);
-  if (p === '/tools/clb-converter') return renderToString(<ClbConverter />);
-  if (p === CRS_TOOL_PATH) return renderToString(<CrsLanguagePoints />);
-  if (p === CEFR_TOOL_PATH) return renderToString(<CefrConverter />);
-  if (p === COMPARE_HUB.path) return renderToString(<CompareHub />);
-  if (p === CLB_TABLE_PAGE.path) return renderToString(<ClbTablePage />);
+export function renderPage(pathname, posts = [], locale) {
+  const split = splitLocale(pathname);
+  const p = split.path;
+  const loc = locale || split.locale;
+  if (p === '/') return page(loc, p, <Landing />);
+  if (p === '/about') return page(loc, p, <InfoPage kind="about" />);
+  if (p === '/faq') return page(loc, p, <InfoPage kind="faq" />);
+  if (p === '/funding') return page(loc, p, <InfoPage kind="funding" />);
+  if (p === '/privacy') return page(loc, p, <LegalPage kind="privacy" />);
+  if (p === '/terms') return page(loc, p, <LegalPage kind="terms" />);
+  if (p === '/tools/clb-converter') return page(loc, p, <ClbConverter />);
+  if (p === CRS_TOOL_PATH) return page(loc, p, <CrsLanguagePoints />);
+  if (p === CEFR_TOOL_PATH) return page(loc, p, <CefrConverter />);
+  if (p === COMPARE_HUB.path) return page(loc, p, <CompareHub />);
+  if (p === CLB_TABLE_PAGE.path) return page(loc, p, <ClbTablePage />);
   const cm = p.match(/^\/compare\/([a-z0-9-]+)$/);
-  if (cm && comparePageBySlug(cm[1])) return renderToString(<ComparePage slug={cm[1]} />);
-  if (p === '/exams') return renderToString(<ExamsIndex posts={posts} />);
+  if (cm && comparePageBySlug(cm[1])) return page(loc, p, <ComparePage slug={cm[1]} />);
+  if (p === '/exams') return page(loc, p, <ExamsIndex posts={posts} />);
   const m = p.match(/^\/exams\/([a-z0-9-]+)$/);
-  if (m) return renderToString(<ExamPage slug={m[1]} posts={posts} />);
+  if (m) return page(loc, p, <ExamPage slug={m[1]} posts={posts} />);
   const pm = p.match(/^\/exams\/([a-z0-9-]+)\/([a-z0-9-]+)$/);
-  if (pm) return renderToString(<PlanPage guide={pm[1]} slug={pm[2]} posts={posts} />);
+  if (pm) return page(loc, p, <PlanPage guide={pm[1]} slug={pm[2]} posts={posts} />);
   return null;
 }
 
@@ -47,3 +55,5 @@ export { CEFR_TOOL_PATH, CEFR_TOOL_H1, CEFR_TOOL_DESCRIPTION, CEFR_TOOL_FAQ, CEF
 export { CRS_TOOL_PATH, CRS_TOOL_H1, CRS_TOOL_DESCRIPTION, CRS_TOOL_FAQ, CRS_LAST_VERIFIED };
 export { COMPARE_PAGES, comparePath, compareBreadcrumbs, COMPARE_LAST_VERIFIED, CLB_TABLE_PAGE, COMPARE_HUB, clbCsv };
 export { examContent, FAQ, PLAN_PAGES, planPath, TOOL_FAQ, TOOL_H1, TOOL_DESCRIPTION, TOOL_LAST_VERIFIED, TOOL_PATH };
+export { registerCatalog } from '../i18n/runtime.js';
+export { localizedUnit } from '../i18n/publish.js';

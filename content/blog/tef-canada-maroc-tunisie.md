@@ -1,7 +1,7 @@
 ---
-title: "TEF Canada au Maroc et en Tunisie : centres agréés, tarifs et préparation gratuite"
-seoTitle: "TEF Canada au Maroc et en Tunisie"
-description: "La liste officielle des centres agréés TEF Canada au Maroc et en Tunisie, les tarifs publiés par l’Institut français, et la préparation gratuite de la CCI Paris Île-de-France."
+title: "TEF Canada in Morocco and Tunisia: approved centres, fees and free preparation"
+seoTitle: "TEF Canada in Morocco and Tunisia"
+description: "The official list of approved TEF Canada centres in Morocco and Tunisia, the fees the Institut français publishes, and the free preparation from CCI Paris Île-de-France."
 date: "2026-11-27"
 updated: "2026-11-27"
 lastVerified: "2026-11-27"
@@ -10,24 +10,24 @@ exams:
 audience:
   - immigration
   - students
-lang: fr
+lang: en
 draft: false
 cover:
   src: "/blog/tef-canada-maroc-tunisie/cover.webp"
-  alt: "Schéma typographique titré TEF Canada au Maroc et en Tunisie, avec une carte pour le Maroc (9 centres agréés, tarif Institut français 2 900 Dhs) et une pour la Tunisie (8 centres agréés, tarif Institut français 720 DT)"
-  credit: "Schéma d’OpenExam Hub. D’après l’annuaire officiel du français des affaires et les pages de l’Institut français, vérifiés le 27 novembre 2026. Ce n’est pas un document officiel."
+  alt: "Typographic diagram titled TEF Canada in Morocco and Tunisia, with a map for Morocco (9 approved centres, Institut français fee 2,900 Dhs) and one for Tunisia (8 approved centres, Institut français fee 720 DT)"
+  credit: "OpenExam Hub diagram. Drawn from the official Le français des affaires directory and the Institut français pages, checked on 27 November 2026. This is not an official document."
 sources:
-  - title: "IRCC — Entrée express : résultats d’examen linguistique"
+  - title: "IRCC — Express Entry: language test results"
     url: "https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/documents/examen-linguistique.html"
-  - title: "Le français des affaires — Trouver un centre d’examen"
+  - title: "Le français des affaires — Find an approved centre"
     url: "https://www.lefrancaisdesaffaires.fr/candidat/trouver-un-centre-agree/"
-  - title: "CCI Paris Île-de-France — Annuaire des centres TEF (recherche candidat)"
+  - title: "CCI Paris Île-de-France — TEF centre directory (candidate search)"
     url: "https://francais.cci-paris-idf.fr/candidat"
-  - title: "Le français des affaires — TEF Canada : présentation des épreuves"
+  - title: "Le français des affaires — TEF Canada: what the tests cover"
     url: "https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/presentation/"
-  - title: "Le français des affaires — TEF Canada : s’inscrire"
+  - title: "Le français des affaires — TEF Canada: how to register"
     url: "https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/inscription/"
-  - title: "Le français des affaires — TEF Canada : se préparer"
+  - title: "Le français des affaires — TEF Canada: how to prepare"
     url: "https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/preparation/"
   - title: "Institut français du Maroc — TEF Canada"
     url: "https://if-maroc.org/certifications/tef-canada/"
@@ -45,163 +45,163 @@ sources:
     url: "https://if-maroc.org/eljadida/certifications/"
   - title: "Institut français de Tunisie — TEF-Canada"
     url: "https://www.institutfrancais-tunisie.com/examens/tef-canada/"
-  - title: "TV5MONDE — Apprendre le français"
+  - title: "TV5MONDE — Learn French"
     url: "https://apprendre.tv5monde.com/fr/"
 faq:
-  - q: "Le TEF Canada est-il accepté pour Entrée express ?"
-    a: "Oui. La page d’IRCC sur les examens linguistiques d’Entrée express n’accepte, pour le français, que le TEF Canada et le TCF Canada. Le DELF et le DALF ne figurent pas sur cette liste."
-  - q: "Quels scores TEF Canada correspondent au NCLC 7 ?"
-    a: "Selon le tableau IRCC (colonne « Équivalence ancien score ») : expression orale 310–348, compréhension de l’oral 249–279, compréhension de l’écrit 207–232, expression écrite 310–348. N’inscrivez pas la colonne « Score / 699 » dans votre profil."
-  - q: "Combien coûte le TEF Canada au Maroc ?"
-    a: "Les six antennes de l’Institut français du Maroc qui publient un tarif TEF Canada (Casablanca, Rabat, Agadir, Tanger, Tétouan et El Jadida) indiquaient 2 900 Dhs le 27 novembre 2026. Les autres centres agréés fixent leurs propres droits : nous n’avons pas trouvé de tarif officiel à citer pour eux."
-  - q: "Combien coûte le TEF Canada en Tunisie ?"
-    a: "L’Institut français de Tunisie indiquait 720 DT pour les quatre épreuves obligatoires le 27 novembre 2026 (atelier de préparation 270 DT, pack atelier + test 940 DT). Les autres centres agréés (Alliances françaises, École polytechnique de Sousse, ESPRIT Language Center) fixent leurs propres droits."
-  - q: "Combien de temps les résultats sont-ils valides ?"
-    a: "Pour Entrée express, IRCC exige des résultats de moins de deux ans au moment où vous remplissez votre profil et au moment où vous présentez votre demande de résidence permanente. Une demande déposée avec des résultats expirés est refusée. Le français des affaires indique que l’attestation est valide deux ans à compter de sa date d’émission."
-  - q: "Peut-on se préparer gratuitement ?"
-    a: "Oui, avec les ressources officielles du français des affaires : exemples d’épreuves (PDF et bandes-son), tutoriels d’entraînement et articles de préparation. TV5MONDE propose aussi des exercices de français gratuits, et un entraînement au TCF, pas au TEF."
-  - q: "Faut-il un compte OpenExam Hub pour voir un plan d’étude ?"
-    a: "Vous pouvez ouvrir un aperçu de plan sans compte. Pour générer et enregistrer un plan complet, un compte gratuit (e-mail ou Google) est nécessaire."
+  - q: "Does Express Entry accept TEF Canada?"
+    a: "Yes. IRCC’s Express Entry language-test page accepts only TEF Canada and TCF Canada for French. DELF and DALF are not on that list."
+  - q: "Which TEF Canada scores match NCLC 7?"
+    a: "On the IRCC table, in the “Équivalence ancien score” column: speaking 310–348, listening 249–279, reading 207–232, writing 310–348. Do not enter the “Score / 699” column in your profile."
+  - q: "How much does TEF Canada cost in Morocco?"
+    a: "The six Institut français du Maroc branches that publish a TEF Canada fee (Casablanca, Rabat, Agadir, Tanger, Tétouan and El Jadida) showed 2,900 Dhs on 27 November 2026. Other approved centres set their own fees. We did not find an official fee to quote for them."
+  - q: "How much does TEF Canada cost in Tunisia?"
+    a: "The Institut français de Tunisie showed 720 DT for the four mandatory tests on 27 November 2026 (preparation workshop 270 DT, workshop-plus-test pack 940 DT). Other approved centres (Alliances françaises, École polytechnique de Sousse, ESPRIT Language Center) set their own fees."
+  - q: "How long are the results valid?"
+    a: "For Express Entry, IRCC requires results less than two years old when you fill in your profile and when you apply for permanent residence. An application filed with expired results is refused. Le français des affaires says the attestation is valid for two years from the date it is issued."
+  - q: "Can I prepare for free?"
+    a: "Yes, with the official resources from Le français des affaires: sample tests (PDF and audio), practice tutorials and preparation articles. TV5MONDE also has free French exercises, and TCF practice, not TEF practice."
+  - q: "Do I need an OpenExam Hub account to see a study plan?"
+    a: "You can open a plan preview without an account. Generating and saving a full plan needs a free account (email or Google)."
 ---
 
-**À jour au 27 novembre 2026.** Cet article s’appuie uniquement sur des sources officielles vérifiées le même jour : IRCC, Le français des affaires / CCI Paris Île-de-France, les pages certifications de l’Institut français du Maroc et la page TEF-Canada de l’Institut français de Tunisie. Les listes de centres, les tarifs et les dates changent : confirmez-les sur les pages liées avant de vous inscrire.
+**Checked on 27 November 2026.** This article uses only official sources read that same day: IRCC, Le français des affaires / CCI Paris Île-de-France, the certification pages of the Institut français du Maroc, and the TEF-Canada page of the Institut français de Tunisie. Centre lists, fees and dates change. Confirm them on the linked pages before you register.
 
-## L’essentiel
+## The short version
 
-Le [TEF Canada](https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/presentation/) (Test d’évaluation de français) est l’un des deux seuls tests de français acceptés par IRCC pour [Entrée express](https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/documents/examen-linguistique.html). L’autre est le TCF Canada. Au Maroc et en Tunisie, on le passe dans un [centre agréé](https://francais.cci-paris-idf.fr/candidat) du français des affaires.
+[TEF Canada](https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/presentation/) (Test d’évaluation de français) is one of only two French tests IRCC accepts for [Express Entry](https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/documents/examen-linguistique.html). The other is TCF Canada. In Morocco and Tunisia you sit it at an [approved centre](https://francais.cci-paris-idf.fr/candidat) of Le français des affaires.
 
-Le 27 novembre 2026, l’annuaire officiel recensait **9 centres au Maroc** et **8 en Tunisie**. L’Institut français du Maroc affichait **2 900 Dhs** sur les six antennes qui publient un tarif TEF Canada. L’Institut français de Tunisie affichait **720 DT** pour les quatre épreuves obligatoires. Les autres centres fixent leurs propres droits : nous ne les avons pas inventés.
+On 27 November 2026 the official directory listed **9 centres in Morocco** and **8 in Tunisia**. The Institut français du Maroc showed **2,900 Dhs** at the six branches that publish a TEF Canada fee. The Institut français de Tunisie showed **720 DT** for the four mandatory tests. Other centres set their own fees. We did not invent those fees.
 
-Pour vous préparer sans payer un cours, commencez par la [page officielle de préparation](https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/preparation/) : exemples d’épreuves, tutoriels et articles du français des affaires.
+To prepare without paying for a course, start with the [official preparation page](https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/preparation/): sample tests, tutorials and articles from Le français des affaires.
 
-Si vous hésitez entre les deux tests acceptés, voyez [TEF Canada vs TCF Canada](/blog/tef-canada-vs-tcf-canada). Pour lire votre attestation, voyez [les scores TEF Canada vers le NCLC](/blog/tef-canada-clb-nclc-express-entry). Un [DELF ou un DALF](/blog/delf-dalf-express-entry) ne remplace pas ce test pour Entrée express.
+If you are choosing between the two accepted tests, see [TEF Canada vs TCF Canada](/blog/tef-canada-vs-tcf-canada). To read your attestation, see [TEF Canada scores to NCLC](/blog/tef-canada-clb-nclc-express-entry). A [DELF or DALF](/blog/delf-dalf-express-entry) does not replace this test for Express Entry.
 
-## Pourquoi le TEF Canada compte pour le Canada
+## Why TEF Canada matters for Canada
 
-Sur la [page IRCC des examens linguistiques](https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/documents/examen-linguistique.html), les tests de français acceptés pour Entrée express sont uniquement le **TEF Canada** et le **TCF Canada**. IRCC mesure le français avec les **Niveaux de compétence linguistique canadien (NCLC)**.
+On [IRCC’s language-test page](https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/documents/examen-linguistique.html), the French tests accepted for Express Entry are only **TEF Canada** and **TCF Canada**. IRCC measures French with the **Niveaux de compétence linguistique canadiens (NCLC)**.
 
-Les minimums dépendent du programme, pas du nom du test. Pour le programme des travailleurs qualifiés (fédéral), le minimum en première langue officielle est le **NCLC 7** dans les quatre compétences. Pour la catégorie de l’expérience canadienne, c’est le NCLC 7 pour les emplois FEER 0 ou 1, et le NCLC 5 pour les emplois FEER 2 ou 3. Pour le programme des travailleurs de métiers spécialisés, les minimums en français sont le NCLC 5 à l’oral (expression et compréhension) et le NCLC 4 à l’écrit (compréhension et expression).
+The minimum depends on the program, not on the name of the test. For Federal Skilled Worker, the minimum in the first official language is **NCLC 7** in all four abilities. For Canadian Experience Class it is NCLC 7 for TEER 0 or 1 jobs, and NCLC 5 for TEER 2 or 3 jobs. For Federal Skilled Trades, the French minimums are NCLC 5 for speaking and listening and NCLC 4 for reading and writing.
 
-Les scores NCLC 7 au TEF Canada, d’après le tableau IRCC fondé sur la colonne **« Équivalence ancien score »** :
+TEF Canada scores for NCLC 7, from the IRCC table based on the **“Équivalence ancien score”** column:
 
-| Compétence | Score NCLC 7 |
+| Ability | NCLC 7 score |
 |---|---|
-| Expression orale | 310–348 |
-| Compréhension de l’oral | 249–279 |
-| Compréhension de l’écrit | 207–232 |
-| Expression écrite | 310–348 |
+| Speaking | 310–348 |
+| Listening | 249–279 |
+| Reading | 207–232 |
+| Writing | 310–348 |
 
-N’inscrivez dans votre profil d’Entrée express **que** les scores de cette colonne. L’attestation comporte aussi une colonne « Score / 699 » : IRCC écrit clairement de ne pas l’utiliser, car elle n’est pas compatible avec son système pour le moment. Un mauvais report peut faire refuser la demande. Le détail des autres niveaux et la note sur les tests passés entre le 11 décembre 2023 et le 6 mai 2024 sont dans le [guide de conversion TEF Canada](/blog/tef-canada-clb-nclc-express-entry). Vous pouvez aussi vérifier vos quatre scores dans le [convertisseur CLB / NCLC](/tools/clb-converter) (onglet TEF Canada) : l’outil applique les tableaux publiés par IRCC, mais ce n’est pas un outil officiel.
+Enter **only** the scores from that column in your Express Entry profile. The attestation also has a “Score / 699” column. IRCC says not to use it, because it is not compatible with its system for now. Reporting the wrong column can get the application refused. Other levels, and the note about tests taken between 11 December 2023 and 6 May 2024, are in the [TEF Canada conversion guide](/blog/tef-canada-clb-nclc-express-entry). You can also check your four scores in the [CLB / NCLC converter](/tools/clb-converter) (TEF Canada tab). The tool applies the tables IRCC publishes. It is not an official IRCC tool.
 
-**Validité.** Pour Entrée express, les résultats ne doivent pas remonter à plus de **deux ans** lorsque vous remplissez votre profil **et** lorsque vous présentez votre demande de résidence permanente. Si vous déposez une demande avec des résultats expirés, IRCC la refuse. Le français des affaires indique de son côté que l’attestation est valide **deux ans à compter de sa date d’émission**. Pour un dossier d’Entrée express, suivez la règle IRCC.
+**Validity.** For Express Entry, results must be less than **two years** old when you fill in your profile **and** when you apply for permanent residence. If you file with expired results, IRCC refuses the application. Le français des affaires, for its part, says the attestation is valid for **two years from the date it is issued**. For an Express Entry file, follow the IRCC rule.
 
-Le format officiel du test, pour une demande d’immigration, comprend **quatre épreuves obligatoires, à passer le même jour** : compréhension écrite (40 questions, 1 heure), compréhension orale (40 questions, 40 minutes), expression écrite (2 sections, 1 heure) et expression orale (2 sections, 15 minutes). Pour la citoyenneté canadienne, le français des affaires ne prévoit que la compréhension orale et l’expression orale ; les règles précises sont celles d’IRCC. Le guide [TEF Canada](/exams/tef-canada) résume ce format.
+The official test format, for an immigration application, is **four mandatory tests, taken on the same day**: reading (40 questions, 1 hour), listening (40 questions, 40 minutes), writing (2 sections, 1 hour) and speaking (2 sections, 15 minutes). For Canadian citizenship, Le français des affaires lists only listening and speaking. The precise rules are IRCC’s. The [TEF Canada guide](/exams/tef-canada) summarises the format.
 
-## Centres agréés au Maroc
+## Approved centres in Morocco
 
-La liste ci-dessous vient de l’[annuaire officiel des centres](https://francais.cci-paris-idf.fr/candidat) du français des affaires, consulté le 27 novembre 2026 pour le produit **TEF Canada** au Maroc. Chaque centre organise ses propres sessions. Recheckez l’annuaire avant de vous déplacer : un agrément ou un calendrier peut changer.
+The list below comes from the [official centre directory](https://francais.cci-paris-idf.fr/candidat) of Le français des affaires, read on 27 November 2026 for the product **TEF Canada** in Morocco. Each centre runs its own sessions. Check the directory again before you travel: an approval or a calendar can change.
 
-**Institut français du Maroc** (six sites dans l’annuaire ce jour-là) :
+**Institut français du Maroc** (six sites in the directory that day):
 
-- **Casablanca** — 121, boulevard Zerktouni, 20000 Casablanca. [Page certifications](https://if-maroc.org/casablanca/certifications/).
-- **Rabat** — 1, rue Abou Inane, 10000 Rabat. [Page certifications](https://if-maroc.org/rabat/certifications/).
-- **Agadir** — Rue de l’entraide, Talborjt, 80001 Agadir. [Page certifications](https://if-maroc.org/agadir/certifications/).
-- **Tanger** — 41, rue Hassan Ibn Ouazzane, 90000 Tanger. [Page certifications](https://if-maroc.org/tanger/certifications/).
-- **Tétouan** — 13, rue Chakib Arsalane, 93000 Tétouan. [Page certifications](https://if-maroc.org/tetouan/certifications/).
-- **El Jadida** — 3, rue du Caire, 24000 El Jadida. [Page certifications](https://if-maroc.org/eljadida/certifications/).
+- **Casablanca** — 121, boulevard Zerktouni, 20000 Casablanca. [Certifications page](https://if-maroc.org/casablanca/certifications/).
+- **Rabat** — 1, rue Abou Inane, 10000 Rabat. [Certifications page](https://if-maroc.org/rabat/certifications/).
+- **Agadir** — Rue de l’entraide, Talborjt, 80001 Agadir. [Certifications page](https://if-maroc.org/agadir/certifications/).
+- **Tanger** — 41, rue Hassan Ibn Ouazzane, 90000 Tanger. [Certifications page](https://if-maroc.org/tanger/certifications/).
+- **Tétouan** — 13, rue Chakib Arsalane, 93000 Tétouan. [Certifications page](https://if-maroc.org/tetouan/certifications/).
+- **El Jadida** — 3, rue du Caire, 24000 El Jadida. [Certifications page](https://if-maroc.org/eljadida/certifications/).
 
-Pour ces six sites, l’annuaire indiquait de **contacter le centre** pour connaître les prochaines dates. Les pages certifications ne publient pas de calendrier de sessions : l’inscription au TCF et au TEF se fait **exclusivement en ligne** sur le site de l’antenne où vous voulez passer l’examen.
+For these six sites, the directory said to **contact the centre** for the next dates. The certification pages do not publish a session calendar: registration for TCF and TEF is **online only**, on the site of the branch where you want to sit the exam.
 
-**Autres centres agréés** recensés le même jour :
+**Other approved centres** listed the same day:
 
-- **Centre de langues La Résidence**, 89, avenue du 2 mars, 20490 Casablanca — 1 session indiquée comme disponible.
-- **Universal Sup**, 210, boulevard Ibn Khaldoune, 23000 Béni Mellal — 1 session indiquée comme disponible.
-- **Universal Sup** (en partenariat avec Artifive), 520, lotissement Charaf, 1er étage, n° 02, Marrakech — 1 session indiquée comme disponible.
+- **Centre de langues La Résidence**, 89, avenue du 2 mars, 20490 Casablanca — 1 session shown as available.
+- **Universal Sup**, 210, boulevard Ibn Khaldoune, 23000 Béni Mellal — 1 session shown as available.
+- **Universal Sup** (in partnership with Artifive), 520, lotissement Charaf, 1st floor, no. 02, Marrakech — 1 session shown as available.
 
-Nous n’avons pas repris les dates exactes de ces trois sessions : elles s’affichent dans le parcours d’inscription de l’annuaire, pas sur une page publique autonome. Passez par l’[annuaire officiel](https://francais.cci-paris-idf.fr/candidat) pour voir le créneau et vous pré-inscrire.
+We did not copy the exact dates of those three sessions. They appear inside the directory’s registration flow, not on a standalone public page. Use the [official directory](https://francais.cci-paris-idf.fr/candidat) to see the slot and pre-register.
 
-D’autres antennes de l’Institut français du Maroc (Marrakech, Fès, Kénitra, Meknès, Oujda, Essaouira) publient bien un tarif **TCF Canada**, mais **pas de rubrique TEF Canada** sur leur page certifications, et elles n’apparaissaient pas dans la recherche officielle TEF Canada du 27 novembre 2026. Ne les considérez pas comme des centres TEF Canada tant que l’annuaire ou la page de l’antenne ne le confirment pas.
+Other Institut français du Maroc branches (Marrakech, Fès, Kénitra, Meknès, Oujda, Essaouira) do publish a **TCF Canada** fee, but **no TEF Canada section** on their certification page, and they did not appear in the official TEF Canada search on 27 November 2026. Do not treat them as TEF Canada centres until the directory or the branch page says so.
 
-## Centres agréés en Tunisie
+## Approved centres in Tunisia
 
-Même source, même jour : 8 résultats pour le **TEF Canada** en Tunisie. Tous ces centres affichaient « contacter le centre pour connaître les prochaines dates ».
+Same source, same day: 8 results for **TEF Canada** in Tunisia. Every one of those centres showed “contact the centre for the next dates”.
 
-**Institut français de Tunisie** dans l’annuaire :
+**Institut français de Tunisie** in the directory:
 
-- **Tunis** — 20-22, avenue de Paris, BP 180, 1080 Tunis. [Page TEF-Canada de l’IFT](https://www.institutfrancais-tunisie.com/examens/tef-canada/).
+- **Tunis** — 20-22, avenue de Paris, BP 180, 1080 Tunis. [IFT TEF-Canada page](https://www.institutfrancais-tunisie.com/examens/tef-canada/).
 - **Sousse** — 15, rue Abou Hamad El Ghazali, Bouhsina, 4000 Sousse.
 
-**Autres centres agréés** recensés le même jour :
+**Other approved centres** listed the same day:
 
 - **Alliance française de Tunis** — 29, rue Ali Ibn Abi Taleb, Menzah 6, 2091 Ariana.
 - **Alliance française de Bizerte** — 26, rue Ali Khamessi, 7000 Bizerte.
 - **Alliance française de Djerba** — 7, rue Ettaamir, 4180 Djerba.
 - **Alliance française de Gafsa** — Cité Echérif, rue Platon, 2100 Gafsa.
-- **École polytechnique de Sousse** — campus universitaire, route de ceinture, entrée Kalâa Sghira, 4021 Sousse.
+- **École polytechnique de Sousse** — university campus, ring road, Kalâa Sghira entrance, 4021 Sousse.
 - **ESPRIT Language Center (ELC)** — 18, rue de l’Usine, Charguia, 2035 Ariana.
 
-**À propos de Sfax.** La page TEF-Canada de l’Institut français de Tunisie publie aussi un calendrier pour le pôle de Sfax (adresse indiquée sur la même page : 9, avenue Habib Bourguiba). Ce pôle **n’apparaissait pas** dans l’annuaire officiel des centres agréés le 27 novembre 2026, même en cherchant « Sfax ». Avant de vous y inscrire, vérifiez l’annuaire et confirmez auprès de l’institut.
+**About Sfax.** The Institut français de Tunisie TEF-Canada page also publishes a calendar for the Sfax site (the address on that same page: 9, avenue Habib Bourguiba). That site **did not appear** in the official directory of approved centres on 27 November 2026, including a search for “Sfax”. Before you register there, check the directory and confirm with the institute.
 
-À l’IFT, l’inscription se fait en deux temps : [prenez rendez-vous en ligne](https://www.institutfrancais-tunisie.com/prise-de-rendez-vous-en-ligne), puis finalisez l’inscription sur place. La présence du candidat le jour de l’inscription n’est pas obligatoire : une autre personne peut le représenter avec une photocopie de sa pièce d’identité. Les places sont limitées.
+At the IFT, registration is two steps: [book an appointment online](https://www.institutfrancais-tunisie.com/prise-de-rendez-vous-en-ligne), then finish registration on site. The candidate does not have to be there on registration day. Someone else can represent them with a photocopy of their identity document. Places are limited.
 
-## Tarifs publiés par l’Institut français
+## Fees the Institut français publishes
 
-Le français des affaires le rappelle : **les droits d’inscription sont fixés par chaque centre** et peuvent varier. Voici uniquement les montants que les Instituts français publient eux-mêmes, relevés le 27 novembre 2026.
+Le français des affaires says it plainly: **each centre sets its own registration fees**, and they can differ. Below are only the amounts the Instituts français publish themselves, read on 27 November 2026.
 
-**Maroc — 2 900 Dhs** pour le TEF Canada, sur les pages certifications de Casablanca, Rabat, Agadir, Tanger, Tétouan et El Jadida. C’est le même montant que le TCF Canada sur ces pages. Nous n’avons pas trouvé de tarif officiel à citer pour le Centre de langues La Résidence ni pour Universal Sup : demandez-le au centre.
+**Morocco — 2,900 Dhs** for TEF Canada, on the certification pages of Casablanca, Rabat, Agadir, Tanger, Tétouan and El Jadida. That is the same amount as TCF Canada on those pages. We did not find an official fee to quote for Centre de langues La Résidence or for Universal Sup. Ask the centre.
 
-**Tunisie — Institut français de Tunisie**, d’après sa [page TEF-Canada](https://www.institutfrancais-tunisie.com/examens/tef-canada/) :
+**Tunisia — Institut français de Tunisie**, from its [TEF-Canada page](https://www.institutfrancais-tunisie.com/examens/tef-canada/):
 
-- TEF-Canada, 4 épreuves obligatoires : **720 DT**
-- atelier de préparation (payant, ce n’est pas une ressource gratuite) : **270 DT**
-- pack atelier + TEF-Canada : **940 DT** (au lieu de 990 DT)
+- TEF-Canada, 4 mandatory tests: **720 DT**
+- preparation workshop (paid; it is not a free resource): **270 DT**
+- workshop plus TEF-Canada pack: **940 DT** (instead of 990 DT)
 
-Paiement : le paiement par chèque était temporairement suspendu. Espèces ou carte bancaire à Tunis ; espèces seulement à Sousse et à Sfax. Les frais ne sont pas remboursables. En cas de force majeure (maladie, décès d’un proche, grève…), un report est possible si un justificatif est adressé au centre de langue dans les **48 heures**. L’IFT indique aussi un délai de **30 jours** entre deux sessions de TCF ou de TEF, et des résultats disponibles **5 semaines** après l’épreuve.
+Payment: payment by cheque was temporarily suspended. Cash or bank card in Tunis; cash only in Sousse and Sfax. Fees are not refundable. In a case of force majeure (illness, death of a relative, a strike), a postponement is possible if you send proof to the language centre within **48 hours**. The IFT also states a **30-day** gap between two TCF or TEF sessions, and results available **5 weeks** after the test.
 
-Le français des affaires, de son côté, indique que les résultats sont transmis dans un délai d’**environ deux semaines**. Les deux délais peuvent donc différer selon le centre : demandez le calendrier de correction à celui où vous vous inscrivez. Une inscription, selon les conditions générales du français des affaires, est ferme et définitive ; les droits restent acquis, sauf étude d’un justificatif pour motif majeur.
+Le français des affaires, separately, says results are sent in about **two weeks**. The two timelines can differ by centre. Ask the centre where you register for its marking calendar. Under the general conditions of Le français des affaires, a registration is firm and final. The fees stay with the centre, except when they review proof of a major reason.
 
-Nous n’avons pas trouvé de tarif officiel à citer pour les Alliances françaises de Tunisie, l’École polytechnique de Sousse ou ESPRIT Language Center.
+We did not find an official fee to quote for the Alliances françaises in Tunisia, the École polytechnique de Sousse, or ESPRIT Language Center.
 
-## Dates de session
+## Session dates
 
-**Au Maroc**, les pages certifications de l’Institut français ne publient pas de calendrier : il faut passer par l’inscription en ligne de l’antenne, ou par l’annuaire officiel. Le 27 novembre 2026, les six sites IF de l’annuaire n’affichaient pas de session ouverte ; trois autres centres agréés affichaient chacun une session disponible, sans date lisible hors du parcours d’inscription.
+**In Morocco**, the Institut français certification pages do not publish a calendar. You go through the branch’s online registration, or the official directory. On 27 November 2026, the six IF sites in the directory did not show an open session. Three other approved centres each showed one available session, with no date readable outside the registration flow.
 
-**En Tunisie**, l’IFT publie un calendrier 2026 sur sa page TEF-Canada. Au 27 novembre 2026 :
+**In Tunisia**, the IFT publishes a 2026 calendar on its TEF-Canada page. As of 27 November 2026:
 
-- à **Tunis**, une session restait indiquée le **22 décembre 2026**, avec une prise de rendez-vous du 9 au 15 novembre et des inscriptions le 16 novembre. Cette fenêtre est déjà passée : vérifiez sur la page s’il reste des places, ou quand s’ouvrira la suivante. Aucun calendrier 2027 n’était publié.
-- à **Sousse**, la session du 27 novembre 2026 tombait le jour même de notre vérification ; **aucune session de décembre 2026** n’était listée.
-- un calendrier **Sfax** était aussi publié (date indiquée : 30 novembre 2026), sous la réserve déjà indiquée sur l’annuaire officiel.
+- in **Tunis**, one session was still listed for **22 December 2026**, with appointments from 9 to 15 November and registration on 16 November. That window has already passed. Check the page for remaining places, or for when the next window opens. No 2027 calendar was published.
+- in **Sousse**, the session of 27 November 2026 fell on the day we checked. **No December 2026 session** was listed.
+- a **Sfax** calendar was also published (date shown: 30 November 2026), with the directory caveat already noted above.
 
-Les Alliances françaises et les autres centres tunisiens de l’annuaire n’avaient pas de dates affichées dans la recherche : contactez-les, ou repassez par l’annuaire.
+The Alliances françaises and the other Tunisian centres in the directory had no dates in the search. Contact them, or go back through the directory.
 
-## Préparation gratuite (sources officielles uniquement)
+## Free preparation (official sources only)
 
-Vous pouvez vous préparer chez vous avec les outils mis en ligne par Le français des affaires, l’organisme qui conçoit le TEF :
+You can prepare at home with the tools published by Le français des affaires, the organisation that designs the TEF:
 
-- la [page « Se préparer » du TEF Canada](https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/preparation/)
-- les exemples d’épreuves : [compréhension écrite](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuves-ce.pdf), [compréhension orale](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuves-co.pdf) (avec les [bandes-son](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-bandes-sons-co.zip)), [expression écrite](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuve-ee.pdf) et [expression orale](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuve-eo.pdf)
-- les tutoriels d’entraînement : [compréhension écrite](https://www.lefrancaisdesaffaires.fr/documents/Tutoriel_TEF_CE/story.html), [compréhension orale](https://www.lefrancaisdesaffaires.fr/documents/Tutoriel-TEF-CO/story.html), [expression écrite](https://www.lefrancaisdesaffaires.fr/documents/Tutoriel_TEF_EE/story.html) et [expression orale](https://www.lefrancaisdesaffaires.fr/documents/Tutoriel_TEF_EO/story.html)
-- les articles officiels de préparation : [compréhension écrite](https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-de-comprehension-ecrite-du-tef/), [compréhension orale](https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-de-comprehension-orale-du-tef/), [fait divers (expression écrite, section A)](https://www.lefrancaisdesaffaires.fr/le-fait-divers-preparer-la-section-a-de-lexpression-ecrite-du-tef/), [argumentation (section B)](https://www.lefrancaisdesaffaires.fr/largumentation-preparer-la-section-b-de-lexpression-ecrite-du-tef/) et [expression orale](https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-dexpression-orale-du-tef/)
+- the [TEF Canada “Se préparer” page](https://www.lefrancaisdesaffaires.fr/candidat/test-evaluation-francais/tef-canada/preparation/)
+- sample tests: [reading](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuves-ce.pdf), [listening](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuves-co.pdf) (with the [audio](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-bandes-sons-co.zip)), [writing](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuve-ee.pdf) and [speaking](https://www.lefrancaisdesaffaires.fr/wp-content/uploads/2024/10/tef-exemples-epreuve-eo.pdf)
+- practice tutorials: [reading](https://www.lefrancaisdesaffaires.fr/documents/Tutoriel_TEF_CE/story.html), [listening](https://www.lefrancaisdesaffaires.fr/documents/Tutoriel-TEF-CO/story.html), [writing](https://www.lefrancaisdesaffaires.fr/documents/Tutoriel_TEF_EE/story.html) and [speaking](https://www.lefrancaisdesaffaires.fr/documents/Tutoriel_TEF_EO/story.html)
+- official preparation articles: [reading](https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-de-comprehension-ecrite-du-tef/), [listening](https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-de-comprehension-orale-du-tef/), [fait divers (writing, section A)](https://www.lefrancaisdesaffaires.fr/le-fait-divers-preparer-la-section-a-de-lexpression-ecrite-du-tef/), [argumentation (section B)](https://www.lefrancaisdesaffaires.fr/largumentation-preparer-la-section-b-de-lexpression-ecrite-du-tef/) and [speaking](https://www.lefrancaisdesaffaires.fr/se-preparer-a-lepreuve-dexpression-orale-du-tef/)
 
-[TV5MONDE Apprendre le français](https://apprendre.tv5monde.com/fr/) propose des milliers d’exercices gratuits pour travailler la langue. Son [entraînement TCF](https://apprendre.tv5monde.com/fr/tcf) concerne le TCF, pas le TEF : utile pour le français général, ce n’est pas un test blanc officiel du TEF Canada.
+[TV5MONDE Apprendre le français](https://apprendre.tv5monde.com/fr/) has thousands of free exercises for the language. Its [TCF practice](https://apprendre.tv5monde.com/fr/tcf) is for the TCF, not the TEF. It is useful for general French. It is not an official TEF Canada mock test.
 
-L’atelier de préparation de l’Institut français de Tunisie (270 DT) et les cours des Instituts français sont des offres payantes des centres. Ils ne font pas partie de la préparation gratuite ci-dessus.
+The Institut français de Tunisie preparation workshop (270 DT) and courses at the Instituts français are paid offers from the centres. They are not part of the free preparation above.
 
-Un parcours de 30 jours fondé sur le matériel officiel est aussi décrit dans le [plan d’étude TEF Canada](/exams/tef-canada/30-day-study-plan).
+A 30-day path built from official material is also described in the [TEF Canada study plan](/exams/tef-canada/30-day-study-plan).
 
-## Ce que nous n’avons pas pu vérifier
+## What we could not verify
 
-- Les **dates exactes** des sessions « disponibles » au Centre de langues La Résidence et chez Universal Sup : elles sont dans le parcours d’inscription de l’annuaire, que nous n’avons pas poursuivi.
-- Les **tarifs** des centres agréés autres que l’Institut français du Maroc et l’Institut français de Tunisie : aucune page officielle de ces centres, avec un montant, n’a été trouvée et citée ici.
-- Un **calendrier 2027** à l’Institut français de Tunisie : seule l’année 2026 était publiée.
-- L’agrément actuel du **pôle IFT de Sfax** pour le TEF Canada, malgré le calendrier publié sur la page de l’institut.
+- The **exact dates** of the “available” sessions at Centre de langues La Résidence and Universal Sup. They sit inside the directory’s registration flow, which we did not continue.
+- The **fees** of approved centres other than the Institut français du Maroc and the Institut français de Tunisie. No official page of those centres, with an amount, was found and cited here.
+- A **2027 calendar** at the Institut français de Tunisie. Only 2026 was published.
+- The current approval of the **IFT Sfax site** for TEF Canada, despite the calendar published on the institute’s page.
 
-Les conditions d’inscription générales : avoir **plus de 16 ans**, aucun diplôme n’est exigé pour se présenter. Inscrivez-vous assez tôt pour que vos résultats soient encore valides le jour de la demande de résidence permanente, pas seulement à l’ouverture du profil.
+General registration conditions: you must be **over 16**. No diploma is required to sit the test. Register early enough that your results are still valid on the day you apply for permanent residence, not only when you open the profile.
 
-Si vous candidatez aussi pour la rentrée de septembre 2027 en France, les tests demandés par Campus France au Maroc, en Tunisie et en Égypte, et les dates limites de chaque Espace, sont expliqués dans [Campus France 2027: which French test you need in Morocco, Tunisia and Egypt](/blog/campus-france-2027-french-test-maroc-tunisie-egypte) (en anglais, avec un résumé en français). Ce n’est pas le même test que le TEF Canada pour Entrée express.
+If you are also applying for the September 2027 intake in France, the tests Campus France asks for in Morocco, Tunisia and Egypt, and each Espace’s deadlines, are explained in [Campus France 2027: which French test you need in Morocco, Tunisia and Egypt](/blog/campus-france-2027-french-test-maroc-tunisie-egypte). That is not the same test as TEF Canada for Express Entry.
 
-## Préparer un plan d’étude
+## Build a study plan
 
-Vous pouvez [apercevoir un plan TEF Canada](https://openexamhub.org/app?exam=TEF_CANADA&level=B2&days=60) sur OpenExam Hub (niveau B2, 60 jours). Le lien ouvre un aperçu lorsqu’un plan en cache existe. **Pour générer et enregistrer un plan, un compte gratuit est nécessaire** (e-mail ou Google).
+You can [preview a TEF Canada plan](https://openexamhub.org/app?exam=TEF_CANADA&level=B2&days=60) on OpenExam Hub (level B2, 60 days). The link opens a preview when a cached plan exists. **Generating and saving a plan needs a free account** (email or Google).
 
-Pour comparer avec le TCF Canada, qui est l’autre test de français accepté par IRCC, voir [TEF Canada vs TCF Canada](/blog/tef-canada-vs-tcf-canada) et [les scores TCF Canada vers le NCLC](/blog/tcf-canada-clb-nclc-express-entry).
+To compare with TCF Canada, the other French test IRCC accepts, see [TEF Canada vs TCF Canada](/blog/tef-canada-vs-tcf-canada) and [TCF Canada scores to NCLC](/blog/tcf-canada-clb-nclc-express-entry).

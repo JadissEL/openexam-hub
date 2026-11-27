@@ -232,14 +232,61 @@
       more: 'Politique de confidentialité',
       accept: 'Accepter',
       reject: 'Refuser'
+    },
+    ar: {
+      label: 'الموافقة على ملفات تعريف الارتباط',
+      title: 'ملفات تعريف الارتباط على OpenExam Hub',
+      body: 'بموافقتك نستخدم Google Analytics وMicrosoft Clarity (خرائط الحرارة وتسجيلات الجلسات) لمعرفة الصفحات المفيدة، وقد يضع Google ملفات إعلانية على لوحة الدراسة. لا يُحمَّل شيء قبل اختيارك، ويمكنك تغييره في أي وقت من «Cookie settings».',
+      more: 'سياسة الخصوصية',
+      accept: 'قبول',
+      reject: 'رفض'
+    },
+    vi: {
+      label: 'Đồng ý cookie',
+      title: 'Cookie trên OpenExam Hub',
+      body: 'Nếu bạn đồng ý, chúng tôi dùng Google Analytics và Microsoft Clarity (bản đồ nhiệt và bản ghi phiên) để xem trang nào hữu ích, và Google có thể đặt cookie quảng cáo trên bảng điều khiển học tập. Không có gì được tải trước khi bạn chọn; bạn đổi lại bất cứ lúc nào trong “Cookie settings”.',
+      more: 'Thông báo quyền riêng tư',
+      accept: 'Chấp nhận',
+      reject: 'Từ chối'
+    },
+    hi: {
+      label: 'कुकी सहमति',
+      title: 'OpenExam Hub पर कुकीज़',
+      body: 'आपकी सहमति से हम Google Analytics और Microsoft Clarity (हीटमैप और सत्र रिकॉर्डिंग) का उपयोग यह देखने के लिए करते हैं कि कौन से पृष्ठ मदद करते हैं, और Google अध्ययन डैशबोर्ड पर विज्ञापन कुकी रख सकता है। आपके चुनने से पहले कुछ भी लोड नहीं होता; “Cookie settings” में कभी भी बदल सकते हैं।',
+      more: 'गोपनीयता सूचना',
+      accept: 'स्वीकार करें',
+      reject: 'अस्वीकार करें'
+    },
+    bn: {
+      label: 'কুকি সম্মতি',
+      title: 'OpenExam Hub-এ কুকি',
+      body: 'আপনার সম্মতিতে আমরা Google Analytics ও Microsoft Clarity (হিটম্যাপ ও সেশন রেকর্ডিং) ব্যবহার করি কোন পৃষ্ঠা কাজে লাগে তা দেখতে, এবং Google পড়াশোনার ড্যাশবোর্ডে বিজ্ঞাপনের কুকি রাখতে পারে। আপনি বেছে নেওয়ার আগে কিছু লোড হয় না; “Cookie settings” থেকে যেকোনো সময় বদলাতে পারবেন।',
+      more: 'গোপনীয়তা বিজ্ঞপ্তি',
+      accept: 'গ্রহণ',
+      reject: 'প্রত্যাখ্যান'
+    },
+    ur: {
+      label: 'کوکی رضامندی',
+      title: 'OpenExam Hub پر کوکیز',
+      body: 'آپ کی رضامندی سے ہم Google Analytics اور Microsoft Clarity (ہیٹ میپ اور سیشن ریکارڈنگ) استعمال کرتے ہیں تاکہ دیکھ سکیں کون سے صفحات مدد دیتے ہیں، اور Google مطالعے کے ڈیش بورڈ پر اشتہاری کوکی رکھ سکتا ہے۔ آپ کے انتخاب سے پہلے کچھ لوڈ نہیں ہوتا؛ “Cookie settings” میں کسی بھی وقت بدل سکتے ہیں۔',
+      more: 'رازداری کا نوٹس',
+      accept: 'قبول',
+      reject: 'رد'
+    },
+    id: {
+      label: 'Persetujuan cookie',
+      title: 'Cookie di OpenExam Hub',
+      body: 'Dengan persetujuan Anda, kami memakai Google Analytics dan Microsoft Clarity (peta panas dan rekaman sesi) untuk melihat halaman mana yang membantu, dan Google dapat menaruh cookie iklan di dasbor belajar. Tidak ada yang dimuat sebelum Anda memilih; ubah kapan saja lewat “Cookie settings”.',
+      more: 'Pemberitahuan privasi',
+      accept: 'Terima',
+      reject: 'Tolak'
     }
   };
   function lang() {
-    var el = d.querySelector('#root [lang]');
-    var l = (el && el.getAttribute('lang')) || d.documentElement.getAttribute('lang') || '';
-    if (/^fr/i.test(l)) return 'fr';
-    if (/^en/i.test(l) && el) return 'en';
-    return /^fr/i.test(navigator.language || '') ? 'fr' : 'en';
+    var page = (d.documentElement.getAttribute('lang') || '').toLowerCase().split('-')[0];
+    if (TEXT[page]) return page;
+    var nav = ((navigator.language || '') + '').toLowerCase().split('-')[0];
+    return TEXT[nav] ? nav : 'en';
   }
 
   var banner = null;

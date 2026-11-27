@@ -10,6 +10,10 @@ import MarkdownIt from 'markdown-it';
 import markdownItAnchor from 'markdown-it-anchor';
 import { KNOWN_EXAMS, PLANNER_ALIASES } from '../lib/exams.js';
 import { indexablePaths, ORG_ID, examPagesForTag } from '../src/seo/site.js';
+import { BLOG_INDEX_TITLE, BLOG_INDEX_DESCRIPTION } from '../src/blog/meta.js';
+import { blogSourceHashFrom } from '../src/i18n/blogText.js';
+import { localizePath } from '../src/i18n/paths.js';
+import { alternatesFor, localizePublicHref } from '../src/i18n/publish.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..');
@@ -389,20 +393,21 @@ export function escapeHtml(str) {
 export const POST_TITLE_SUFFIX = ' · OpenExam Hub';
 
 /** Head title and meta description for the /blog index (shared with CollectionPage JSON-LD). */
-export const BLOG_INDEX_TITLE = 'Blog · OpenExam Hub';
-export const BLOG_INDEX_DESCRIPTION =
-  'Guides on language exams for students, professionals and immigration applicants: what they are used for, who asks for them, and when to start preparing.';
+export { BLOG_INDEX_TITLE, BLOG_INDEX_DESCRIPTION };
 
 /** CollectionPage + ItemList for /blog. Item order must match the visible listing. */
-export function blogIndexJsonLd(posts = []) {
+export function blogIndexJsonLd(posts = [], opts = {}) {
   const list = posts || [];
+  const url = opts.url || `${SITE_ORIGIN}/blog`;
+  const name = opts.name || BLOG_INDEX_TITLE;
+  const description = opts.description || BLOG_INDEX_DESCRIPTION;
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    '@id': `${SITE_ORIGIN}/blog#webpage`,
-    name: BLOG_INDEX_TITLE,
-    description: BLOG_INDEX_DESCRIPTION,
-    url: `${SITE_ORIGIN}/blog`,
+    '@id': `${url}#webpage`,
+    name,
+    description,
+    url,
     isPartOf: {
       '@type': 'Blog',
       '@id': `${SITE_ORIGIN}/blog#blog`,
@@ -461,6 +466,11 @@ export function articleJsonLd(post) {
     }
   };
   if (!data.wordCount) delete data.wordCount;
+  const englishUrl = `${SITE_ORIGIN}/blog/${post.slug}`;
+  const others = alternatesFor(`/blog/${post.slug}`).filter((alt) => alt.hreflang !== 'x-default' && alt.href !== post.canonical);
+  if (others.length) data.workTranslation = others.map((alt) => ({ '@id': alt.href }));
+  if (post.lang && post.lang !== 'en' && post.canonical !== englishUrl) data.translationOfWork = { '@id': englishUrl };
+  data.inLanguage = post.lang || 'en';
   return data;
 }
 
@@ -500,19 +510,90 @@ export const TAG_INDEX_MIN_POSTS = 3;
 export const SITEMAP_PATHS = [...indexablePaths().filter((p) => !SITEMAP_EXCLUDED.includes(p)), '/blog'];
 const STATIC_PAGES = SITEMAP_PATHS;
 
+function sitemapLinks(englishPath) {
+  return alternatesFor(englishPath)
+    .map((alt) => `    <xhtml:link rel="alternate" hreflang="${alt.hreflang}" href="${alt.href}"/>`)
+    .join('\n');
+}
+
 export function buildSitemapXml(posts) {
   const urls = [];
   const latest = posts[0]?.updated || posts[0]?.date;
-  for (const loc of STATIC_PAGES) {
-    const lastmod = loc === '/blog' && latest ? `\n    <lastmod>${latest}</lastmod>` : '';
-    urls.push(`  <url>\n    <loc>${SITE_ORIGIN}${loc === '/' ? '/' : loc}</loc>${lastmod}\n  </url>`);
+  const pages = STATIC_PAGES.map((loc) => ({ path: loc, lastmod: loc === '/blog' ? latest : null }));
+  for (const post of posts) pages.push({ path: `/blog/${post.slug}`, lastmod: post.updated || post.date });
+  for (const page of pages) {
+    for (const alt of alternatesFor(page.path)) {
+      if (alt.hreflang === 'x-default') continue;
+      const lastmod = page.lastmod ? `\n    <lastmod>${page.lastmod}</lastmod>` : '';
+      urls.push(`  <url>\n    <loc>${alt.href}</loc>${lastmod}\n${sitemapLinks(page.path)}\n  </url>`);
+    }
   }
-  for (const post of posts) {
-    urls.push(
-      `  <url>\n    <loc>${post.canonical}</loc>\n    <lastmod>${post.updated || post.date}</lastmod>\n  </url>`
-    );
-  }
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${urls.join('\n')}\n</urlset>\n`;
+}
+
+export function blogFileHash(slug) {
+  const raw = fs.readFileSync(path.join(CONTENT_DIR, `${slug}.md`), 'utf8');
+  const parsed = matter(raw);
+  return blogSourceHashFrom(parsed.data || {}, String(parsed.content || '').trim());
+}
+
+export function loadTranslationMarkdown(slug, locale) {
+  const file = path.join(REPO_ROOT, 'content', 'blog', 'i18n', locale, `${slug}.md`);
+  if (!fs.existsSync(file)) return null;
+  const parsed = matter(fs.readFileSync(file, 'utf8'));
+  return { data: parsed.data || {}, body: String(parsed.content || '').trim() };
+}
+
+export function rewriteHtmlHrefs(html, locale) {
+  if (!locale || locale === 'en') return html;
+  return String(html).replace(/href="(\/[^"]*)"/g, (_, href) => `href="${localizePublicHref(locale, href)}"`);
+}
+
+/** English post with a fresh Markdown translation overlaid. Null when missing or stale. */
+export function localizePost(post, locale) {
+  if (!post || !locale || locale === 'en') return post;
+  const tr = loadTranslationMarkdown(post.slug, locale);
+  if (!tr || tr.data.translationOf !== post.slug || tr.data.sourceHash !== blogFileHash(post.slug)) return null;
+  const label = `content/blog/i18n/${locale}/${post.slug}.md`;
+  const coverInput = post.cover?.src
+    ? {
+        src: post.cover.src,
+        alt: (tr.data.cover && tr.data.cover.alt) || post.cover.alt,
+        ...(tr.data.cover && tr.data.cover.credit ? { credit: tr.data.cover.credit } : post.cover.credit ? { credit: post.cover.credit } : {})
+      }
+    : null;
+  const applied = applyCover(md.render(tr.body), coverInput, label);
+  const html = rewriteHtmlHrefs(applied.html, locale);
+  const faq = Array.isArray(tr.data.faq) && tr.data.faq.length
+    ? tr.data.faq.map((item) => ({ q: String(item.q || '').trim(), a: String(item.a || '').trim() }))
+    : post.faq;
+  const sources = (post.sources || []).map((source, i) => ({
+    ...source,
+    title: (tr.data.sources && tr.data.sources[i] && tr.data.sources[i].title) || source.title
+  }));
+  const url = localizePath(locale, `/blog/${post.slug}`);
+  const words = wordCount(tr.body);
+  return {
+    ...post,
+    title: String(tr.data.title || '').trim() || post.title,
+    seoTitle: tr.data.seoTitle ? String(tr.data.seoTitle).trim() : null,
+    description: String(tr.data.description || '').trim() || post.description,
+    lang: locale,
+    faq,
+    sources,
+    cover: applied.cover || post.cover,
+    html,
+    headings: extractHeadings(html),
+    wordCount: words,
+    readingMinutes: Math.max(1, Math.round(words / 220)),
+    url,
+    canonical: `${SITE_ORIGIN}${url}`
+  };
+}
+
+export function postsForLocale(posts, locale) {
+  if (!locale || locale === 'en') return posts;
+  return posts.map((post) => localizePost(post, locale)).filter(Boolean);
 }
 
 function rfc822(iso) {

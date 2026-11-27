@@ -178,7 +178,7 @@ You can also enter four scores in the [CLB and NCLC converter](/tools/clb-conver
 
 ### How to prepare
 
-- Choose **TEF Canada or TCF Canada** using [the comparison guide](/blog/tef-canada-vs-tcf-canada). No official source ranks one as easier. Look at your nearest approved centre, your dates, and the official sample material for each test. Candidates in Morocco and Tunisia can start with the French guide to [TEF Canada centres, fees and free official prep](/blog/tef-canada-maroc-tunisie).
+- Choose **TEF Canada or TCF Canada** using [the comparison guide](/blog/tef-canada-vs-tcf-canada). No official source ranks one as easier. Look at your nearest approved centre, your dates, and the official sample material for each test. Candidates in Morocco and Tunisia can start with [TEF Canada centres, fees and free official prep](/blog/tef-canada-maroc-tunisie).
 - Read the [TEF Canada exam guide](/exams/tef-canada) or the [TCF Canada exam guide](/exams/tcf-canada). If you still want the diploma explained in one place, see the [DELF exam guide](/exams/delf).
 - Use official practice where it exists: the [TEF Canada 30-day study plan](/exams/tef-canada/30-day-study-plan) and the [TCF Canada official practice study path](/exams/tcf-canada/official-practice-study-path).
 - Book early enough that your results will still be valid when you submit a permanent residence application, not only when you open a profile.

@@ -3,6 +3,7 @@ import { API_BASE, SERVER_ENABLED } from './firebaseConfig.js';
 import { FIVE_YEAR_GOAL_EUR } from './funding.js';
 import { AI_FRUGALITY_INTRO, AI_FRUGALITY_POINTS, AI_FRUGALITY_TITLE } from './aiFrugality.js';
 import { EXPENSES, expensesTotalEur, formatEur, formatMoney, netBalanceEur } from './expenses.js';
+import { useT, useUnit } from './i18n/LocaleContext.jsx';
 
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
@@ -112,19 +113,23 @@ function cacheLine(stats) {
 }
 
 export function AiFrugality({ variant = 'page', stats }) {
+  const funding = useUnit('landing:funding');
+  const title = funding?.frugality?.title || AI_FRUGALITY_TITLE;
+  const intro = funding?.frugality?.intro || AI_FRUGALITY_INTRO;
+  const points = funding?.frugality?.points || AI_FRUGALITY_POINTS;
   const isPage = variant === 'page';
   const line = cacheLine(stats);
   return (
     <section aria-labelledby="ai-frugality-title" className={isPage ? 'mt-16 max-w-4xl' : ''}>
       <h3 id="ai-frugality-title" className={isPage ? 'font-display text-[22px] font-medium text-[#1A1714]' : 'text-xs font-bold uppercase tracking-wider text-neutral-500'}>
-        {AI_FRUGALITY_TITLE}
+        {title}
       </h3>
       <p className={isPage ? 'mt-3 text-[17px] leading-[1.7] text-[#6B635A]' : 'mt-2 text-sm text-neutral-600'}>
-        {AI_FRUGALITY_INTRO}
+        {intro}
         {line ? ` ${line}` : ''}
       </p>
       <dl className={isPage ? 'mt-6 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]' : 'mt-3 divide-y divide-black/5'}>
-        {AI_FRUGALITY_POINTS.map((p) => (
+        {points.map((p) => (
           <div key={p.t} className={isPage ? 'py-4 grid sm:grid-cols-[11rem_1fr] gap-1 sm:gap-6' : 'py-2.5'}>
             <dt className={isPage ? 'text-[#1A1714] font-semibold text-[17px]' : 'text-sm font-semibold text-neutral-900'}>{p.t}</dt>
             <dd className={isPage ? 'text-[17px] leading-[1.65] text-[#6B635A]' : 'text-sm text-neutral-600 mt-0.5'}>{p.d}</dd>
@@ -144,6 +149,8 @@ function asOfLabel(iso) {
 }
 
 export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stats, earnings: earningsProp, loaded = true, error = false, asOf = null }) {
+  const t = useT();
+  const expenseCopy = useUnit('landing:expenses');
   const isPage = variant === 'page';
   const wrap = isPage ? 'text-[#1A1714]' : 'text-neutral-800';
   const muted = isPage ? 'text-[#6B635A]' : 'text-neutral-600';
@@ -156,7 +163,7 @@ export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stat
   const net = netBalanceEur(earnings, listedEur, aiCost);
   const monthUsage = usage || { calls: 0, promptTokens: 0, completionTokens: 0, costEur: 0, month: null };
 
-  const pendingText = error ? 'Not available right now' : 'Loading…';
+  const pendingText = error ? t('books.unavailable') : t('books.loading');
   const pendingCls = `mt-2 text-base font-medium ${muted}`;
   const valueCls = `mt-2 text-2xl font-bold tabular-nums ${isPage ? 'text-[#1A1714]' : 'text-neutral-900'}`;
   const asOfText = asOf ? asOfLabel(asOf) : null;
@@ -164,26 +171,26 @@ export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stat
   return (
     <div className={`space-y-8 ${wrap}`}>
       {asOfText ? (
-        <p className={`text-sm ${muted}`} data-testid="books-as-of">{`Figures as of ${asOfText}. Live numbers load in your browser.`}</p>
+        <p className={`text-sm ${muted}`} data-testid="books-as-of">{t('books.asOf', { date: asOfText })}</p>
       ) : null}
       <div className={isPage ? 'grid md:grid-cols-3 gap-8 max-w-4xl' : 'grid grid-cols-1 gap-4'}>
         <div className={box}>
-          <h3 className={h}>Earnings so far</h3>
+          <h3 className={h}>{t('books.earnings')}</h3>
           <p className={loaded ? valueCls : pendingCls}>{loaded ? formatEur(earnings) : pendingText}</p>
           <p className={`mt-1 text-sm ${muted}`}>
-            Donations and dashboard ads
-            {FIVE_YEAR_GOAL_EUR != null ? ` · toward the €${Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB')} goal` : ''}.
+            {t('books.earningsNote')}
+            {FIVE_YEAR_GOAL_EUR != null ? ` · ${t('books.goal', { amount: Number(FIVE_YEAR_GOAL_EUR).toLocaleString('en-GB') })}` : ''}.
           </p>
         </div>
         <div className={box}>
-          <h3 className={h}>Expenses so far</h3>
+          <h3 className={h}>{t('books.expenses')}</h3>
           <p className={loaded ? valueCls : pendingCls}>{loaded ? formatEur(listedEur + aiCost) : pendingText}</p>
           <p className={`mt-1 text-sm ${muted}`}>
             Recorded costs plus AI usage{pending ? ` · ${pending} amount${pending === 1 ? '' : 's'} pending` : ''}.
           </p>
         </div>
         <div className={box}>
-          <h3 className={h}>Net</h3>
+          <h3 className={h}>{t('books.net')}</h3>
           <p className={loaded ? valueCls : pendingCls}>{loaded ? formatEur(net, { sign: true }) : pendingText}</p>
           <p className={`mt-1 text-sm ${muted}`}>
             {loaded
@@ -198,13 +205,15 @@ export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stat
       </div>
 
       <section aria-labelledby="expenses-list-title" className={isPage ? 'max-w-4xl' : box}>
-        <h3 id="expenses-list-title" className={h}>Expenses</h3>
+        <h3 id="expenses-list-title" className={h}>{t('books.expensesHeading')}</h3>
         <ul className={isPage ? 'mt-4 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]' : 'mt-3 divide-y divide-black/5'}>
-          {EXPENSES.map((e) => (
+          {EXPENSES.map((e, i) => {
+            const copy = expenseCopy?.entries?.[i] || e;
+            return (
             <li key={e.id} className={isPage ? 'py-4' : 'py-3'}>
               <div className="flex justify-between gap-4 items-baseline">
                 <div className="min-w-0">
-                  <p className={isPage ? 'font-semibold text-[17px]' : 'text-sm font-semibold text-neutral-900'}>{e.item}</p>
+                  <p className={isPage ? 'font-semibold text-[17px]' : 'text-sm font-semibold text-neutral-900'}>{copy.item || e.item}</p>
                   <p className={`text-sm mt-1 ${muted}`}>
                     {e.date}
                     {' · '}
@@ -215,12 +224,13 @@ export function BooksPanel({ variant = 'page', treasury, usage, usageTotal, stat
                   </p>
                 </div>
                 <p className={`shrink-0 font-semibold tabular-nums ${isPage ? 'text-[17px]' : 'text-sm'}`}>
-                  {e.status === 'pending' || e.amountEur == null ? 'Amount pending' : formatEur(e.amountEur)}
+                  {e.status === 'pending' || e.amountEur == null ? t('books.pending') : formatEur(e.amountEur)}
                 </p>
               </div>
-              {e.source ? <p className={`mt-2 text-xs leading-relaxed ${muted}`}>{e.source}{e.fx?.source ? ` Converted at the ${e.fx.source}.` : ''}</p> : null}
+              {(copy.source || e.source) ? <p className={`mt-2 text-xs leading-relaxed ${muted}`}>{copy.source || e.source}{e.fx?.source ? ` ${t('books.converted', { source: copy.fxSource || e.fx.source })}` : ''}</p> : null}
             </li>
-          ))}
+            );
+          })}
         </ul>
       </section>
 

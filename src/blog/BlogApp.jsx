@@ -4,6 +4,10 @@ import { SiteHeader, SiteFooter } from '../landing/SiteChrome.jsx';
 import { ink, muted, eyebrow, lead, pageFont } from '../landing/theme.js';
 import { examPagesForTag } from '../seo/site.js';
 import { relatedPostsFor } from './related.js';
+import { useHref, useLocale, useT } from '../i18n/LocaleContext.jsx';
+import { localeMeta } from '../i18n/locales.js';
+
+const arrow = 'w-4 h-4 rtl:-scale-x-100';
 
 export const EXAM_LABELS = {
   TCF: 'TCF',
@@ -38,10 +42,10 @@ export function plannerUrl(examId) {
   return id ? `/app?exam=${encodeURIComponent(id)}` : '/app';
 }
 
-export function formatDate(iso) {
+export function formatDate(iso, locale = 'en') {
   const [y, m, d] = String(iso).split('-').map(Number);
   if (!y || !m || !d) return String(iso);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString(localeMeta(locale || 'en').dateLocale, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -60,11 +64,12 @@ function PageShell({ title, children, lang = 'en' }) {
 }
 
 function ExamFilter({ exams, active }) {
+  const href = useHref();
   const allActive = !active;
   return (
     <nav aria-label="Filter by exam" className="flex flex-wrap gap-2">
       <a
-        href="/blog"
+        href={href('/blog')}
         aria-current={allActive ? 'page' : undefined}
         className={`inline-flex items-center h-9 px-3.5 rounded-full text-[14px] font-medium transition-colors ${
           allActive ? 'bg-[#1A1714] text-white' : 'bg-white border border-[#E7E1D7] text-[#3B352F] hover:border-[#1A1714]'
@@ -77,7 +82,7 @@ function ExamFilter({ exams, active }) {
         return (
           <a
             key={id}
-            href={`/blog/tag/${id}`}
+            href={href(`/blog/tag/${id}`)}
             aria-current={isActive ? 'page' : undefined}
             className={`inline-flex items-center h-9 px-3.5 rounded-full text-[14px] font-medium transition-colors ${
               isActive ? 'bg-[#1A1714] text-white' : 'bg-white border border-[#E7E1D7] text-[#3B352F] hover:border-[#1A1714]'
@@ -107,15 +112,18 @@ function CoverImage({ cover, href, className = '', priority = false }) {
 }
 
 function PostCard({ post, first = false }) {
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
   return (
     <article className="border-b border-[#D9D1C5] py-8 sm:py-10">
       {post.cover ? (
         <div className="mb-5 overflow-hidden rounded-2xl bg-[#EDE7DD]">
-          <CoverImage cover={post.cover} href={post.url} priority={first} />
+          <CoverImage cover={post.cover} href={href(post.url)} priority={first} />
         </div>
       ) : null}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#6B635A]">
-        <time dateTime={post.date}>{formatDate(post.date)}</time>
+        <time dateTime={post.date}>{formatDate(post.date, locale)}</time>
         <span aria-hidden="true">·</span>
         <span>{post.readingMinutes} min read</span>
         {post.draft ? (
@@ -126,13 +134,13 @@ function PostCard({ post, first = false }) {
         ) : null}
       </div>
       <h2 className={`mt-3 font-display ${ink} text-[28px] sm:text-[34px] leading-[1.15] tracking-[-0.02em] font-medium`}>
-        <a href={post.url} className="hover:text-[#C2410C]">{post.title}</a>
+        <a href={href(post.url)} className="hover:text-[#C2410C]">{post.title}</a>
       </h2>
       <p className={`mt-3 ${lead} max-w-3xl text-[17px] sm:text-[18px]`}>{post.description}</p>
-      <ul className="mt-4 flex flex-wrap gap-2" aria-label="Exams and audiences">
+      <ul className="mt-4 flex flex-wrap gap-2" aria-label={t('blog.examsAudiences')}>
         {post.exams.map((id) => (
           <li key={id}>
-            <a href={`/blog/tag/${id}`} className="inline-flex items-center h-7 px-2.5 rounded-full bg-[#EDE7DD] text-[13px] font-medium text-[#3B352F] hover:bg-[#E7C9B4]">
+            <a href={href(`/blog/tag/${id}`)} className="inline-flex items-center h-7 px-2.5 rounded-full bg-[#EDE7DD] text-[13px] font-medium text-[#3B352F] hover:bg-[#E7C9B4]">
               {examLabel(id)}
             </a>
           </li>
@@ -180,6 +188,7 @@ function examGuidesFor(tags) {
 }
 
 function ExamGuideLinks({ tags, className = '' }) {
+  const href = useHref();
   const guides = examGuidesFor(tags);
   if (!guides.length) return null;
   return (
@@ -188,7 +197,7 @@ function ExamGuideLinks({ tags, className = '' }) {
       {guides.map((g, i) => (
         <React.Fragment key={g.slug}>
           {i > 0 ? ', ' : null}
-          <a href={`/exams/${g.slug}`} className="text-[#C2410C] underline underline-offset-4">
+          <a href={href(`/exams/${g.slug}`)} className="text-[#C2410C] underline underline-offset-4">
             {g.label} format and free official practice
           </a>
         </React.Fragment>
@@ -198,25 +207,27 @@ function ExamGuideLinks({ tags, className = '' }) {
 }
 
 export function BlogIndex({ posts, exam = null }) {
+  const t = useT();
+  const href = useHref();
   const exams = [...new Set(posts.flatMap((p) => p.exams))].sort((a, b) => examLabel(a).localeCompare(examLabel(b)));
   const list = exam ? posts.filter((p) => p.exams.includes(exam)) : posts;
   const knownExam = exam && (EXAM_LABELS[exam] || exam);
   const title = exam ? `Blog · ${examLabel(exam)}` : 'Blog';
   const intro = exam
-    ? `Articles about ${examLabel(exam)} for students, professionals and immigration applicants.`
+    ? t('blog.tagDescription', { exam: examLabel(exam) })
     : 'Practical guides on language exams: what they are used for, who asks for them, and when to start preparing. Written for students, professionals and immigration applicants.';
 
   return (
     <PageShell title={title}>
       <header className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-6 sm:pb-8">
-        <p className={eyebrow}>{exam ? 'Blog' : 'From OpenExam Hub'}</p>
+        <p className={eyebrow}>{exam ? t('crumb.blog') : 'From OpenExam Hub'}</p>
         <h1 className={`mt-4 font-display ${ink} text-5xl sm:text-6xl tracking-[-0.03em] font-medium leading-[1.02]`}>
-          {exam ? `${examLabel(exam)} guides` : 'Blog'}
+          {exam ? `${examLabel(exam)} guides` : t('crumb.blog')}
         </h1>
         <p className={`mt-6 max-w-3xl ${lead}`}>{intro}</p>
         <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
           <ExamFilter exams={exams} active={exam} />
-          <a href="/blog/rss.xml" className={`inline-flex items-center gap-2 text-[14px] font-medium ${muted} hover:text-[#C2410C]`}>
+          <a href={href('/blog/rss.xml')} className={`inline-flex items-center gap-2 text-[14px] font-medium ${muted} hover:text-[#C2410C]`}>
             <Rss className="w-4 h-4" aria-hidden="true" /> RSS feed
           </a>
         </div>
@@ -224,12 +235,12 @@ export function BlogIndex({ posts, exam = null }) {
         {exam === 'IELTS' ? (
           <p className={`mt-3 text-[15px] ${muted}`}>
             Comparing English tests? See the{' '}
-            <a href="/exams/toefl" className="text-[#C2410C] underline underline-offset-4">TOEFL iBT 2026 format guide and free ETS practice</a>.
+            <a href={href('/exams/toefl')} className="text-[#C2410C] underline underline-offset-4">TOEFL iBT 2026 format guide and free ETS practice</a>.
           </p>
         ) : null}
         {!exam ? (
           <p className={`mt-3 text-[15px] ${muted}`}>
-            Questions about how OpenExam Hub works? <a href="/faq" className="text-[#C2410C] underline underline-offset-4">Read the FAQ</a>.
+            Questions about how OpenExam Hub works? <a href={href('/faq')} className="text-[#C2410C] underline underline-offset-4">Read the FAQ</a>.
           </p>
         ) : null}
         {exam && !knownExam ? (
@@ -240,7 +251,7 @@ export function BlogIndex({ posts, exam = null }) {
         {list.length ? list.map((post, i) => <PostCard key={post.slug} post={post} first={i === 0} />) : <EmptyList />}
         {exam ? (
           <p className="mt-10">
-            <a href="/blog" className="text-[#C2410C] underline underline-offset-4">All blog posts</a>
+            <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">All blog posts</a>
           </p>
         ) : null}
       </section>
@@ -271,10 +282,12 @@ function TableOfContents({ headings }) {
 }
 
 function RoadmapCta({ exams }) {
+  const t = useT();
+  const href = useHref();
   if (!exams?.length) {
     return (
-      <a href="/app" className="mt-4 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold">
-        Build a free study plan <ArrowRight className="w-4 h-4" aria-hidden="true" />
+      <a href={href('/app')} className="mt-4 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold">
+        Build a free study plan <ArrowRight className={arrow} aria-hidden="true" />
       </a>
     );
   }
@@ -283,10 +296,10 @@ function RoadmapCta({ exams }) {
       {exams.map((id) => (
         <li key={id}>
           <a
-            href={plannerUrl(id)}
+            href={href(plannerUrl(id))}
             className="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold"
           >
-            Build a free {examLabel(id)} plan <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            {t('blog.buildPlan', { exam: examLabel(id) })} <ArrowRight className={arrow} aria-hidden="true" />
           </a>
         </li>
       ))}
@@ -295,17 +308,19 @@ function RoadmapCta({ exams }) {
 }
 
 function RelatedPosts({ post, posts }) {
+  const t = useT();
+  const href = useHref();
   const related = relatedPostsFor(post, posts);
   if (!related.length) return null;
   return (
     <section aria-labelledby="related-posts-title" className="mt-14 pt-10 border-t border-[#E7E1D7]">
       <h2 id="related-posts-title" className={`font-display ${ink} text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium`}>
-        Related reading
+        {t('blog.related')}
       </h2>
       <ul className="mt-5 space-y-3 text-[16px] leading-snug">
         {related.map((p) => (
           <li key={p.slug}>
-            <a href={p.url} className="text-[#C2410C] underline underline-offset-4">{p.title}</a>
+            <a href={href(p.url)} className="text-[#C2410C] underline underline-offset-4">{p.title}</a>
           </li>
         ))}
       </ul>
@@ -314,47 +329,50 @@ function RelatedPosts({ post, posts }) {
 }
 
 export function BlogPost({ post, posts = [] }) {
+  const t = useT();
+  const href = useHref();
+  const locale = useLocale();
   if (!post) return <BlogNotFound />;
-  const verified = formatDate(post.lastVerified);
-  const published = formatDate(post.date);
-  const updated = post.updated && post.updated !== post.date ? formatDate(post.updated) : null;
+  const verified = formatDate(post.lastVerified, locale);
+  const published = formatDate(post.date, locale);
+  const updated = post.updated && post.updated !== post.date ? formatDate(post.updated, locale) : null;
 
   return (
     <PageShell title={post.title} lang={post.lang}>
       <article className="mx-auto max-w-6xl px-5 sm:px-8 pt-10 sm:pt-16 pb-24">
         <nav aria-label="Breadcrumb" className="text-[14px]">
-          <a href="/" className="text-[#C2410C] underline underline-offset-4">Home</a>
+          <a href={href('/')} className="text-[#C2410C] underline underline-offset-4">{t('crumb.home')}</a>
           <span className="text-[#6B635A]"> / </span>
-          <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Blog</a>
+          <a href={href('/blog')} className="text-[#C2410C] underline underline-offset-4">{t('crumb.blog')}</a>
           <span className="text-[#6B635A]"> / </span>
           {post.exams.map((id, i) => (
             <React.Fragment key={id}>
               {i > 0 ? <span className="text-[#6B635A]">, </span> : null}
-              <a href={`/blog/tag/${id}`} className="text-[#C2410C] underline underline-offset-4">{examLabel(id)}</a>
+              <a href={href(`/blog/tag/${id}`)} className="text-[#C2410C] underline underline-offset-4">{examLabel(id)}</a>
             </React.Fragment>
           ))}
         </nav>
         <header className="mt-5 max-w-3xl">
           {post.draft ? (
             <p className="mb-5 rounded-2xl border border-[#E7C9B4] bg-[#FDF3EC] px-4 py-3 text-[15px] leading-relaxed text-[#7C2D12]" role="note">
-              Example post — this is a format sample for writers and is not published on the live site while it remains a draft.
+              {t('blog.draft')}
             </p>
           ) : null}
-          <p className={eyebrow}>OpenExam Hub blog</p>
+          <p className={eyebrow}>{t('blog.eyebrow')}</p>
           <h1 className={`mt-4 font-display ${ink} text-[36px] sm:text-5xl lg:text-6xl tracking-[-0.03em] font-medium leading-[1.05]`}>
             {post.title}
           </h1>
           <p className={`mt-6 ${lead}`}>{post.description}</p>
           <p className={`mt-6 text-[15px] ${muted}`}>
-            <span className="font-semibold text-[#1A1714]">As of {verified}.</span>
-            {' '}Published {published}
-            {updated ? ` · Updated ${updated}` : ''}.
-            {' '}{post.readingMinutes} min read.
+            <span className="font-semibold text-[#1A1714]">{t('blog.asOf', { date: verified })}</span>
+            {' '}{t('blog.published', { date: published })}
+            {updated ? ` · ${t('blog.updated', { date: updated })}` : ''}.
+            {' '}{t('blog.minRead', { minutes: post.readingMinutes })}
           </p>
-          <ul className="mt-4 flex flex-wrap gap-2" aria-label="Exams and audiences">
+          <ul className="mt-4 flex flex-wrap gap-2" aria-label={t('blog.examsAudiences')}>
             {post.exams.map((id) => (
               <li key={id}>
-                <a href={`/blog/tag/${id}`} className="inline-flex items-center h-7 px-2.5 rounded-full bg-[#EDE7DD] text-[13px] font-medium text-[#3B352F] hover:bg-[#E7C9B4]">
+                <a href={href(`/blog/tag/${id}`)} className="inline-flex items-center h-7 px-2.5 rounded-full bg-[#EDE7DD] text-[13px] font-medium text-[#3B352F] hover:bg-[#E7C9B4]">
                   {examLabel(id)}
                 </a>
               </li>
@@ -369,7 +387,7 @@ export function BlogPost({ post, posts = [] }) {
           </ul>
           <ExamGuideLinks tags={post.exams} className="mt-5" />
           <p className={`mt-2 text-[15px] ${muted}`}>
-            Questions about OpenExam Hub? <a href="/faq" className="text-[#C2410C] underline underline-offset-4">Read the FAQ</a>.
+            Questions about OpenExam Hub? <a href={href('/faq')} className="text-[#C2410C] underline underline-offset-4">Read the FAQ</a>.
           </p>
         </header>
 
@@ -394,7 +412,7 @@ export function BlogPost({ post, posts = [] }) {
             {post.faq?.length ? (
               <section aria-labelledby="post-faq-title" className="mt-14 pt-10 border-t border-[#E7E1D7]">
                 <h2 id="post-faq-title" className={`font-display ${ink} text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium`}>
-                  Questions people ask
+                  {t('blog.faq')}
                 </h2>
                 <div className="mt-4 divide-y divide-[#E7E1D7] border-y border-[#E7E1D7]">
                   {post.faq.map((item) => (
@@ -413,7 +431,7 @@ export function BlogPost({ post, posts = [] }) {
             {post.sources?.length ? (
               <section aria-labelledby="sources-title" className="mt-14 pt-10 border-t border-[#E7E1D7]">
                 <h2 id="sources-title" className={`font-display ${ink} text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium`}>
-                  Sources
+                  {t('blog.sources')}
                 </h2>
                 <p className={`mt-3 text-[15px] ${muted}`}>Official pages this article draws on. Last checked {verified}.</p>
                 <ol className="mt-5 space-y-3 text-[16px] leading-snug">
@@ -448,16 +466,18 @@ export function BlogPost({ post, posts = [] }) {
 }
 
 export function BlogNotFound() {
+  const t = useT();
+  const href = useHref();
   return (
-    <PageShell title="Post not found">
+    <PageShell title={t('blog.notFound')}>
       <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-16 pb-32">
-        <p className={eyebrow}>Blog</p>
+        <p className={eyebrow}>{t('crumb.blog')}</p>
         <h1 className={`mt-4 font-display ${ink} text-5xl tracking-[-0.03em] font-medium`}>This post isn’t here</h1>
         <p className={`mt-6 max-w-xl ${lead}`}>
           The link may be mistyped, or the article is still a draft. See every published post on the blog.
         </p>
-        <a href="/blog" className="mt-8 inline-flex items-center gap-2 text-[#C2410C] font-semibold underline underline-offset-4">
-          Back to the blog <ArrowRight className="w-4 h-4" aria-hidden="true" />
+        <a href={href('/blog')} className="mt-8 inline-flex items-center gap-2 text-[#C2410C] font-semibold underline underline-offset-4">
+          Back to the blog <ArrowRight className={arrow} aria-hidden="true" />
         </a>
       </div>
     </PageShell>
