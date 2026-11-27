@@ -245,3 +245,15 @@ export function faqPageJsonLd(faq) {
     }))
   };
 }
+
+/**
+ * "a" or "an" for the word that follows, from its initial sound.
+ * Exam names are often initialisms (IELTS, ETS), so a leading vowel letter
+ * is treated as a vowel sound. Add exceptions only when a name needs them
+ * ("a university"-style /juː/, or a silent h).
+ */
+export function indefiniteArticle(word) {
+  const s = String(word || '').trim();
+  if (!s) return 'a';
+  return /^[aeiou]/i.test(s) ? 'an' : 'a';
+}

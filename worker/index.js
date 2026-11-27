@@ -8,6 +8,7 @@
 //   - /demo/*              -> byte-range (206) support for the demo video: Static Assets alone always
 //                             answers 200 with the full file, which breaks seeking and Safari playback.
 //   - /transparency[/]     -> 301 /funding (legacy public-books URL)
+//   - /tools[/]            -> 301 /tools/clb-converter (keeps the query, e.g. ?tab=ielts)
 //   - any path with no matching file -> /app/<tab> deep links get the /app shell (200); everything
 //                             else is a real 404 (every public page is prerendered, so no soft 404s).
 // www.openexamhub.org -> apex 308 is a zone Redirect Rule; the host check below is a backup.
@@ -150,6 +151,10 @@ export default {
     // Public books used to be advertised at /transparency; they now live at /funding.
     if (pathname === '/transparency' || pathname === '/transparency/') {
       return Response.redirect(`https://${APEX}/funding${url.search}`, 301);
+    }
+    // Short /tools URL (and ?tab=) should open the only tool, the CLB converter.
+    if (pathname === '/tools' || pathname === '/tools/') {
+      return Response.redirect(`https://${APEX}/tools/clb-converter${url.search}`, 301);
     }
     if (pathname === '/api/hit') return hitBeacon(request, env, ctx);
     if (pathname.startsWith('/api/')) return proxyToApi(request, env, url, pathname);

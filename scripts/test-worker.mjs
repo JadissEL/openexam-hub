@@ -1,4 +1,4 @@
-// Offline tests for the Cloudflare Worker: /transparency 301 and basic routing.
+// Offline tests for the Cloudflare Worker: /transparency and /tools 301s, and basic routing.
 // No network. Run: node scripts/test-worker.mjs
 import assert from 'node:assert/strict';
 import worker from '../worker/index.js';
@@ -6,7 +6,8 @@ import worker from '../worker/index.js';
 const assets = new Map([
   ['/funding', '<html>funding</html>'],
   ['/blog', '<html>blog</html>'],
-  ['/app', '<html>app</html>']
+  ['/app', '<html>app</html>'],
+  ['/tools/clb-converter', '<html>converter</html>']
 ]);
 
 function env() {
@@ -53,6 +54,30 @@ test('/funding is still served (no redirect loop)', async () => {
   const res = await fetchPath('/funding');
   assert.equal(res.status, 200);
   assert.equal(await res.text(), '<html>funding</html>');
+});
+
+test('/tools 301-redirects to /tools/clb-converter', async () => {
+  const res = await fetchPath('/tools');
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), 'https://openexamhub.org/tools/clb-converter');
+});
+
+test('/tools/ 301-redirects to /tools/clb-converter', async () => {
+  const res = await fetchPath('/tools/');
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), 'https://openexamhub.org/tools/clb-converter');
+});
+
+test('/tools keeps the query string, including ?tab=', async () => {
+  const res = await fetchPath('/tools?tab=ielts');
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), 'https://openexamhub.org/tools/clb-converter?tab=ielts');
+});
+
+test('/tools/clb-converter is still served (no redirect loop)', async () => {
+  const res = await fetchPath('/tools/clb-converter?tab=ielts');
+  assert.equal(res.status, 200);
+  assert.equal(await res.text(), '<html>converter</html>');
 });
 
 test('unknown paths stay 404', async () => {

@@ -359,6 +359,22 @@ test('study plan data: routes, sitemap paths and sources stay official and claim
   assert.equal(siteModule.routeMeta('/exams/ielts/not-a-plan'), null);
 });
 
+
+test('indefinite article uses "an" for vowel-sound exam names', () => {
+  assert.equal(siteModule.indefiniteArticle('IELTS'), 'an');
+  assert.equal(siteModule.indefiniteArticle('ETS'), 'an');
+  assert.equal(siteModule.indefiniteArticle('TEF Canada'), 'a');
+  assert.equal(siteModule.indefiniteArticle('TCF'), 'a');
+  assert.equal(siteModule.indefiniteArticle('TOEFL'), 'a');
+  assert.equal(siteModule.indefiniteArticle('CELPIP'), 'a');
+  assert.equal(siteModule.indefiniteArticle('Goethe'), 'a');
+  assert.equal(siteModule.indefiniteArticle('DELE'), 'a');
+  assert.equal(siteModule.indefiniteArticle('telc'), 'a');
+  assert.equal(siteModule.indefiniteArticle(''), 'a');
+  assert.equal(`Turn this into ${siteModule.indefiniteArticle('IELTS')} IELTS study plan`, 'Turn this into an IELTS study plan');
+});
+
+
 test('TCF Canada links: ?exam=TCF_CANADA or ?exam=TCF&variant=canada', () => {
   assert.deepEqual(parsePlannerQuery('?exam=TCF_CANADA&level=B2'), { exam: 'TCF', level: 'B2' });
   assert.equal(parsePlannerVariant('?exam=TCF_CANADA'), 'canada');
@@ -707,6 +723,17 @@ if (process.argv.includes('--built')) {
     assert.ok(fs.existsSync(path.join(dist, 'exams/index.html')));
     assert.ok(sitemap.includes('<loc>https://openexamhub.org/exams</loc>'));
   });
+
+
+  test('exam guide planner CTAs use "an" before vowel-sound names', () => {
+    const ielts = read('exams/ielts/index.html');
+    assert.ok(ielts.includes('Turn this into an IELTS study plan'), 'IELTS CTA uses "an IELTS"');
+    assert.ok(!ielts.includes('Turn this into a IELTS'), 'IELTS CTA must not say "a IELTS"');
+    assert.ok(read('exams/tef-canada/index.html').includes('Turn this into a TEF Canada study plan'));
+    assert.ok(read('exams/celpip/index.html').includes('Turn this into a CELPIP study plan'));
+    assert.ok(read('exams/toefl/index.html').includes('Turn this into a TOEFL study plan'));
+  });
+
 
   test('study plan pages are prerendered, linked from their guide, in the sitemap, with visible FAQ JSON-LD', () => {
     const sitemap = read('sitemap.xml');

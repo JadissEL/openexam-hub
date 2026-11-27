@@ -45,6 +45,16 @@
       "permanent": true
     },
     {
+      "source": "/tools",
+      "destination": "/tools/clb-converter",
+      "permanent": true
+    },
+    {
+      "source": "/tools/",
+      "destination": "/tools/clb-converter",
+      "permanent": true
+    },
+    {
       "source": "/((?!api/).*)",
       "has": [
         {

@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { SiteHeader, SiteFooter } from '../landing/SiteChrome.jsx';
 import { ink, muted, eyebrow, lead, pageFont } from '../landing/theme.js';
-import { EXAM_PAGES, EXAMS_INDEX } from './site.js';
+import { EXAM_PAGES, EXAMS_INDEX, indefiniteArticle } from './site.js';
 import { examContent } from './examContent.js';
 import { planPage, planPath, plansForGuide } from './planPages.js';
 import { toolPathForGuide } from '../tools/clbContent.js';
@@ -229,7 +229,7 @@ function PlannerCta({ planner, label, relatedPlanner }) {
     <section aria-labelledby="plan-title" className="mt-14 rounded-3xl bg-[#1A1714] text-white px-6 sm:px-8 py-8 sm:py-10">
       <h2 id="plan-title" className="font-display text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium">
         {planner
-          ? `Turn this into a ${planner.label} study plan`
+          ? `Turn this into ${indefiniteArticle(planner.label)} ${planner.label} study plan`
           : `Personalised ${label} plans are coming soon`}
       </h2>
       <p className="mt-3 text-[16px] sm:text-[17px] leading-relaxed text-[#D9D2C8] max-w-xl">
