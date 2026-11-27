@@ -428,7 +428,8 @@ What the Worker does (everything else is a plain asset hit and never runs the sc
 | Path | Behaviour (same as vercel.json) |
 | --- | --- |
 | `/api/*` | proxied to `API_ORIGIN` (method, headers, body, status passed through; redirects not followed) |
-| `/ads.txt` | proxied to `API_ORIGIN/api/ads-txt` |
+| `/ads.txt` and `/app-ads.txt` | proxied to `API_ORIGIN/api/ads-txt` (same seller line; 404 until `ADSENSE_PUBLISHER_ID` is set). `app-ads.txt` is what AdMob crawls for the Android app. |
+| `/.well-known/assetlinks.json` | Android App Links for `org.openexamhub.app`. Static file, also returned by the Worker if the asset is missing. The SHA-256 is a placeholder until the Play App Signing certificate is filled in (`lib/assetlinks.js`). |
 | `/demo/*` | served with `Range` support (206) through the Cache API; Static Assets alone only answers 200 |
 | `/blog/` | same page as `/blog` |
 | missing file | `/app/<tab>` deep links get the `/app` shell (200); any other unknown path is a real 404 (all public pages are prerendered) |

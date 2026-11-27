@@ -2,7 +2,7 @@
 //
 // Static files in dist/ are served by Workers Static Assets WITHOUT invoking this script (free and
 // unmetered). This script only runs for:
-//   - /api/* and /ads.txt  -> proxied to API_ORIGIN (the Vercel deployment, which still runs the
+//   - /api/*, /ads.txt and /app-ads.txt -> proxied to API_ORIGIN (the Vercel deployment, which still runs the
 //                             Node functions and the cron jobs; see DEPLOY.md "Cloudflare Workers")
 //   - /blog/               -> same page as /blog (Vercel parity: 200, no redirect)
 //   - /demo/*              -> byte-range (206) support for the demo video: Static Assets alone always
@@ -14,6 +14,7 @@
 // www.openexamhub.org -> apex 308 is a zone Redirect Rule; the host check below is a backup.
 
 import { sanitizeBeacon } from '../lib/analytics/hits.js';
+import { assetlinksJson } from '../lib/assetlinks.js';
 
 const APEX = 'openexamhub.org';
 // Client-side routes without their own prerendered file: the dashboard's tab deep links (/app/plan, ...).
@@ -158,10 +159,23 @@ export default {
     }
     if (pathname === '/api/hit') return hitBeacon(request, env, ctx);
     if (pathname.startsWith('/api/')) return proxyToApi(request, env, url, pathname);
-    if (pathname === '/ads.txt') return proxyToApi(request, env, url, '/api/ads-txt');
+    // /ads.txt and /app-ads.txt share one seller line (AdSense and AdMob, same publisher id).
+    // 404 until ADSENSE_PUBLISHER_ID is set, so a placeholder seller line is never published.
+    if (pathname === '/ads.txt' || pathname === '/app-ads.txt') return proxyToApi(request, env, url, '/api/ads-txt');
 
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+    }
+    // Android App Links. Also shipped as a static asset (public/.well-known/assetlinks.json);
+    // this copy runs when the request reaches the Worker (local tests, or a missing asset).
+    if (pathname === '/.well-known/assetlinks.json') {
+      return new Response(request.method === 'HEAD' ? null : assetlinksJson(), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600'
+        }
+      });
     }
     if (pathname.startsWith('/demo/')) return demoAsset(request, env, url);
     if (pathname === '/blog/') return env.ASSETS.fetch(new Request(new URL('/blog', url), request));

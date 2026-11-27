@@ -1,7 +1,9 @@
 // Offline tests for the Cloudflare Worker: /transparency and /tools 301s, and basic routing.
 // No network. Run: node scripts/test-worker.mjs
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import worker from '../worker/index.js';
+import { ASSETLINKS } from '../lib/assetlinks.js';
 
 const assets = new Map([
   ['/funding', '<html>funding</html>'],
@@ -78,6 +80,38 @@ test('/tools/clb-converter is still served (no redirect loop)', async () => {
   const res = await fetchPath('/tools/clb-converter?tab=ielts');
   assert.equal(res.status, 200);
   assert.equal(await res.text(), '<html>converter</html>');
+});
+
+test('/.well-known/assetlinks.json names the Android package and matches the static file', async () => {
+  const res = await fetchPath('/.well-known/assetlinks.json');
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /application\/json/);
+  const body = JSON.parse(await res.text());
+  assert.deepEqual(body, ASSETLINKS);
+  assert.equal(body[0].target.package_name, 'org.openexamhub.app');
+  assert.equal(body[0].target.sha256_cert_fingerprints.length, 1);
+  const disk = JSON.parse(readFileSync(new URL('../public/.well-known/assetlinks.json', import.meta.url), 'utf8'));
+  assert.deepEqual(disk, ASSETLINKS);
+});
+
+test('/app-ads.txt is proxied to the ads.txt handler', async () => {
+  const orig = globalThis.fetch;
+  let seen = '';
+  globalThis.fetch = async (url) => {
+    seen = String(url);
+    return new Response('google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0\n', {
+      status: 200,
+      headers: { 'content-type': 'text/plain; charset=utf-8' }
+    });
+  };
+  try {
+    const res = await fetchPath('/app-ads.txt');
+    assert.equal(res.status, 200);
+    assert.equal(seen, 'https://openexam-hub.vercel.app/api/ads-txt');
+    assert.match(await res.text(), /^google\.com, pub-1234567890123456, DIRECT,/);
+  } finally {
+    globalThis.fetch = orig;
+  }
 });
 
 test('unknown paths stay 404', async () => {
