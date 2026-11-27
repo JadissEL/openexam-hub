@@ -200,6 +200,9 @@ test('price table: free-tier models cost €0 but still compute a micro-euro inc
   assert.equal(priceFor('other', 'mystery-model').tier, 'free');
   assert.equal(inferProvider('openai/gpt-oss-20b', 'https://api.groq.com/openai/v1'), 'groq');
   assert.equal(inferProvider('gemini-3.5-flash', 'https://generativelanguage.googleapis.com/v1beta/openai'), 'gemini');
+  assert.equal(inferProvider('@cf/meta/llama-3.3-70b-instruct-fp8-fast', 'https://api.cloudflare.com/client/v4/accounts/abc/ai/v1'), 'cloudflare');
+  assert.equal(priceFor('cloudflare', '@cf/meta/llama-3.3-70b-instruct-fp8-fast').tier, 'free');
+  assert.equal(costEur('cloudflare', '@cf/meta/llama-3.3-70b-instruct-fp8-fast', 800, 200), 0);
   assert.equal(slugKey('openai/gpt-oss-120b'), 'openai_gpt-oss-120b');
 });
 
@@ -456,22 +459,6 @@ test('increment helper matches firebase-admin NumericIncrementTransform', () => 
   assert.equal(v.operand, 3);
 });
 
-let failed = 0;
-for (const { name, fn } of tests) {
-  try {
-    await fn();
-    console.log(`  ok  ${name}`);
-  } catch (err) {
-    failed += 1;
-    console.error(`  FAIL  ${name}`);
-    console.error(err);
-  }
-}
-setPubForTests(null);
-setUsageClockForTests(null);
-setCountRegisteredUsersForTests(null);
-console.log(`\n${tests.length - failed} passed, ${failed} failed`);
-process.exit(failed ? 1 : 0);
 
 test('presentUsage folds legacy dotted keys written by set(merge) into the breakdowns', () => {
   const out = presentUsage({
@@ -491,8 +478,125 @@ test('presentUsage folds legacy dotted keys written by set(merge) into the break
 
 test('LLM_FALLBACK_MODEL accepts a comma-separated list tried in order', async () => {
   const { fallbackTargets } = await import('../lib/llm.js');
-  const env = { LLM_FALLBACK_BASE_URL: 'https://g.example/v1', LLM_FALLBACK_API_KEY: 'k', LLM_FALLBACK_MODEL: 'gemini-3-flash-preview, gemini-3.1-flash-lite' };
-  assert.deepEqual(fallbackTargets(env).map((t) => t.model), ['gemini-3-flash-preview', 'gemini-3.1-flash-lite']);
+  const env = { LLM_FALLBACK_BASE_URL: 'https://g.example/v1', LLM_FALLBACK_API_KEY: 'k', LLM_FALLBACK_MODEL: 'gemini-3.1-flash-lite, gemini-3-flash-preview' };
+  assert.deepEqual(fallbackTargets(env).map((t) => t.model), ['gemini-3.1-flash-lite', 'gemini-3-flash-preview']);
   assert.equal(fallbackTargets({}).length, 0);
   assert.deepEqual(fallbackTargets({ LLM_FALLBACK_BASE_URL: 'x' }).map((t) => t.model), ['auto']);
 });
+
+test('LLM_FALLBACK2_* is appended after the first fallback endpoint', async () => {
+  const { fallbackTargets } = await import('../lib/llm.js');
+  const env = {
+    LLM_FALLBACK_BASE_URL: 'https://g.example/v1',
+    LLM_FALLBACK_API_KEY: 'gk',
+    LLM_FALLBACK_MODEL: 'gemini-3.1-flash-lite,gemini-3-flash-preview',
+    LLM_FALLBACK2_BASE_URL: 'https://api.cloudflare.com/client/v4/accounts/abc/ai/v1',
+    LLM_FALLBACK2_API_KEY: 'ck',
+    LLM_FALLBACK2_MODEL: '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
+  };
+  const targets = fallbackTargets(env);
+  assert.deepEqual(targets.map((t) => t.model), [
+    'gemini-3.1-flash-lite',
+    'gemini-3-flash-preview',
+    '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
+  ]);
+  assert.equal(targets[2].base, env.LLM_FALLBACK2_BASE_URL);
+  assert.equal(targets[2].key, 'ck');
+  assert.deepEqual(
+    fallbackTargets({
+      LLM_FALLBACK2_BASE_URL: 'https://cf.example/v1',
+      LLM_FALLBACK2_API_KEY: 'ck',
+      LLM_FALLBACK2_MODEL: 'm1, m2'
+    }).map((t) => t.model),
+    ['m1', 'm2']
+  );
+});
+
+test('generateJson walks primary, Gemini fallbacks, then the Cloudflare fallback on HTTP errors', async () => {
+  const { generateJson } = await import('../lib/llm.js');
+  const keys = [
+    'LLM_BASE_URL', 'LLM_API_KEY', 'LLM_MODEL',
+    'LLM_FALLBACK_BASE_URL', 'LLM_FALLBACK_API_KEY', 'LLM_FALLBACK_MODEL',
+    'LLM_FALLBACK2_BASE_URL', 'LLM_FALLBACK2_API_KEY', 'LLM_FALLBACK2_MODEL',
+    'LLM_REASONING_EFFORT'
+  ];
+  const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  const origFetch = globalThis.fetch;
+  const calls = [];
+  const fail = (status) => ({
+    ok: false,
+    status,
+    text: async () => `fail ${status}`
+  });
+  const okBody = { ok: true };
+  try {
+    Object.assign(process.env, {
+      LLM_BASE_URL: 'https://api.groq.com/openai/v1',
+      LLM_API_KEY: 'pk',
+      LLM_MODEL: 'openai/gpt-oss-120b',
+      LLM_FALLBACK_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai',
+      LLM_FALLBACK_API_KEY: 'gk',
+      LLM_FALLBACK_MODEL: 'gemini-3.1-flash-lite,gemini-3-flash-preview',
+      LLM_FALLBACK2_BASE_URL: 'https://api.cloudflare.com/client/v4/accounts/abc/ai/v1',
+      LLM_FALLBACK2_API_KEY: 'ck',
+      LLM_FALLBACK2_MODEL: '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
+    });
+    delete process.env.LLM_REASONING_EFFORT;
+    globalThis.fetch = async (url, opts) => {
+      const body = JSON.parse(opts.body);
+      calls.push({ url, model: body.model, auth: opts.headers.Authorization });
+      if (String(url).includes('cloudflare')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            choices: [{ message: { content: JSON.stringify(okBody) } }],
+            usage: { prompt_tokens: 1, completion_tokens: 1 },
+            model: body.model
+          })
+        };
+      }
+      return fail(429);
+    };
+    const out = await generateJson({
+      agent: 'PLANNER',
+      system: 'test',
+      prompt: 'ping',
+      schema: { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'] }
+    });
+    assert.deepEqual(out.data, okBody);
+    assert.equal(out.model, '@cf/meta/llama-3.3-70b-instruct-fp8-fast');
+    assert.deepEqual(calls.map((c) => c.model), [
+      'openai/gpt-oss-120b',
+      'gemini-3.1-flash-lite',
+      'gemini-3-flash-preview',
+      '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
+    ]);
+    assert.equal(calls[0].url, 'https://api.groq.com/openai/v1/chat/completions');
+    assert.equal(calls[3].url, 'https://api.cloudflare.com/client/v4/accounts/abc/ai/v1/chat/completions');
+    assert.equal(calls[3].auth, 'Bearer ck');
+  } finally {
+    globalThis.fetch = origFetch;
+    for (const k of keys) {
+      if (saved[k] === undefined) delete process.env[k];
+      else process.env[k] = saved[k];
+    }
+  }
+});
+
+let failed = 0;
+for (const { name, fn } of tests) {
+  try {
+    await fn();
+    console.log(`  ok  ${name}`);
+  } catch (err) {
+    failed += 1;
+    console.error(`  FAIL  ${name}`);
+    console.error(err);
+  }
+}
+setPubForTests(null);
+setUsageClockForTests(null);
+setCountRegisteredUsersForTests(null);
+console.log(`\n${tests.length - failed} passed, ${failed} failed`);
+process.exit(failed ? 1 : 0);

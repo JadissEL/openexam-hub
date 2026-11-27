@@ -43,7 +43,10 @@ use it), or with `vercel env add NAME production`. Never commit them.
 | `LLM_MODEL_<AGENT>` | no | A per-agent override. AGENT is one of `DISCOVERY`, `PLANNER`, `FORMAT`, `DIAGNOSTIC`, `COACH`, `PRACTICE`, `EXPANSION`. Example: `LLM_MODEL_PLANNER=groq/llama-3.3-70b-versatile`, or the name of an OmniRoute combo. |
 | `LLM_FALLBACK_BASE_URL` | no | A second OpenAI-compatible endpoint, used when the primary errors (4xx/5xx/timeouts). A cheap **paid** API is recommended once you have real traffic. |
 | `LLM_FALLBACK_API_KEY` | with fallback | The key for the fallback endpoint. |
-| `LLM_FALLBACK_MODEL` | with fallback | The model id on the fallback endpoint, or a comma-separated list tried in order (e.g. `gemini-3-flash-preview,gemini-3.1-flash-lite`). Check ids with the provider's models.list before setting them: Gemini retired `gemini-2.5-flash` for new keys, and `gemini-flash-latest` / `gemini-3.8-flash` were overloaded (503/timeouts) on 21 Nov 2026. Keep OpenRouter's free tier (50 requests/day, account-wide) out of this chain, or last. |
+| `LLM_FALLBACK_MODEL` | with fallback | The model id on the fallback endpoint, or a comma-separated list tried in order (e.g. `gemini-3.1-flash-lite,gemini-3-flash-preview`). Put `gemini-3.1-flash-lite` first: it has higher free limits than `gemini-3-flash-preview`. Check ids with the provider's models.list before setting them: Gemini retired `gemini-2.5-flash` for new keys, and `gemini-flash-latest` / `gemini-3.8-flash` were overloaded (503/timeouts) on 21 Nov 2026. Keep OpenRouter's free tier (50 requests/day, account-wide) out of this chain, or last. |
+| `LLM_FALLBACK2_BASE_URL` | no | A third OpenAI-compatible endpoint, tried after `LLM_FALLBACK_*`. For Cloudflare Workers AI: `https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1`. |
+| `LLM_FALLBACK2_API_KEY` | with fallback 2 | The Bearer token for the second fallback endpoint (a Cloudflare API token with Workers AI rights). |
+| `LLM_FALLBACK2_MODEL` | with fallback 2 | The model id on the second fallback endpoint, or a comma-separated list tried in order (e.g. `@cf/meta/llama-3.3-70b-instruct-fp8-fast`). |
 
 ### Donations
 | Variable | Required | What it is |
