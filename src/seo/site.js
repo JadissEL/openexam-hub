@@ -149,9 +149,9 @@ export const PAGE_META = {
   },
   '/exams': EXAMS_INDEX,
   '/tools/clb-converter': {
-    title: 'IELTS, CELPIP, TEF & TCF to CLB (NCLC) converter · OpenExam Hub',
+    title: 'IELTS, CELPIP, PTE, TEF, TCF to CLB converter · OpenExam Hub',
     description:
-      'Free converter from IELTS General Training, CELPIP-General, TEF Canada and TCF Canada scores to CLB (NCLC) levels, using IRCC’s official tables. Level per skill, level 7 or 9 check, CRS points.'
+      'Convert IELTS General Training, CELPIP-General, PTE Core, TEF Canada or TCF Canada scores to CLB (NCLC) with IRCC’s tables. Level per skill and CRS points.'
   }
 };
 

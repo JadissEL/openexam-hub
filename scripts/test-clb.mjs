@@ -299,7 +299,8 @@ test('CTA picks the planner level from the gap and is a valid planner deep link'
   assert.equal(plannerHref('IELTS_GT', 8), '/app?exam=IELTS&level=C1&days=30&utm_source=clb-tool');
   assert.equal(plannerHref('CELPIP_G', 6), '/app?exam=CELPIP&level=B2&days=30&utm_source=clb-tool');
   assert.equal(plannerHref('CELPIP_G', 8), '/app?exam=CELPIP&level=C1&days=30&utm_source=clb-tool');
-  for (const id of TABLE_IDS) {
+  assert.equal(plannerHref('PTE_CORE', 7), null, 'PTE Core has no planner exam, so no /app deep link');
+  for (const id of TABLE_IDS.filter((t) => t !== 'PTE_CORE')) {
     for (const lvl of [null, 5, 7, 9]) {
       const qs = plannerHref(id, lvl).split('?')[1];
       assert.equal(isPlannerDeepLink(qs), true, `${id} ${lvl}`);

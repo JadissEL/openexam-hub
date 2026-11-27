@@ -30,6 +30,11 @@
  *  - CELPIP-General, CLB 4 to 9: "Federal Skilled Trades Program > CELPIP" (CLB level = score).
  *    CLB 10 ("10 and above CELPIP-G, 10+") is on the Federal Skilled Worker table. The top of the scale,
  *    12, is the upper end of IRCC's "5-12" second-official-language row.
+ *  - PTE Core (PTE_CORE below), CLB 4 to 10: "Federal Skilled Trades Program > PTE Core" on the same page
+ *    (IRCC prints a score range per level; the top row is "89+" / "88+" / "90+"). The Federal Skilled
+ *    Worker table prints the same CLB 7 to 10 rows. IRCC: "You must take the PTE Core option", so PTE
+ *    Academic is not accepted. Pearson reports PTE Core scores on a 10-90 scale (PTE_CORE_SCORING_URL),
+ *    so the top band ends at 90 and no score under 10 exists. Transcribed on PTE_LAST_VERIFIED.
  *  - Only IELTS General Training is accepted for Express Entry (not Academic, not One Skill Retake) and
  *    only CELPIP-General: IRCC's "Language tests we accept" table on the same page.
  *  - IRCC does not say what to do with an IELTS score that sits between two listed values (for example
@@ -41,10 +46,14 @@ export const LAST_VERIFIED = '2026-11-26';
 /** IELTS and CELPIP tables: transcribed from canada.ca on this date. */
 export const ENGLISH_LAST_VERIFIED = '2026-11-27';
 /** Date modified of EE_LANGUAGE_URL on the day it was read (the dcterms.modified meta tag in its HTML). */
+/** PTE Core table: transcribed from canada.ca (and Pearson's 10-90 scale) on this date. */
+export const PTE_LAST_VERIFIED = '2026-11-27';
 export const EE_LANGUAGE_MODIFIED = '2026-10-16';
 
 export const EE_LANGUAGE_URL =
   'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html';
+/** Pearson: PTE Core scoring (10-90 score scale, and Pearson's copy of IRCC's CLB table). */
+export const PTE_CORE_SCORING_URL = 'https://www.pearsonpte.com/pte-core/scoring';
 export const START_UP_URL =
   'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/start-visa/language-testing.html';
 export const CRS_URL =
@@ -178,6 +187,30 @@ export const TABLES = {
       writing: ladder(1, 12, [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10]),
       speaking: ladder(1, 12, [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9], [10, 10])
     }
+  },
+  // IRCC: Express Entry > Language test results > PTE Core (PTE Core only). See the header comment.
+  PTE_CORE: {
+    id: 'PTE_CORE',
+    exam: 'PTE_CORE',
+    examName: 'PTE Core',
+    language: 'en',
+    scheme: 'CLB',
+    step: 1,
+    scaleMin: 10,
+    planner: false,
+    tab: 'PTE Core',
+    label: 'PTE Core',
+    short: 'PTE Core',
+    expressEntry: true,
+    sourceUrl: EE_LANGUAGE_URL,
+    sourceLabel: 'IRCC: Express Entry, Language test results (PTE Core)',
+    notice: 'Express Entry accepts PTE Core only. PTE Academic is a different test and is not on IRCC’s Express Entry list, so enter PTE Core scores (10 to 90).',
+    bands: {
+      reading: band([4, 33, 41], [5, 42, 50], [6, 51, 59], [7, 60, 68], [8, 69, 77], [9, 78, 87], [10, 88, 90]),
+      listening: band([4, 28, 38], [5, 39, 49], [6, 50, 59], [7, 60, 70], [8, 71, 81], [9, 82, 88], [10, 89, 90]),
+      writing: band([4, 41, 50], [5, 51, 59], [6, 60, 68], [7, 69, 78], [8, 79, 87], [9, 88, 89], [10, 90, 90]),
+      speaking: band([4, 42, 50], [5, 51, 58], [6, 59, 67], [7, 68, 75], [8, 76, 83], [9, 84, 88], [10, 89, 90])
+    }
   }
 };
 
@@ -215,6 +248,8 @@ export function parseScore(tableId, skill, raw) {
   }
   const value = Number(s.replace(',', '.'));
   if (half && Math.round(value * 2) !== value * 2) return { ok: false, error: 'IELTS bands go up in steps of 0.5, for example 6.0 or 6.5.' };
+  const scaleMin = TABLES[tableId].scaleMin;
+  if (scaleMin !== undefined && value < scaleMin) return { ok: false, error: `${TABLES[tableId].examName} scores start at ${scaleMin}.` };
   const max = maxScore(tableId, skill);
   if (value > max) return { ok: false, error: `The highest score on IRCC’s table is ${formatScore(tableId, max)}.` };
   return { ok: true, value };
@@ -297,10 +332,26 @@ export function recommendedLevel(lowest) {
   return lowest < 7 ? 'B2' : 'C1';
 }
 
-/** Planner deep link for the CTA (CELPIP, IELTS, TEF Canada and TCF Canada all have plans). */
+/**
+ * Planner deep link for the CTA (CELPIP, IELTS, TEF Canada and TCF Canada all have plans). PTE Core has
+ * no planner exam, so it returns null and the page links to the PTE comparison instead.
+ */
 export function plannerHref(tableId, lowest) {
+  if (TABLES[tableId].planner === false) return null;
   const exam = TABLES[tableId].exam;
   return `/app?exam=${exam}&level=${recommendedLevel(lowest)}&days=30&utm_source=clb-tool`;
+}
+
+// IRCC prints one listed score per level for IELTS and CELPIP (the lowest that earns it), and a range only on
+// the top row (IELTS "7.5-9.0", CELPIP "10+"). Show them as IRCC does; the other tables show full ranges.
+/** How IRCC prints one cell of a table (see the comment above). */
+export function bandText(table, r) {
+  // PTE Core: IRCC prints the top row as "89+" (Pearson's scale ends at 90).
+  if (table.id === 'PTE_CORE' && r.level === 10) return `${r.min}+`;
+  if (!table.listed) return r.min === r.max ? String(r.min) : `${r.min}–${r.max}`;
+  const fmt = (n) => formatScore(table.id, n);
+  if (r.level < 10) return fmt(r.min);
+  return table.id === 'CELPIP_G' ? `${r.min}+` : `${fmt(r.min)}–${fmt(r.max)}`;
 }
 
 export function levelLabel(level, scheme = 'NCLC') {
