@@ -415,6 +415,15 @@ if (process.argv.includes('--built')) {
     const faq = all.find((b) => b['@type'] === 'FAQPage');
     assert.equal(faq.mainEntity.length, TOOL_FAQ.length);
     for (const item of TOOL_FAQ) assert.ok(text.includes(item.q) && text.includes(item.a.slice(0, 60)), `FAQ must be visible on the page: ${item.q}`);
+    // The JSON-LD answers must match the visible answers word for word (Google's FAQPage rule), and the
+    // page has no numbered how-to steps, so it must not carry HowTo markup.
+    const squash = (s) => s.replace(/\s+/g, ' ').trim();
+    faq.mainEntity.forEach((q, i) => {
+      assert.equal(q.name, TOOL_FAQ[i].q);
+      assert.equal(q.acceptedAnswer.text, TOOL_FAQ[i].a);
+      assert.ok(squash(text).includes(squash(q.name)) && squash(text).includes(squash(q.acceptedAnswer.text)), `full FAQ answer is visible on the page: ${q.name}`);
+    });
+    assert.ok(!types.includes('HowTo'), 'no HowTo markup without visible step-by-step instructions');
     assert.doesNotMatch(html, /pagead2\.googlesyndication|adsbygoogle/);
   });
 

@@ -389,6 +389,26 @@ Body text.
   assert.throws(() => parsePost('covered-post.md', bad), /cover/);
 });
 
+test('every published post is listed in public/llms.txt and has a unique title and description', () => {
+  const llms = fs.readFileSync(path.join(root, 'public/llms.txt'), 'utf8');
+  const posts = loadBlogPosts({ includeDrafts: false });
+  assert.ok(posts.length > 0);
+  for (const p of posts) {
+    assert.ok(llms.includes(`](https://openexamhub.org/blog/${p.slug})`), `llms.txt must list /blog/${p.slug}`);
+  }
+  const drafts = loadBlogPosts({ includeDrafts: true }).filter((p) => p.draft);
+  for (const d of drafts) assert.ok(!llms.includes(`/blog/${d.slug}`), `llms.txt must not list the draft /blog/${d.slug}`);
+  for (const key of ['title', 'description']) {
+    const seen = new Map();
+    for (const p of posts) {
+      const v = String(p[key]).trim().toLowerCase();
+      assert.ok(v, `${p.slug}: ${key} is empty`);
+      assert.ok(!seen.has(v), `${p.slug} and ${seen.get(v)} share the same ${key}`);
+      seen.set(v, p.slug);
+    }
+  }
+});
+
 if (process.argv.includes('--built')) {
   const dist = path.join(root, 'dist');
   test('built sitemap and RSS exist', () => {
@@ -463,6 +483,33 @@ if (process.argv.includes('--built')) {
   const jsonLdBlocks = (html) =>
     [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
   const types = (blocks) => blocks.flatMap((b) => (b['@graph'] ? b['@graph'] : [b])).map((b) => b['@type']);
+
+  test('exam guides link to the comparison posts they are relevant to', () => {
+    const published = new Set(loadBlogPosts({ includeDrafts: false }).map((p) => p.slug));
+    const expected = {
+      ielts: ['toefl-vs-ielts', 'ielts-to-cefr'],
+      toefl: ['toefl-vs-ielts'],
+      delf: ['delf-vs-tcf-which-french-test'],
+      tcf: ['delf-vs-tcf-which-french-test'],
+      'tcf-canada': ['delf-vs-tcf-which-french-test']
+    };
+    for (const [guide, slugs] of Object.entries(expected)) {
+      const html = read(`exams/${guide}/index.html`);
+      const main = html.split('aria-label="Comparing tests"')[1] || '';
+      for (const slug of slugs) {
+        if (!published.has(slug)) continue;
+        assert.ok(main.includes(`href="/blog/${slug}"`), `/exams/${guide} links to /blog/${slug} from the comparison note`);
+        assert.ok(html.includes(`href="/blog/${slug}"`), `/exams/${guide} lists /blog/${slug}`);
+      }
+    }
+  });
+
+  test('built sitemap lists every published post and no draft', () => {
+    const sitemap = read('sitemap.xml');
+    for (const p of loadBlogPosts({ includeDrafts: false })) assert.ok(sitemap.includes(`<loc>https://openexamhub.org/blog/${p.slug}</loc>`), `sitemap lists ${p.slug}`);
+    // Local and preview builds include drafts on purpose; only a production build must omit them.
+    if (!includeDraftsFromEnv()) for (const d of loadBlogPosts({ includeDrafts: true }).filter((p) => p.draft)) assert.ok(!sitemap.includes(`/blog/${d.slug}<`), `sitemap omits draft ${d.slug}`);
+  });
 
   test('exam guide pages are prerendered as static HTML with their own head and JSON-LD', () => {
     const { EXAM_PAGES } = siteModule;
