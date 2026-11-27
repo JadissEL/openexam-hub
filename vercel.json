@@ -10,6 +10,9 @@
     },
     "api/admin/*.js": {
       "maxDuration": 300
+    },
+    "api/generate-roadmap.js": {
+      "maxDuration": 300
     }
   },
   "crons": [

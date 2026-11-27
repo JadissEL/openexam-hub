@@ -120,7 +120,7 @@ globalThis.fetch = async (url, opts = {}) => {
     const body = JSON.parse(opts.body);
     const agent = body.response_format.json_schema.name.replace('_output', '');
     const out = llm[agent] ? llm[agent](body) : { httpStatus: 400 };
-    if (out.httpStatus) return new Response('{}', { status: out.httpStatus });
+    if (out.httpStatus) return new Response(out.body || '{}', { status: out.httpStatus });
     return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(out) } }], usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 }, model: 'stub' }), { status: 200 });
   }
   const h = web.get(u) || web.get(u.replace(/\/$/, ''));
@@ -382,11 +382,26 @@ await test('diagnostic -> personalised, library-first, cached per profile band',
   assert.match(r2.body.roadmap.id, /^TCF-B2-30-p-/);
 });
 await test('LLM planner down -> deterministic fallback, not cached', async () => {
-  const saved = llm.planner; llm.planner = () => ({ httpStatus: 400 });
-  const r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 12, forceRefresh: true });
-  llm.planner = saved;
+  const saved = llm.planner;
+  llm.planner = () => ({ httpStatus: 429, body: 'planner LLM failed: AI service temporarily unavailable (HTTP 429) sk-leak-token' });
+  const logs = [];
+  const origErr = console.error;
+  console.error = (...args) => logs.push(args.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
+  let r;
+  try {
+    r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 12, forceRefresh: true });
+  } finally {
+    console.error = origErr;
+    llm.planner = saved;
+  }
   assert.equal(r.status, 200);
-  assert.ok(r.body.roadmap.pipeline.some((p) => p.agent === 'planner' && p.status === 'failed'));
+  const step = r.body.roadmap.pipeline.find((p) => p.agent === 'planner');
+  assert.equal(step.status, 'failed');
+  assert.equal(step.detail, 'Used the standard study schedule; wording will be polished when the AI planner is available.');
+  const body = JSON.stringify(r.body);
+  assert.doesNotMatch(body, /sk-leak-token|HTTP 429|planner LLM failed|temporarily unavailable/);
+  assert.match(logs.join('\n'), /sk-leak-token/);
+  assert.match(logs.join('\n'), /HTTP 429/);
   assert.deepEqual(P.checkPlan(r.body.roadmap, 12), []);
   assert.equal(r.body.roadmap.scheduleMethod, 'deterministic_v1');
   assert.equal(await counter('fallbackPlans'), 1);
@@ -398,6 +413,38 @@ await test('LLM planner down -> deterministic fallback, not cached', async () =>
   const again = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 12 });
   assert.notEqual(again.body.roadmap.source, 'global_cache');
   assert.ok((await globalThis.__fakeDb.pub().collection('plans').doc('TCF_B2_14').get()).data().wording);
+});
+await test('learner pipeline hides a failed planner detail', async () => {
+  const { pipelineDetailForLearner, learnerPipeline } = await import('../lib/algo/common.js');
+  const raw = 'planner LLM failed: AI service temporarily unavailable (HTTP 429)';
+  const steps = [
+    { agent: 'planner', status: 'failed', detail: raw },
+    { agent: 'scheduler', status: 'ok', detail: '14 days' }
+  ];
+  const friendly = 'Used the standard study schedule; wording will be polished when the AI planner is available.';
+  assert.equal(pipelineDetailForLearner(steps[0]), friendly);
+  assert.equal(pipelineDetailForLearner(steps[1]), '14 days');
+  const safe = learnerPipeline(steps);
+  assert.equal(safe[0].detail, friendly);
+  assert.equal(safe[1], steps[1]);
+  assert.doesNotMatch(JSON.stringify(safe), /HTTP 429|planner LLM failed/);
+});
+await test('discovery LLM failure does not return the provider error', async () => {
+  const saved = llm.discovery;
+  llm.discovery = () => ({ httpStatus: 400, body: 'discovery failed: AI service temporarily unavailable (HTTP 429) sk-leak-token' });
+  const logs = [];
+  const origErr = console.error;
+  console.error = (...args) => logs.push(args.map((x) => (typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
+  try {
+    const r = await D.discoverResources({ exam: 'IELTS', level: 'B2' });
+    assert.equal(r.ok, false);
+    assert.equal(r.error, 'Source search is temporarily unavailable');
+    assert.doesNotMatch(r.error, /sk-leak-token|HTTP|429/);
+    assert.match(logs.join('\n'), /sk-leak-token/);
+  } finally {
+    console.error = origErr;
+    llm.discovery = saved;
+  }
 });
 await test('not enough verified resources -> 422 with trace (discovery retried once)', async () => {
   llm.discovery = () => ({ candidates: [{ title: 'Off', url: 'https://some-blog.com/x', category: 'x', skills: ['reading'], levels: [] }] });

@@ -8,7 +8,12 @@ import { cors, safeBody } from '../lib/http.js';
 import { requireAccount } from '../lib/auth.js';
 import { generateRoadmap } from '../lib/orchestrator.js';
 
-export const config = { maxDuration: 120 };
+// Hobby with fluid compute allows 300s and that is also the plan maximum
+// (https://vercel.com/docs/functions/limitations). A polish chain is 30s + 30s + 55s
+// of provider timeouts (30s more per extra fallback model), and this route may also
+// extract an exam format and re-check links before that. 300s is the platform cap.
+// generateRoadmap stops new LLM calls 25s early so the deterministic plan still returns.
+export const config = { maxDuration: 300 };
 
 export default async function handler(req, res) {
   try {
