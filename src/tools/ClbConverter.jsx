@@ -417,6 +417,9 @@ export default function ClbConverter() {
                 </details>
               ))}
             </div>
+            <p className={`mt-4 text-[16px] ${muted}`}>
+              More answers about how OpenExam Hub works: <a href="/faq" className="text-[#C2410C] underline underline-offset-4">read the full FAQ</a>.
+            </p>
           </section>
 
           <section aria-labelledby="sources-title" className="mt-14 pt-10 border-t border-[#E7E1D7] max-w-3xl">

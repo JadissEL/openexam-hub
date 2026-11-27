@@ -204,6 +204,9 @@ function Faq({ faq }) {
           </details>
         ))}
       </div>
+      <p className={`mt-4 text-[16px] ${muted}`}>
+        More answers about how OpenExam Hub works: <a href="/faq" className="text-[#C2410C] underline underline-offset-4">read the full FAQ</a>.
+      </p>
     </section>
   );
 }
@@ -234,6 +237,34 @@ function PlannerCta({ planner, label, relatedPlanner }) {
   );
 }
 
+/** Short "comparing tests" pointer between the two English-language guides. */
+const COMPARE = {
+  ielts: {
+    lead: 'Some universities and employers accept the TOEFL iBT as well as IELTS. ETS changed the TOEFL iBT format on 21 January 2026; see the',
+    slug: 'toefl',
+    anchor: 'TOEFL iBT 2026 format guide and free ETS practice',
+    tail: 'Always check which tests your university or immigration programme accepts.'
+  },
+  toefl: {
+    lead: 'Not sure which English test to take? Compare with the',
+    slug: 'ielts',
+    anchor: 'IELTS format and free official practice guide',
+    tail: 'Check which tests your university or immigration programme accepts before you book.'
+  }
+};
+
+function CompareNote({ guide }) {
+  const c = COMPARE[guide];
+  if (!c) return null;
+  return (
+    <section aria-label="Comparing English tests" className="mt-10 max-w-3xl">
+      <p className={`text-[16px] leading-[1.7] ${muted}`}>
+        {c.lead} <a href={`/exams/${c.slug}`} className="text-[#C2410C] underline underline-offset-4">{c.anchor}</a>. {c.tail}
+      </p>
+    </section>
+  );
+}
+
 function RelatedReading({ posts, related }) {
   return (
     <section aria-labelledby="related-title" className="mt-14 grid gap-10 md:grid-cols-2">
@@ -246,10 +277,13 @@ function RelatedReading({ posts, related }) {
                 <a href={p.url} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{p.title}</a>
               </li>
             ))}
+            <li>
+              <a href="/blog" className="text-[#C2410C] underline underline-offset-4">All OpenExam Hub blog articles</a>
+            </li>
           </ul>
         ) : (
           <p className={`mt-4 text-[16px] ${muted}`}>
-            No articles on this exam yet. <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Browse the blog</a>.
+            No articles on this exam yet. <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Browse the OpenExam Hub blog</a>.
           </p>
         )}
       </div>
@@ -258,7 +292,7 @@ function RelatedReading({ posts, related }) {
         <ul className="mt-4 space-y-3 text-[16px] leading-snug">
           {related.map((r) => (
             <li key={r.slug}>
-              <a href={`/exams/${r.slug}`} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{r.label}</a>
+              <a href={`/exams/${r.slug}`} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{r.label} guide</a>
             </li>
           ))}
           <li>
@@ -434,10 +468,13 @@ export function PlanPage({ guide, slug, posts = [] }) {
                     <a href={p.url} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{p.title}</a>
                   </li>
                 ))}
+                <li>
+                  <a href="/blog" className="text-[#C2410C] underline underline-offset-4">All OpenExam Hub blog articles</a>
+                </li>
               </ul>
             ) : (
               <p className={`mt-4 text-[16px] ${muted}`}>
-                No articles on this exam yet. <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Browse the blog</a>.
+                No articles on this exam yet. <a href="/blog" className="text-[#C2410C] underline underline-offset-4">Browse the OpenExam Hub blog</a>.
               </p>
             )}
           </div>
@@ -497,6 +534,7 @@ export function ExamPage({ slug, posts = [] }) {
 
         <StudyPlans guide={slug} />
         <RelatedTool guide={slug} />
+        <CompareNote guide={slug} />
         <FormatTable format={c.format} />
         <DeleLevels rows={c.deleLevels} scoring={c.scoring} />
         <Resources groups={c.resources} lastChecked={c.lastChecked} />
@@ -534,6 +572,10 @@ export function ExamsIndex({ posts = [] }) {
           <p className={eyebrow}>Exam guides</p>
           <h1 className={`mt-4 font-display ${ink} text-5xl sm:text-6xl tracking-[-0.03em] font-medium leading-[1.02]`}>Language exam guides</h1>
           <p className={`mt-6 ${lead}`}>{EXAMS_INDEX.description}</p>
+          <p className={`mt-4 text-[16px] ${muted}`}>
+            Looking for something else? Read the <a href="/faq" className="text-[#C2410C] underline underline-offset-4">OpenExam Hub FAQ</a> or the{' '}
+            <a href="/blog" className="text-[#C2410C] underline underline-offset-4">blog on exam scores, fees and requirements</a>.
+          </p>
         </header>
         <ul className="mt-12 grid gap-5 sm:grid-cols-2">
           {EXAM_PAGES.map((p) => {
