@@ -58,9 +58,9 @@ export const EXAM_PAGES = [
     slug: 'celpip',
     label: 'CELPIP',
     tags: ['CELPIP'],
-    title: 'CELPIP: test format, CLB scores and free official practice',
+    title: 'CELPIP: format, CLB and official practice',
     description:
-      'CELPIP-General from official sources: the four skills and their timings from Paragon’s Test Format & Scoring page, how CELPIP levels correspond to CLB and CEFR, and IRCC’s use of the test for Express Entry.'
+      'Official CELPIP-General format and timings from Paragon, how levels correspond to CLB and CEFR, and IRCC’s use of the test for Express Entry.'
   },
   {
     slug: 'delf',
