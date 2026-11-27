@@ -119,7 +119,7 @@ function HowItWorks() {
           <p className={eyebrow}>See how it works</p>
           <h2 id="how-title" className={`mt-4 ${h2}`}>Three choices, then a plan you can actually follow.</h2>
           <p className={`mt-4 text-[17px] leading-[1.7] ${muted}`}>
-            A two-and-a-half-minute walkthrough, from creating a free account to building a plan.
+            A 75-second walkthrough, from creating a free account to building a plan.
           </p>
         </div>
         <figure className="mt-8 max-w-3xl rounded-[18px] bg-[#1A1714] ring-1 ring-black/[0.07] shadow-[0_40px_80px_-40px_rgba(60,40,20,0.45)] overflow-hidden">
@@ -131,14 +131,14 @@ function HowItWorks() {
             width={1280}
             height={720}
             className="block w-full h-auto aspect-video bg-[#1A1714]"
-            aria-label="OpenExam Hub demo: signing up, building a TEF Canada plan, and logging back in"
+            aria-label="OpenExam Hub demo: signing up and building a TEF Canada plan"
           >
             <source src="/demo/desktop.mp4" type="video/mp4" />
             <track kind="captions" src="/demo/desktop.vtt" srcLang="en" label="English" default />
           </video>
         </figure>
         <p className={`mt-3 max-w-3xl text-[13px] leading-relaxed ${muted}`}>
-          English captions are available in the player. Background music: “Chill Out Theme” by Komiku, released under CC0 1.0.
+          English captions are available in the player. Background music: “Everyone is so alive” by Loyalty Freak Music, released under CC0 1.0.
         </p>
         <ol className="mt-12 grid md:grid-cols-3 gap-x-10 gap-y-10">
           {STEPS.map((s, i) => (
