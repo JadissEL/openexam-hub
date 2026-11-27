@@ -296,8 +296,9 @@ test('CTA picks the planner level from the gap and is a valid planner deep link'
   assert.equal(plannerHref('TCF_CANADA', null), '/app?exam=TCF_CANADA&level=B2&days=30&utm_source=clb-tool');
   assert.equal(plannerHref('IELTS_GT', 6), '/app?exam=IELTS&level=B2&days=30&utm_source=clb-tool');
   assert.equal(plannerHref('IELTS_GT', 8), '/app?exam=IELTS&level=C1&days=30&utm_source=clb-tool');
-  assert.equal(plannerHref('CELPIP_G', 6), null, 'no CELPIP plan exists, so no planner link');
-  for (const id of TABLE_IDS.filter((t) => t !== 'CELPIP_G')) {
+  assert.equal(plannerHref('CELPIP_G', 6), '/app?exam=CELPIP&level=B2&days=30&utm_source=clb-tool');
+  assert.equal(plannerHref('CELPIP_G', 8), '/app?exam=CELPIP&level=C1&days=30&utm_source=clb-tool');
+  for (const id of TABLE_IDS) {
     for (const lvl of [null, 5, 7, 9]) {
       const qs = plannerHref(id, lvl).split('?')[1];
       assert.equal(isPlannerDeepLink(qs), true, `${id} ${lvl}`);
@@ -429,7 +430,7 @@ if (process.argv.includes('--built')) {
 
   test('built sitemap lists the tool; guides and footer link to it', () => {
     assert.ok(read('sitemap.xml').includes('<loc>https://openexamhub.org/tools/clb-converter</loc>'));
-    for (const rel of ['exams/tef-canada/index.html', 'exams/tcf-canada/index.html', 'exams/ielts/index.html']) {
+    for (const rel of ['exams/tef-canada/index.html', 'exams/tcf-canada/index.html', 'exams/ielts/index.html', 'exams/celpip/index.html']) {
       assert.ok(read(rel).includes('href="/tools/clb-converter"'), `${rel} links to the tool`);
     }
     assert.ok(visibleText(read('exams/ielts/index.html')).includes('Express Entry accepts IELTS General Training only, not Academic'), 'IELTS guide card states the General Training rule');
@@ -438,8 +439,10 @@ if (process.argv.includes('--built')) {
       assert.ok(read(rel).includes('href="/tools/clb-converter"'), `${rel} footer/tool link`);
     }
     assert.ok(visibleText(read('exams/ielts/index.html')).includes('Convert your IELTS scores to CLB'), 'IELTS guide has the tool card');
+    assert.ok(visibleText(read('exams/celpip/index.html')).includes('Convert your CELPIP scores to CLB'), 'CELPIP guide has the tool card');
+    assert.ok(visibleText(read('exams/celpip/index.html')).includes('Express Entry accepts the CELPIP-General test'), 'CELPIP guide card states the General test rule');
     for (const rel of ['exams/toefl/index.html', 'exams/delf/index.html', 'exams/goethe/index.html']) {
-      assert.ok(!read(rel).includes('Convert your'), `${rel}: the tool card is only on the TEF/TCF Canada and IELTS guides`);
+      assert.ok(!read(rel).includes('Convert your'), `${rel}: the tool card is only on the TEF/TCF Canada, IELTS and CELPIP guides`);
     }
     assert.ok(read('llms.txt').includes('/tools/clb-converter'));
   });

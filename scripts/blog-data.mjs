@@ -31,6 +31,7 @@ export const EXAM_LABELS = {
   IELTS: 'IELTS',
   CAMBRIDGE: 'Cambridge English',
   TOEFL: 'TOEFL',
+  CELPIP: 'CELPIP',
   GOETHE: 'Goethe',
   TELC: 'telc',
   TESTDAF: 'TestDaF',

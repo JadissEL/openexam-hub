@@ -55,6 +55,14 @@ export const EXAM_PAGES = [
       'The TOEFL iBT as updated by ETS from 21 January 2026: section order, timings and task types, plus the free official ETS sample tests, full-length practice tests and scoring rubrics.'
   },
   {
+    slug: 'celpip',
+    label: 'CELPIP',
+    tags: ['CELPIP'],
+    title: 'CELPIP: test format, CLB scores and free official practice',
+    description:
+      'CELPIP-General from official sources: the four skills and their timings from Paragon’s Test Format & Scoring page, how CELPIP levels correspond to CLB and CEFR, and IRCC’s use of the test for Express Entry.'
+  },
+  {
     slug: 'delf',
     label: 'DELF and DALF',
     tags: ['DELF', 'DALF'],
@@ -91,7 +99,7 @@ export function examPagesForTag(tag) {
 }
 
 export const EXAMS_INDEX = {
-  title: 'Language exam guides: TEF Canada, TCF, IELTS, TOEFL, DELF, Goethe, DELE',
+  title: 'Language exam guides: TEF Canada, TCF, IELTS, TOEFL, CELPIP, DELF, Goethe, DELE',
   description:
     'Free guides to the main language exams for study, work and immigration: official formats and timings, how scores are reported, and free official practice material for each exam.'
 };
@@ -99,9 +107,9 @@ export const EXAMS_INDEX = {
 /** Static routes and their head tags. Titles here are the full <title> text. */
 export const PAGE_META = {
   '/': {
-    title: 'OpenExam Hub · Free study plans for TEF Canada, TCF, IELTS, TOEFL, Goethe and DELE',
+    title: 'OpenExam Hub · Free study plans for TEF Canada, TCF, IELTS, TOEFL, CELPIP, Goethe and DELE',
     description:
-      'Free, day-by-day study plans for TEF Canada, TCF, IELTS, TOEFL, Goethe and DELE, built only from official free resources. Free. Create a free account to generate your plan. Code public on GitHub.'
+      'Free, day-by-day study plans for TEF Canada, TCF, IELTS, TOEFL, CELPIP, Goethe and DELE, built only from official free resources. Free. Create a free account to generate your plan. Code public on GitHub.'
   },
   '/app': {
     title: 'Study planner · OpenExam Hub',

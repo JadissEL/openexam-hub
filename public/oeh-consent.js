@@ -29,7 +29,7 @@
   var OFFICIAL = [
     'france-education-international.fr', 'tv5monde.com', 'rfi.fr', 'britishcouncil.org', 'ielts.org',
     'cambridgeenglish.org', 'goethe.de', 'dw.com', 'vhs-lernportal.de', 'europa.eu', 'lefrancaisdesaffaires.fr',
-    'canada.ca', 'ets.org', 'cervantes.es', 'cervantes.org', 'testdaf.de', 'ambafrance-ca.org'
+    'canada.ca', 'ets.org', 'cervantes.es', 'cervantes.org', 'testdaf.de', 'ambafrance-ca.org', 'celpip.ca', 'paragontesting.ca'
   ];
 
   w.dataLayer = w.dataLayer || [];

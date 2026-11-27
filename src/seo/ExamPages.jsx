@@ -166,13 +166,13 @@ function Resources({ groups, lastChecked }) {
   );
 }
 
-const TOOL_GUIDES = ['tef-canada', 'tcf-canada', 'ielts'];
+const TOOL_GUIDES = ['tef-canada', 'tcf-canada', 'ielts', 'celpip'];
 
 /** Free-tool card on the TEF Canada and TCF Canada guides (links to /tools/clb-converter). */
 function RelatedTool({ guide }) {
   if (!TOOL_GUIDES.includes(guide)) return null;
-  const name = { 'tcf-canada': 'TCF Canada', ielts: 'IELTS' }[guide] || 'TEF Canada';
-  const scheme = guide === 'ielts' ? 'CLB' : 'NCLC';
+  const name = { 'tcf-canada': 'TCF Canada', ielts: 'IELTS', celpip: 'CELPIP' }[guide] || 'TEF Canada';
+  const scheme = (guide === 'ielts' || guide === 'celpip') ? 'CLB' : 'NCLC';
   return (
     <section aria-labelledby="related-tool-title" className="mt-14 rounded-2xl border border-[#E7C9B4] bg-[#FBF1E9] p-6">
       <p className={eyebrow}>Free tool</p>
@@ -180,7 +180,7 @@ function RelatedTool({ guide }) {
         Convert your {name} scores to {scheme}
       </h2>
       <p className={`mt-3 text-[16px] leading-[1.65] ${muted} max-w-2xl`}>
-        Enter your four scores and see your CLB (NCLC) level per skill, whether you meet level 7 or 9, and your CRS language points, using IRCC’s official tables.{guide === 'ielts' ? ' Express Entry accepts IELTS General Training only, not Academic.' : ''} No score guarantees, no account needed.
+        Enter your four scores and see your CLB (NCLC) level per skill, whether you meet level 7 or 9, and your CRS language points, using IRCC’s official tables.{guide === 'ielts' ? ' Express Entry accepts IELTS General Training only, not Academic.' : guide === 'celpip' ? ' Express Entry accepts the CELPIP-General test.' : ''} No score guarantees, no account needed.
       </p>
       <a href="/tools/clb-converter" className="mt-4 inline-flex items-center gap-1.5 font-semibold text-[#C2410C] underline underline-offset-4">
         Open the CLB / NCLC score converter <ArrowRight className="w-4 h-4" aria-hidden="true" />

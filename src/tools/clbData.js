@@ -297,9 +297,8 @@ export function recommendedLevel(lowest) {
   return lowest < 7 ? 'B2' : 'C1';
 }
 
-/** Planner deep link for the CTA, or null when OpenExam Hub has no plan for that test (CELPIP). */
+/** Planner deep link for the CTA (CELPIP, IELTS, TEF Canada and TCF Canada all have plans). */
 export function plannerHref(tableId, lowest) {
-  if (tableId === 'CELPIP_G') return null;
   const exam = TABLES[tableId].exam;
   return `/app?exam=${exam}&level=${recommendedLevel(lowest)}&days=30&utm_source=clb-tool`;
 }

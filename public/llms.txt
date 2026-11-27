@@ -1,6 +1,6 @@
 # OpenExam Hub
 
-> Free, independent study planner for language exams (TEF Canada, TCF, IELTS, TOEFL, Goethe-Zertifikat, DELE). It turns free official material from exam bodies and public broadcasters into a day-by-day plan. No paywall. Open source (MIT). Not affiliated with any exam body.
+> Free, independent study planner for language exams (TEF Canada, TCF, IELTS, TOEFL, CELPIP, Goethe-Zertifikat, DELE). It turns free official material from exam bodies and public broadcasters into a day-by-day plan. No paywall. Open source (MIT). Not affiliated with any exam body.
 
 ## Exam guides
 - [TEF Canada](https://openexamhub.org/exams/tef-canada): format, NCLC scores and free official practice
@@ -8,6 +8,7 @@
 - [TCF tout public](https://openexamhub.org/exams/tcf): format, scoring and free official practice
 - [IELTS](https://openexamhub.org/exams/ielts): test format, band scores and free official practice tests
 - [TOEFL iBT](https://openexamhub.org/exams/toefl): 2026 format and free official practice
+- [CELPIP](https://openexamhub.org/exams/celpip): test format, CLB scores and free official practice
 - [DELF and DALF](https://openexamhub.org/exams/delf): levels A1–C2 and free official sample papers
 - [Goethe-Zertifikat](https://openexamhub.org/exams/goethe): free official practice tests A1–C2
 - [DELE](https://openexamhub.org/exams/dele): exam format by level and official resources

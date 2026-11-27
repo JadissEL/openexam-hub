@@ -289,7 +289,7 @@ test('schedule: weak skills get more days; all-weak/all-strong are balanced; exa
 });
 test('official TEF Canada / TCF Canada / TOEFL / DELE blueprints and Spanish section map', async () => {
   const { officialProfile, mapExamIds, KNOWN_EXAMS, profileForPlan } = await import('../lib/exams.js');
-  assert.ok(KNOWN_EXAMS.includes('TEF_CANADA') && KNOWN_EXAMS.includes('TOEFL') && KNOWN_EXAMS.includes('DELE'));
+  assert.ok(KNOWN_EXAMS.includes('TEF_CANADA') && KNOWN_EXAMS.includes('TOEFL') && KNOWN_EXAMS.includes('DELE') && KNOWN_EXAMS.includes('CELPIP'));
   assert.deepEqual(mapExamIds('DELF/DALF'), ['DELF', 'DALF']);
   assert.deepEqual(mapExamIds('tef-canada'), ['TEF_CANADA']);
   const tef = officialProfile('TEF_CANADA');
@@ -309,6 +309,13 @@ test('official TEF Canada / TCF Canada / TOEFL / DELE blueprints and Spanish sec
   const toefl = officialProfile('TOEFL');
   assert.equal(toefl.sections.length, 4);
   assert.ok(toefl.notes.includes('21 January 2026'));
+  const celpip = officialProfile('CELPIP');
+  assert.equal(celpip.sections.length, 4);
+  assert.equal(celpip.sourceUrl, 'https://www.celpip.ca/test-format-scoring/');
+  assert.equal(celpip.sections.find((s) => s.skills.includes('writing')).durationMinutes, 53);
+  assert.equal(celpip.sections.find((s) => s.skills.includes('speaking')).questionCount, 8);
+  assert.deepEqual(mapExamIds('CELPIP_G'), ['CELPIP']);
+
   const deleC2 = officialProfile('DELE', { level: 'C2' });
   assert.equal(deleC2.sections.length, 3);
   const swC2 = SC.sectionWeightsFromProfile(deleC2);

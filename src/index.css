@@ -75,9 +75,11 @@ body { -webkit-font-smoothing: antialiased; }
   border-radius: 1rem;
   background: #EDE7DD;
 }
+.blog-prose em { color: #3B352F; }
 .blog-prose figcaption,
 .blog-prose p:has(> em:only-child) {
   font-size: 0.9rem;
-  color: #8A8178;
+  color: #5C554C;
   line-height: 1.5;
 }
+.blog-prose p:has(> em:only-child) em { color: #3B352F; }

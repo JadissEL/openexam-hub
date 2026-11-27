@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Free, official-source study roadmaps for language exams (TEF Canada, TCF, IELTS, TOEFL, Goethe, DELE). Vite + React frontend, Vercel Node functions, Firestore.",
+  "description": "Free, official-source study roadmaps for language exams (TEF Canada, TCF, IELTS, TOEFL, CELPIP, Goethe, DELE). Vite + React frontend, Vercel Node functions, Firestore.",
   "engines": {
     "node": "24.x"
   },

@@ -48,6 +48,14 @@ export const SOURCES = [
     ]
   },
   {
+    exam: 'CELPIP',
+    language: 'English',
+    orgs: [
+      { name: 'Paragon Testing Enterprises (CELPIP)', note: 'the body that runs the CELPIP tests', url: 'https://www.celpip.ca/test-format-scoring/' },
+      { name: 'IRCC', note: 'Express Entry language-test rules', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html' }
+    ]
+  },
+  {
     exam: 'Goethe',
     language: 'German',
     orgs: [
@@ -76,14 +84,14 @@ export const FAQ = [
   },
   {
     q: 'Which exams are covered?',
-    a: 'Right now: TEF Canada and TCF (French), IELTS and TOEFL (English), the Goethe-Zertifikat exams (German), and DELE (Spanish), for levels A1 to C2. TCF is offered as TCF tout public or TCF Canada. More exams will come once we have good official material to point to.'
+    a: 'Right now: TEF Canada and TCF (French), IELTS, TOEFL and CELPIP (English), the Goethe-Zertifikat exams (German), and DELE (Spanish), for levels A1 to C2. TCF is offered as TCF tout public or TCF Canada. More exams will come once we have good official material to point to.'
   },
   {
     q: 'Do you host or copy exam papers?',
     a: 'No. We link to pages that the exam bodies and public broadcasters already publish for free, and we check those links regularly. We never re-upload their material.'
   },
   {
-    q: 'Are you affiliated with CCI Paris, France Éducation international, ETS, Instituto Cervantes, IELTS or the Goethe-Institut?',
+    q: 'Are you affiliated with CCI Paris, France Éducation international, ETS, Paragon Testing Enterprises, Instituto Cervantes, IELTS or the Goethe-Institut?',
     a: 'No. OpenExam Hub is an independent project. We are not affiliated with, endorsed by or sponsored by any exam body or publisher we link to.'
   },
   {

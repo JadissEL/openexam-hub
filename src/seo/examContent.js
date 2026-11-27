@@ -254,7 +254,7 @@ const CONTENT = {
       { title: 'IELTS General Training test (IELTS.org)', url: IELTS_GENERAL },
       { title: 'IELTS and the CEFR (IELTS.org)', url: 'https://ielts.org/organisations/ielts-for-organisations/compare-ielts/ielts-and-the-cefr' }
     ],
-    related: ['toefl', 'tef-canada', 'tcf-canada']
+    related: ['toefl', 'celpip', 'tef-canada', 'tcf-canada']
   }),
 
   toefl: () => {
@@ -291,7 +291,61 @@ const CONTENT = {
         { title: 'ETS: Updated TOEFL iBT test overview (PDF)', url: profile.sourceUrl },
         { title: 'ETS: TOEFL iBT test content', url: 'https://www.ets.org/toefl/test-takers/ibt/about/content.html' }
       ],
-      related: ['ielts', 'dele', 'goethe']
+      related: ['ielts', 'celpip', 'dele', 'goethe']
+    };
+  },
+
+
+  celpip: () => {
+    const profile = officialProfile('CELPIP');
+    const CELPIP_FORMAT = 'https://www.celpip.ca/test-format-scoring/';
+    return {
+      h1: 'CELPIP: test format, CLB scores and free official practice',
+      runBy: { name: 'Paragon Testing Enterprises (CELPIP)', url: CELPIP_FORMAT },
+      intro: [
+        'The Canadian English Language Proficiency Index Program (CELPIP) is a general English language proficiency test run by Paragon Testing Enterprises. The CELPIP Test assesses listening, reading, writing and speaking. The CELPIP LS Test assesses only listening and speaking.',
+        'IRCC accepts the CELPIP-General test for Express Entry. On Paragon’s official chart, CELPIP levels correspond to Canadian Language Benchmarks (CLB) and to CEFR levels. Free official format information and IRCC’s conversion table are linked below.'
+      ],
+      facts: [
+        ['Run by', 'Paragon Testing Enterprises'],
+        ['Tests', 'CELPIP Test (four skills) and CELPIP LS (listening and speaking)'],
+        ['Skills (CELPIP Test)', 'Listening, Reading, Writing, Speaking'],
+        ['Scores', 'CELPIP levels 0–12, mapped to CLB and CEFR on the official chart'],
+        ['Validity', 'Two years from the date the score report is issued']
+      ],
+      format: {
+        sections: [
+          { name: 'Listening', duration: '46–55 min', items: '—', description: 'Six parts: Listening to Problem Solving; Listening to a Daily Life Conversation; Listening for Information; Listening to a News Item; Listening to a Discussion; Listening to Viewpoints. Includes unscored items used for test development.' },
+          { name: 'Reading', duration: '43–56 min', items: '—', description: 'Four parts: Reading Correspondence; Reading to Apply a Diagram; Reading for Information; Reading for Viewpoints. Includes unscored items used for test development.' },
+          { name: 'Writing', duration: '53 min', items: '2 tasks', description: 'Task 1: Writing an Email. Task 2: Responding to Survey Questions.' },
+          { name: 'Speaking', duration: '15 min', items: '8 tasks', description: 'Eight tasks: Giving Advice; Talking about a Personal Experience; Describing a Scene; Making Predictions; Comparing and Persuading; Dealing with a Difficult Situation; Expressing Opinions; Describing an Unusual Situation.' }
+        ],
+        scoring: profile.scoring,
+        notes: profile.notes,
+        sourceUrl: CELPIP_FORMAT
+      },
+      examIds: ['CELPIP'],
+      planner: { exam: 'CELPIP', label: 'CELPIP' },
+      faq: [
+        {
+          q: 'What is the difference between the CELPIP Test and CELPIP LS?',
+          a: 'Paragon’s Test Format & Scoring page says the CELPIP Test assesses listening, reading, writing and speaking, while the CELPIP LS Test assesses only listening and speaking.'
+        },
+        {
+          q: 'How do CELPIP levels correspond to CLB and CEFR?',
+          a: 'On Paragon’s official chart, from CELPIP 4 to 12 the CELPIP level equals the CLB level (CELPIP 2 maps to CLB 1 and 2). The same chart maps CELPIP 12 to CEFR C2, 10–11 to C1, 7–9 to B2, 5–6 to B1, 3–4 to A2, and 2 to A1. IRCC’s Express Entry table also treats a CELPIP-General level as the CLB level for immigration scoring. Always confirm the current tables on celpip.ca and canada.ca.'
+        },
+        {
+          q: 'Does Express Entry accept CELPIP?',
+          a: 'IRCC’s list of accepted tests says you must take the CELPIP-General test. This page does not replace IRCC’s rules; check canada.ca for the programme you are applying to.'
+        },
+        NOT_AFFILIATED('Paragon Testing Enterprises (CELPIP) or IRCC')
+      ],
+      sources: [
+        { title: 'CELPIP: Test Format & Scoring', url: CELPIP_FORMAT },
+        { title: 'IRCC: Express Entry language tests', url: IRCC_LANGUAGE_TESTS }
+      ],
+      related: ['ielts', 'toefl', 'tef-canada', 'tcf-canada']
     };
   },
 

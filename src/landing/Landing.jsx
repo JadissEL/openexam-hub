@@ -53,7 +53,7 @@ function Hero() {
     <section className="relative overflow-hidden" aria-labelledby="hero-title">
       <div className="relative mx-auto max-w-6xl px-5 sm:px-8 pt-8 sm:pt-14 lg:pt-20 pb-10 sm:pb-14 grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
         <div>
-          <p className={eyebrow}>Free study plans · TEF Canada · TCF · IELTS · TOEFL · Goethe · DELE</p>
+          <p className={eyebrow}>Free study plans · TEF Canada · TCF · IELTS · TOEFL · CELPIP · Goethe · DELE</p>
           <h1 id="hero-title" className={`mt-5 font-display ${ink} text-[44px] leading-[1.02] sm:text-6xl lg:text-[68px] lg:leading-[1.0] tracking-[-0.03em] font-medium`}>
             Prepare for your language exam <em className="italic text-[#C2410C]">without</em> paying for a course.
           </h1>
@@ -99,7 +99,7 @@ function Hero() {
 const STEPS = [
   {
     title: 'Tell it about your exam',
-    body: 'Choose TEF Canada, TCF, IELTS, TOEFL, Goethe or DELE, the level you’re aiming for (A1 to C2) and how many days you have. Not sure of your level? There’s a short placement check.'
+    body: 'Choose TEF Canada, TCF, IELTS, TOEFL, CELPIP, Goethe or DELE, the level you’re aiming for (A1 to C2) and how many days you have. Not sure of your level? There’s a short placement check.'
   },
   {
     title: 'Get a day-by-day plan',
@@ -160,7 +160,7 @@ function Exams() {
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-20">
         <div className="max-w-3xl">
           <p className={eyebrow}>Exams and sources</p>
-          <h2 id="exams-title" className={`mt-4 ${h2}`}>TEF Canada, TCF, IELTS, TOEFL, Goethe and DELE. Only official, free sources.</h2>
+          <h2 id="exams-title" className={`mt-4 ${h2}`}>TEF Canada, TCF, IELTS, TOEFL, CELPIP, Goethe and DELE. Only official, free sources.</h2>
           <p className={`mt-6 ${lead}`}>
             These are the organisations whose free pages are in our library today. We link; we never copy.
             Plans can only point to websites on an allowlist, and links are re-checked every night.
@@ -266,7 +266,7 @@ function FinalCTA() {
 
 export default function Landing() {
   useEffect(() => {
-    document.title = 'OpenExam Hub · Free study plans for TEF Canada, TCF, IELTS, TOEFL, Goethe and DELE';
+    document.title = 'OpenExam Hub · Free study plans for TEF Canada, TCF, IELTS, TOEFL, CELPIP, Goethe and DELE';
     const hash = (window.location.hash || '').replace(/^#/, '');
     const dest = LEGACY_HASH_REDIRECTS[hash];
     if (dest) {

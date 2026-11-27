@@ -57,7 +57,7 @@ function Story() {
           </p>
           <p>
             The strange part is that the good material already exists. The CCI Paris, France Éducation international,
-            ETS, Instituto Cervantes, the Goethe-Institut, the British Council and public broadcasters publish free
+            ETS, Paragon Testing Enterprises, Instituto Cervantes, the Goethe-Institut, the British Council and public broadcasters publish free
             sample papers and practice for these exams. It is just scattered across dozens of pages, in different
             languages, with no plan attached.
           </p>

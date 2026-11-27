@@ -136,7 +136,9 @@ const OFFICIAL_DOMAIN_ALLOWLIST = [
   'cervantes.es',
   'cervantes.org',
   'testdaf.de',
-  'ambafrance-ca.org'
+  'ambafrance-ca.org',
+  'celpip.ca',
+  'paragontesting.ca'
 ];
 
 /**

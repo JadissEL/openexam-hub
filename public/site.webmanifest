@@ -1,7 +1,7 @@
 {
   "name": "OpenExam Hub",
   "short_name": "OpenExam",
-  "description": "Free study plans for TEF Canada, TCF, IELTS, TOEFL, Goethe and DELE, built from official sources. A free account is needed to generate a plan.",
+  "description": "Free study plans for TEF Canada, TCF, IELTS, TOEFL, CELPIP, Goethe and DELE, built from official sources. A free account is needed to generate a plan.",
   "start_url": "/app",
   "display": "standalone",
   "background_color": "#F7F5F0",

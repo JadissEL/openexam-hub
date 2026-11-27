@@ -5,7 +5,7 @@ date: "2026-11-27"
 updated: "2026-11-27"
 lastVerified: "2026-11-27"
 exams:
-  - IELTS
+  - CELPIP
 audience:
   - immigration
 lang: en

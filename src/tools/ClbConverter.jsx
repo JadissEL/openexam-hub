@@ -392,20 +392,7 @@ function Converter() {
               Get a free study plan to reach CLB 7/9 <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </a>
           </div>
-        ) : (
-          <div className="mt-6 rounded-3xl bg-[#1A1714] px-5 sm:px-7 py-6 text-white">
-            <p className="font-display text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium leading-tight">Looking for free practice material?</p>
-            <p className="mt-2 text-[15px] leading-relaxed text-[#D9D2C8]">
-              OpenExam Hub doesn’t have a CELPIP study plan yet. Our exam guides link to the free official practice that exam bodies publish.
-            </p>
-            <a
-              href="/exams"
-              className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold"
-            >
-              Browse the exam guides <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </a>
-          </div>
-        )}
+        ) : null}
       </div>
 
       <p className="mt-5 text-[13px] leading-snug text-[#6B635A]">
@@ -516,6 +503,7 @@ export default function ClbConverter() {
             <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Related guides</h2>
             <ul className="mt-4 space-y-3 text-[16px] leading-snug">
               <li><a href="/exams/ielts" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS guide: test format, band scores and free official practice</a></li>
+              <li><a href="/exams/celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CELPIP guide: test format, CLB scores and free official practice</a></li>
               <li><a href="/exams/tef-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TEF Canada guide: format, NCLC scores and free official practice</a></li>
               <li><a href="/exams/tcf-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TCF Canada guide: format, timings and free official practice</a></li>
               <li><a href="/blog" className="text-[#C2410C] underline underline-offset-4">Read the blog</a></li>
