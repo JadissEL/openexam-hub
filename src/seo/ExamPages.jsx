@@ -181,13 +181,66 @@ const TOOL_GUIDES = ['tef-canada', 'tcf-canada', 'ielts', 'celpip'];
 
 /** Free-tool card on the TEF Canada, TCF Canada, IELTS and CELPIP guides (deep-links the matching converter tab). */
 // Side-by-side /compare pages (src/compare/comparePages.js) linked from the English guide cards.
+const CRS_LINK = { href: '/tools/crs-language-points', label: 'CRS points for your first and second official language' };
 const GUIDE_COMPARE_LINKS = {
   ielts: [
     { href: '/compare/ielts-vs-celpip', label: 'IELTS vs CELPIP: CLB scores and test format' },
-    { href: '/compare/ielts-vs-pte', label: 'IELTS vs PTE Core: CLB scores and test format' }
+    { href: '/compare/ielts-vs-pte', label: 'IELTS vs PTE Core: CLB scores and test format' },
+    { href: '/tools/cefr-converter', label: 'IELTS band to CEFR level, from IELTS’s own table' },
+    CRS_LINK
   ],
-  celpip: [{ href: '/compare/ielts-vs-celpip', label: 'IELTS vs CELPIP: CLB scores and test format' }]
+  celpip: [
+    { href: '/compare/ielts-vs-celpip', label: 'IELTS vs CELPIP: CLB scores and test format' },
+    { href: '/compare/celpip-vs-pte', label: 'CELPIP vs PTE Core: CLB scores and test format' },
+    { href: '/tools/cefr-converter?tab=celpip', label: 'CELPIP level to CEFR level, from CELPIP’s chart' },
+    CRS_LINK
+  ],
+  'tef-canada': [
+    { href: '/compare/tef-vs-tcf', label: 'TEF Canada vs TCF Canada: NCLC scores side by side' },
+    CRS_LINK
+  ],
+  'tcf-canada': [
+    { href: '/compare/tef-vs-tcf', label: 'TEF Canada vs TCF Canada: NCLC scores side by side' },
+    { href: '/tools/cefr-converter?tab=tcf', label: 'TCF score to CEFR level (Campus France’s TCF grid)' },
+    CRS_LINK
+  ]
 };
+
+// Guides without the converter card get a short list of the relevant compare pages and tools.
+const GUIDE_TOOL_LINKS = {
+  tcf: [
+    { href: '/compare/delf-vs-tcf', label: 'DELF vs TCF: levels, validity and where each is accepted' },
+    { href: '/tools/cefr-converter?tab=tcf', label: 'TCF score to CEFR level (Campus France’s TCF grid)' },
+    { href: '/compare/tef-vs-tcf', label: 'Applying to Canada? TEF Canada vs TCF Canada, by NCLC' }
+  ],
+  delf: [
+    { href: '/compare/delf-vs-tcf', label: 'DELF vs TCF: levels, validity and where each is accepted' },
+    { href: '/compare/tef-vs-tcf', label: 'For Express Entry: TEF Canada vs TCF Canada, by NCLC' },
+    CRS_LINK
+  ],
+  goethe: [{ href: '/compare/goethe-vs-telc', label: 'Goethe vs telc: German exams by CEFR level, and what BAMF and DAAD accept' }],
+  telc: [{ href: '/compare/goethe-vs-telc', label: 'Goethe vs telc: German exams by CEFR level, and what BAMF and DAAD accept' }]
+};
+
+function GuideToolLinks({ guide }) {
+  const links = GUIDE_TOOL_LINKS[guide];
+  if (!links) return null;
+  return (
+    <section aria-labelledby="guide-tools-title" className="mt-14 rounded-2xl border border-[#E7E1D7] bg-white/70 p-6 max-w-3xl">
+      <p className={eyebrow}>Compare and free tools</p>
+      <h2 id="guide-tools-title" className={`mt-2 font-display ${ink} text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium`}>
+        Side by side, from official sources
+      </h2>
+      <ul className="mt-4 space-y-2 text-[16px] leading-snug">
+        {links.map((l) => (
+          <li key={l.href}>
+            <a href={l.href} className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">{l.label}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 function RelatedTool({ guide }) {
   if (!TOOL_GUIDES.includes(guide)) return null;
@@ -765,6 +818,7 @@ export function ExamPage({ slug, posts = [] }) {
 
         <StudyPlans guide={slug} />
         <RelatedTool guide={slug} />
+        <GuideToolLinks guide={slug} />
         <CompareNote guide={slug} posts={posts} />
         <FormatTable format={c.format} label={c.label} />
         <DeleLevels rows={c.deleLevels} scoring={c.scoring} />

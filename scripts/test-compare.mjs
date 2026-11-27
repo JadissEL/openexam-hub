@@ -256,6 +256,27 @@ if (built) {
   });
 }
 
+if (built) {
+  const read = (rel) => fs.readFileSync(path.join(root, 'dist', rel), 'utf8');
+  test('guides and the CLB converter cross-link the new compare pages and tools', () => {
+    const expect = {
+      'exams/tef-canada/index.html': ['/compare/tef-vs-tcf', '/tools/crs-language-points'],
+      'exams/tcf-canada/index.html': ['/compare/tef-vs-tcf', '/tools/cefr-converter?tab=tcf', '/tools/crs-language-points'],
+      'exams/tcf/index.html': ['/compare/delf-vs-tcf', '/tools/cefr-converter?tab=tcf'],
+      'exams/delf/index.html': ['/compare/delf-vs-tcf', '/compare/tef-vs-tcf'],
+      'exams/goethe/index.html': ['/compare/goethe-vs-telc'],
+      'exams/telc/index.html': ['/compare/goethe-vs-telc'],
+      'exams/ielts/index.html': ['/tools/cefr-converter', '/tools/crs-language-points'],
+      'exams/celpip/index.html': ['/compare/celpip-vs-pte', '/tools/cefr-converter?tab=celpip'],
+      'tools/clb-converter/index.html': ['/compare/tef-vs-tcf', '/compare/delf-vs-tcf', '/compare/celpip-vs-pte', '/compare/clb-equivalency-table', '/tools/cefr-converter', '/tools/crs-language-points']
+    };
+    for (const [rel, hrefs] of Object.entries(expect)) {
+      const html = read(rel);
+      for (const h of hrefs) assert.ok(html.includes(`href="${h}"`), `${rel} links ${h}`);
+    }
+  });
+}
+
 if (failed) {
   console.error(`\n${failed} test(s) failed`);
   process.exit(1);

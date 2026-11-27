@@ -565,6 +565,10 @@ export default function ClbConverter() {
               <li><a href="/tools/crs-language-points" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CRS points for your first and second official language</a></li>
               <li><a href="/compare/ielts-vs-celpip" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS vs CELPIP: CLB scores and test format side by side</a></li>
               <li><a href="/compare/ielts-vs-pte" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS vs PTE Core: CLB scores and test format side by side</a></li>
+              <li><a href="/compare/celpip-vs-pte" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CELPIP vs PTE Core: CLB scores and test format side by side</a></li>
+              <li><a href="/compare/tef-vs-tcf" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TEF Canada vs TCF Canada: NCLC scores side by side</a></li>
+              <li><a href="/compare/delf-vs-tcf" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">DELF vs TCF: levels, validity and where each is accepted</a></li>
+              <li><a href="/compare/clb-equivalency-table" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">CLB equivalency table for all five IRCC tests (CSV download)</a></li>
               <li><a href="/blog/ielts-to-clb-express-entry" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS to CLB for Express Entry</a></li>
               <li>
                 <a href="/blog/ielts-to-cefr" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2</a>
