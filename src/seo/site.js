@@ -1,3 +1,4 @@
+import { CRS_TOOL_PATH, CRS_TOOL_TITLE, CRS_TOOL_DESCRIPTION } from '../tools/crsLanguage.js';
 /**
  * SEO metadata shared by the build-time prerender (Node) and the browser.
  * Plain data and pure functions only: no React, no JSON imports, no browser globals.
@@ -152,7 +153,8 @@ export const PAGE_META = {
     title: 'IELTS, CELPIP, PTE, TEF, TCF to CLB converter · OpenExam Hub',
     description:
       'Convert IELTS General Training, CELPIP-General, PTE Core, TEF Canada or TCF Canada scores to CLB (NCLC) with IRCC’s tables. Level per skill and CRS points.'
-  }
+  },
+  [CRS_TOOL_PATH]: { title: CRS_TOOL_TITLE, description: CRS_TOOL_DESCRIPTION }
 };
 
 export function normalizePath(pathname) {

@@ -8,6 +8,8 @@ import { PLAN_PAGES, planPath } from './planPages.js';
 import { examContent } from './examContent.js';
 import { FAQ } from '../landing/content.js';
 import ClbConverter from '../tools/ClbConverter.jsx';
+import CrsLanguagePoints from '../tools/CrsLanguagePoints.jsx';
+import { CRS_TOOL_PATH, CRS_TOOL_H1, CRS_TOOL_DESCRIPTION, CRS_TOOL_FAQ, CRS_LAST_VERIFIED } from '../tools/crsLanguage.js';
 import ComparePage from '../compare/ComparePage.jsx';
 import { ClbTablePage, CompareHub } from '../compare/CompareHub.jsx';
 import { clbCsv } from '../compare/compareData.js';
@@ -25,6 +27,7 @@ export function renderPage(pathname, posts = []) {
   if (p === '/privacy') return renderToString(<LegalPage kind="privacy" />);
   if (p === '/terms') return renderToString(<LegalPage kind="terms" />);
   if (p === '/tools/clb-converter') return renderToString(<ClbConverter />);
+  if (p === CRS_TOOL_PATH) return renderToString(<CrsLanguagePoints />);
   if (p === COMPARE_HUB.path) return renderToString(<CompareHub />);
   if (p === CLB_TABLE_PAGE.path) return renderToString(<ClbTablePage />);
   const cm = p.match(/^\/compare\/([a-z0-9-]+)$/);
@@ -37,5 +40,6 @@ export function renderPage(pathname, posts = []) {
   return null;
 }
 
+export { CRS_TOOL_PATH, CRS_TOOL_H1, CRS_TOOL_DESCRIPTION, CRS_TOOL_FAQ, CRS_LAST_VERIFIED };
 export { COMPARE_PAGES, comparePath, compareBreadcrumbs, COMPARE_LAST_VERIFIED, CLB_TABLE_PAGE, COMPARE_HUB, clbCsv };
 export { examContent, FAQ, PLAN_PAGES, planPath, TOOL_FAQ, TOOL_H1, TOOL_DESCRIPTION, TOOL_LAST_VERIFIED, TOOL_PATH };
