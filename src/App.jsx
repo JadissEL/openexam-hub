@@ -86,6 +86,8 @@ import { track, trackAuth } from './analytics.js';
 import ReviewDeck, { SaveToDeckButton, cardFromPractice, cardIdFor } from './ReviewDeck.jsx';
 import { dueQueue, retention as srsRetention } from '../lib/algo/srs.js';
 import { quantiseProfile, localDate, hasSchedule, planDays, currentDay } from './lib/plan.js';
+import { accountChipLabel, accountDisplayName } from './accountLabel.js';
+import { DEFAULT_API_TIMEOUT_MS, requestSignal } from './requestSignal.js';
 
 // ============================================================================
 // FIREBASE INITIALIZATION (MANDATORY CONFIG + SAFE FALLBACK)
@@ -206,13 +208,14 @@ function friendlyError(err, fallback) {
   return err instanceof ApiError && err.status === 400 && err.message ? err.message : fallback;
 }
 
-async function apiPost(path, body, { token } = {}) {
+async function apiPost(path, body, { token, signal, timeoutMs = DEFAULT_API_TIMEOUT_MS } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    signal: requestSignal({ signal, timeoutMs })
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new ApiError(data.error || `Server error ${res.status}`, res.status);
@@ -1935,14 +1938,14 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
               <button
                 type="button"
                 onClick={() => setShowAuthModal(true)}
-                aria-label="Your account"
+                aria-label={accountChipLabel(firebaseUser)}
                 className="h-11 pl-1.5 pr-1.5 sm:pr-4 rounded-full bg-white border border-black/5 inline-flex items-center gap-2 text-sm font-semibold hover:bg-neutral-50 transition"
               >
                 <span className="w-8 h-8 rounded-full bg-[#111111] text-white flex items-center justify-center" aria-hidden="true">
                   <UserCheck className="w-4 h-4" />
                 </span>
                 <span className="hidden sm:inline max-w-[120px] truncate">
-                  {firebaseUser.displayName || firebaseUser.email || 'Member'}
+                  {accountDisplayName(firebaseUser)}
                 </span>
               </button>
             ) : (
@@ -2347,7 +2350,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
                         {noticeIsError && (
                           <button
                             type="button"
-                            onClick={() => handleGenerateStudyPath(false)}
+                            onClick={() => handleGenerateStudyPath(true)}
                             disabled={isGenerating}
                             className={`${THEME.primaryBtn} min-h-[44px] px-5 text-sm w-full sm:w-auto`}
                           >
