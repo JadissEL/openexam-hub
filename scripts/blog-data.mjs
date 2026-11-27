@@ -314,6 +314,14 @@ export function parsePost(filename, raw) {
   const sources = normalizeSources(data.sources, label);
   const faq = normalizeFaq(data.faq, label);
 
+  let seoTitle = null;
+  if (data.seoTitle !== undefined && data.seoTitle !== null) {
+    if (typeof data.seoTitle !== 'string' || !data.seoTitle.trim()) {
+      throw new Error(`${label}: "seoTitle" must be a non-empty string when set`);
+    }
+    seoTitle = data.seoTitle.trim();
+  }
+
   const rendered = md.render(body);
   const { cover, html } = applyCover(rendered, data.cover, label);
   const headings = extractHeadings(html);
@@ -323,6 +331,7 @@ export function parsePost(filename, raw) {
   return {
     slug,
     title: data.title.trim(),
+    seoTitle,
     description: data.description.trim(),
     date: data.date,
     updated: data.updated,
@@ -373,6 +382,15 @@ export function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+/** Suffix appended to a post's seoTitle (or title) to form the document <title>. */
+export const POST_TITLE_SUFFIX = ' · OpenExam Hub';
+
+/** Full <title> / og:title / twitter:title for a blog post. */
+export function postHeadTitle(post) {
+  const base = (post.seoTitle || post.title || '').trim();
+  return `${base}${POST_TITLE_SUFFIX}`;
 }
 
 export function articleJsonLd(post) {

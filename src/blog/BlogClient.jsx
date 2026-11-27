@@ -13,7 +13,7 @@ export default function BlogClient() {
     }
     if (route.kind === 'post') {
       const post = posts.find((p) => p.slug === route.slug);
-      document.title = post ? `${post.title} · OpenExam Hub` : 'Post not found · OpenExam Hub';
+      document.title = post ? `${post.seoTitle || post.title} · OpenExam Hub` : 'Post not found · OpenExam Hub';
       return;
     }
     if (route.kind === 'tag') {

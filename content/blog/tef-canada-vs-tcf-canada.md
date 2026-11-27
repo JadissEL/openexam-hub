@@ -1,5 +1,6 @@
 ---
 title: "TEF Canada vs TCF Canada: differences and which to take"
+seoTitle: "TEF Canada vs TCF Canada: which to take"
 description: "Both French tests are listed by IRCC for Express Entry and citizenship, and by Quebec for skilled workers. What actually differs, what doesn’t, and how to choose."
 date: "2026-11-26"
 updated: "2026-11-27"

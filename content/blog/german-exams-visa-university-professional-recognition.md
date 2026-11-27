@@ -1,5 +1,6 @@
 ---
 title: "Which German exam you need for a visa, university or professional recognition"
+seoTitle: "German exams for visa, university or work"
 description: "Official CEFR levels and accepted exams for German visas, university admission and professional recognition, including Goethe-Zertifikat, TestDaF, DSH and the Fachsprachenprüfung for doctors and nurses."
 date: "2026-11-21"
 updated: "2026-11-21"

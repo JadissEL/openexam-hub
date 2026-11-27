@@ -1,5 +1,6 @@
 ---
 title: "TOEFL vs IELTS in 2026: which English test should you take?"
+seoTitle: "TOEFL vs IELTS in 2026: which test to take"
 description: "TOEFL iBT changed in January 2026. How it compares with IELTS on format, scoring and acceptance, and why TOEFL is not on IRCC’s Express Entry list."
 date: "2026-11-27"
 updated: "2026-11-27"

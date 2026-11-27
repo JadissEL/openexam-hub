@@ -17,7 +17,8 @@ import {
   faqJsonLd,
   examLabel,
   SITE_ORIGIN,
-  REPO_ROOT
+  REPO_ROOT,
+  postHeadTitle
 } from './blog-data.mjs';
 import { prerenderPages } from './prerender-pages.mjs';
 import { TAG_INDEX_MIN_POSTS } from './blog-data.mjs';
@@ -180,7 +181,7 @@ async function prerender(distDir) {
     const html = stripModuleScripts(
       injectRoot(
         applyHead(template, {
-          title: `${post.title} · OpenExam Hub`,
+          title: postHeadTitle(post),
           description: post.description,
           canonical: post.canonical,
           type: 'article',

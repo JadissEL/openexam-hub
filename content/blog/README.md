@@ -16,6 +16,7 @@ Do not invent testimonials, pass rates, prices, deadlines or university requirem
 ```markdown
 ---
 title: "A clear, factual title"
+seoTitle: "Optional shorter title for the browser tab"  # optional; see fields
 description: "One or two sentences for listings, search results and social previews."
 date: "2026-11-20"          # first published, YYYY-MM-DD
 updated: "2026-11-20"       # last substantive edit, YYYY-MM-DD
@@ -48,7 +49,8 @@ Do not repeat the title as a # heading; the page already renders `title`.
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `title` | yes | Plain text, no trailing period unless the title is a question. |
+| `title` | yes | Plain text, no trailing period unless the title is a question. Shown as the page H1, in listings, RSS and the BlogPosting `headline`. |
+| `seoTitle` | no | Shorter title used only for `<title>`, `og:title` and `twitter:title`. The site appends ` · OpenExam Hub` (15 characters), so this field should be at most 45 characters. If omitted, `title` is used. |
 | `description` | yes | Shown in the listing, `<meta name="description">` and Open Graph tags. |
 | `date` | yes | ISO date. Used for sort order (newest first) and `datePublished`. |
 | `updated` | yes | ISO date. Use the same value as `date` if the post is new. |

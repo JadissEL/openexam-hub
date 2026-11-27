@@ -1,5 +1,6 @@
 ---
 title: "NCLC 7 / CLB 7: what TEF Canada and TCF Canada scores you need"
+seoTitle: "NCLC 7 / CLB 7: TEF and TCF Canada scores"
 description: "The exact TEF Canada (old-scale and /699) and TCF Canada scores that correspond to NCLC 7, and why CLB/NCLC 7 is the Express Entry threshold on IRCC’s pages."
 date: "2026-11-21"
 updated: "2026-11-27"

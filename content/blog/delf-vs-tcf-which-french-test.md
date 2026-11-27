@@ -1,5 +1,6 @@
 ---
 title: "DELF vs TCF: which French test should you take?"
+seoTitle: "DELF vs TCF: which French test to take"
 description: "A lifetime diploma or a score valid for two years? What the French government, universities and IRCC actually accept for citizenship, residence, study and Canadian immigration."
 date: "2026-11-27"
 updated: "2026-11-27"
