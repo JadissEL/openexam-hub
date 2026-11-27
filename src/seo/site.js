@@ -133,9 +133,9 @@ export const PAGE_META = {
   },
   '/exams': EXAMS_INDEX,
   '/tools/clb-converter': {
-    title: 'TEF Canada & TCF Canada to CLB (NCLC) score converter · OpenExam Hub',
+    title: 'IELTS, CELPIP, TEF & TCF to CLB (NCLC) converter · OpenExam Hub',
     description:
-      'Free converter from TEF Canada and TCF Canada scores to NCLC (CLB) levels, using IRCC’s official tables. See your level per skill, whether you meet NCLC 7 or 9, and your CRS language points.'
+      'Free converter from IELTS General Training, CELPIP-General, TEF Canada and TCF Canada scores to CLB (NCLC) levels, using IRCC’s official tables. Level per skill, level 7 or 9 check, CRS points.'
   }
 };
 

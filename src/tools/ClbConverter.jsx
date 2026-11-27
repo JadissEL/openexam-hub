@@ -6,7 +6,9 @@ import { Breadcrumbs } from '../seo/ExamPages.jsx';
 import { count } from '../analytics.js';
 import {
   CRS_URL,
+  EE_LANGUAGE_MODIFIED,
   EE_LANGUAGE_URL,
+  ENGLISH_LAST_VERIFIED,
   FRENCH_BONUS,
   LAST_VERIFIED,
   SKILLS,
@@ -14,6 +16,7 @@ import {
   START_UP_URL,
   TABLES,
   convert,
+  formatScore,
   levelLabel,
   maxScore,
   plannerHref,
@@ -23,17 +26,19 @@ import { TOOL_FAQ, TOOL_H1, TOOL_PATH } from './clbContent.js';
 
 const MODES = [
   { id: 'TEF_EXPRESS_ENTRY', tab: 'tef', title: 'TEF Canada' },
-  { id: 'TCF_CANADA', tab: 'tcf', title: 'TCF Canada' }
+  { id: 'TCF_CANADA', tab: 'tcf', title: 'TCF Canada' },
+  { id: 'IELTS_GT', tab: 'ielts', title: 'IELTS' },
+  { id: 'CELPIP_G', tab: 'celpip', title: 'CELPIP' }
 ];
 
-function verifiedLabel() {
-  const [y, m, d] = LAST_VERIFIED.split('-').map(Number);
+function verifiedLabel(date = LAST_VERIFIED) {
+  const [y, m, d] = date.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 export const toolBreadcrumbs = [
   { name: 'Home', path: '/' },
-  { name: 'NCLC score converter', path: TOOL_PATH }
+  { name: 'CLB / NCLC score converter', path: TOOL_PATH }
 ];
 
 function SectionTitle({ id, children }) {
@@ -53,7 +58,7 @@ function Segmented({ label, options, value, onChange }) {
           type="button"
           aria-pressed={value === o.id}
           onClick={() => onChange(o.id)}
-          className={`flex-1 sm:flex-none h-11 px-5 rounded-full text-[15px] font-semibold transition-colors ${
+          className={`flex-1 sm:flex-none h-11 px-2.5 sm:px-5 rounded-full text-[14px] sm:text-[15px] font-semibold transition-colors ${
             value === o.id ? 'bg-[#1A1714] text-white shadow-sm' : 'text-[#3B352F] hover:bg-white/60'
           }`}
         >
@@ -64,16 +69,26 @@ function Segmented({ label, options, value, onChange }) {
   );
 }
 
+// IRCC prints one listed score per level for IELTS and CELPIP (the lowest that earns it), and a range only on
+// the top row (IELTS "7.5-9.0", CELPIP "10+"). Show them as IRCC does; the other tables show full ranges.
+function cellText(table, r) {
+  if (!table.listed) return r.min === r.max ? String(r.min) : `${r.min}–${r.max}`;
+  const fmt = (n) => formatScore(table.id, n);
+  if (r.level < 10) return fmt(r.min);
+  return table.id === 'CELPIP_G' ? `${r.min}+` : `${fmt(r.min)}–${fmt(r.max)}`;
+}
+
 function ReferenceTable({ table }) {
+  const scheme = table.scheme;
   return (
     <div className="mt-5 first:mt-0">
       <h3 className={`font-display ${ink} text-[20px] tracking-[-0.01em] font-medium`}>{table.label}</h3>
       <div className="mt-3 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70">
         <table className="w-full text-left text-[15px] leading-snug">
-          <caption className="sr-only">{table.label}: score ranges for each NCLC level</caption>
+          <caption className="sr-only">{table.label}: {table.listed ? 'score listed by IRCC for each' : 'score ranges for each'} {scheme} level</caption>
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
             <tr>
-              <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">NCLC</th>
+              <th scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">{scheme}</th>
               {SKILLS.map((s) => (
                 <th key={s} scope="col" className="px-4 py-3 font-semibold whitespace-nowrap">{SKILL_LABELS[s].en}</th>
               ))}
@@ -87,7 +102,7 @@ function ReferenceTable({ table }) {
                   const r = table.bands[s].find((b) => b.level === lvl);
                   return (
                     <td key={s} className="px-4 py-2.5 whitespace-nowrap tabular-nums">
-                      {r.min === r.max ? r.min : `${r.min}–${r.max}`}
+                      {cellText(table, r)}
                     </td>
                   );
                 })}
@@ -180,7 +195,10 @@ function Converter() {
   const level = result.lowest;
   const cta = plannerHref(tableId, level);
   const ctaLevel = recommendedLevel(level);
-  const examName = table.exam === 'TCF_CANADA' ? 'TCF Canada' : 'TEF Canada';
+  const examName = table.examName || (table.exam === 'TCF_CANADA' ? 'TCF Canada' : 'TEF Canada');
+  const scheme = table.scheme;
+  const french = table.language === 'fr';
+  const activeTab = mode === 'TEF_NEW_699' ? 'TEF_EXPRESS_ENTRY' : mode;
 
   return (
     <section aria-labelledby="tool-title" className="mt-10 rounded-3xl border border-[#E7E1D7] bg-white/80 p-5 sm:p-8 shadow-[0_30px_60px_-40px_rgba(26,23,20,0.35)]">
@@ -190,13 +208,16 @@ function Converter() {
         <Segmented
           label="Test"
           options={MODES}
-          value={mode === 'TCF_CANADA' ? 'TCF_CANADA' : 'TEF_EXPRESS_ENTRY'}
+          value={activeTab}
           onChange={(id) => {
             if (id === 'TEF_EXPRESS_ENTRY' && mode === 'TEF_NEW_699') return;
             chooseMode(id);
           }}
         />
-        {mode !== 'TCF_CANADA' ? (
+        {table.notice ? (
+          <p className="mt-1 rounded-2xl border border-[#E7C9B4] bg-[#FBF1E9] px-4 py-3 text-[15px] leading-snug text-[#3B352F]">{table.notice}</p>
+        ) : null}
+        {activeTab === 'TEF_EXPRESS_ENTRY' ? (
           <div className="mt-1">
             <label className="flex items-start gap-3 text-[15px] leading-snug text-[#3B352F]">
               <input
@@ -233,12 +254,12 @@ function Converter() {
                   id={id}
                   name={s}
                   type="text"
-                  inputMode="numeric"
+                  inputMode={table.step === 0.5 ? 'decimal' : 'numeric'}
                   autoComplete="off"
-                  pattern="[0-9]*"
+                  pattern={table.step === 0.5 ? '[0-9]*[.,]?[0-9]?' : '[0-9]*'}
                   maxLength={4}
                   value={scores[s]}
-                  placeholder={`max ${maxScore(tableId, s)}`}
+                  placeholder={`max ${formatScore(tableId, maxScore(tableId, s))}`}
                   aria-invalid={showError ? 'true' : undefined}
                   aria-describedby={`${id}-out`}
                   onChange={(e) => setScores((prev) => ({ ...prev, [s]: e.target.value.replace(/\s/g, '') }))}
@@ -248,7 +269,7 @@ function Converter() {
                 <p id={`${id}-out`} className="mt-2 min-h-[1.5rem] text-[14px] leading-snug">
                   {r.ok ? (
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold ${r.level >= 9 ? 'bg-[#EEF7EF] text-[#1F6B2C]' : r.level >= 7 ? 'bg-[#FBF1E9] text-[#9A3412]' : 'bg-[#F3EEE6] text-[#5C554C]'}`}>
-                      {levelLabel(r.level)}
+                      {levelLabel(r.level, scheme)}
                     </span>
                   ) : showError ? (
                     <span className="text-[#B91C1C]">{r.error}</span>
@@ -263,13 +284,13 @@ function Converter() {
       <div className="mt-6 border-t border-[#E7E1D7] pt-6" aria-live="polite">
         {!result.complete ? (
           <p className={`text-[16px] ${muted}`}>
-            {anyEntered ? 'Add the remaining scores to see your lowest level and the NCLC 7 and 9 check.' : 'Your level for each skill, and your lowest level overall, will show here as you type.'}
+            {anyEntered ? 'Add the remaining scores to see your lowest level and the {scheme} 7 and 9 check.' : 'Your level for each skill, and your lowest level overall, will show here as you type.'}
           </p>
         ) : (
           <div>
             <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6B635A]">Your result</p>
             <p className={`mt-2 font-display ${ink} text-[34px] sm:text-[44px] leading-[1.05] tracking-[-0.02em] font-medium`}>
-              Lowest level: {levelLabel(level)}
+              Lowest level: {levelLabel(level, scheme)}
             </p>
             <p className={`mt-2 text-[16px] ${muted}`}>
               IRCC looks at each ability separately, so your lowest skill sets the level you can claim for a minimum requirement.
@@ -277,13 +298,13 @@ function Converter() {
             <ul className="mt-5 grid gap-3 sm:grid-cols-2">
               <Meets
                 ok={result.meets7}
-                label="Meets NCLC 7 (FSW minimum)"
-                detail={result.meets7 ? 'All four abilities are NCLC 7 or higher.' : `Below 7: ${result.below7.map((s) => SKILL_LABELS[s].en).join(', ')}.`}
+                label={`Meets ${scheme} 7 (FSW minimum)`}
+                detail={result.meets7 ? `All four abilities are ${scheme} 7 or higher.` : `Below 7: ${result.below7.map((s) => SKILL_LABELS[s].en).join(', ')}.`}
               />
               <Meets
                 ok={result.meets9}
-                label="Meets NCLC 9"
-                detail={result.meets9 ? 'All four abilities are NCLC 9 or higher.' : `Below 9: ${result.below9.map((s) => SKILL_LABELS[s].en).join(', ')}.`}
+                label={`Meets ${scheme} 9`}
+                detail={result.meets9 ? `All four abilities are ${scheme} 9 or higher.` : `Below 9: ${result.below9.map((s) => SKILL_LABELS[s].en).join(', ')}.`}
               />
             </ul>
 
@@ -309,10 +330,16 @@ function Converter() {
                 <p className={`mt-4 text-[17px] ${ink}`}>
                   Total: <strong className="tabular-nums">{result.crs.total}</strong> of {result.crs.max} points
                 </p>
-                <p className={`mt-2 text-[14px] leading-snug ${muted}`}>
-                  First official language only. IRCC also adds {FRENCH_BONUS.lowEnglish} extra points when you reach NCLC 7 in all four French abilities and CLB 4 or lower in English (or no English test), or {FRENCH_BONUS.strongEnglish} if you also reach CLB 5 in all four English abilities.
-                  {result.frenchBonusEligible ? ' You reach NCLC 7 in French, so the bonus can apply to you.' : ''} The rest of your CRS score (age, education, work experience…) isn’t calculated here.
-                </p>
+                {french ? (
+                  <p className={`mt-2 text-[14px] leading-snug ${muted}`}>
+                    First official language only. IRCC also adds {FRENCH_BONUS.lowEnglish} extra points when you reach NCLC 7 in all four French abilities and CLB 4 or lower in English (or no English test), or {FRENCH_BONUS.strongEnglish} if you also reach CLB 5 in all four English abilities.
+                    {result.frenchBonusEligible ? ' You reach NCLC 7 in French, so the bonus can apply to you.' : ''} The rest of your CRS score (age, education, work experience…) isn’t calculated here.
+                  </p>
+                ) : (
+                  <p className={`mt-2 text-[14px] leading-snug ${muted}`}>
+                    First official language only, so these points apply when English is your first official language. The rest of your CRS score (age, education, work experience, any French bonus…) isn’t calculated here, and the tool gives no guarantee about your CRS score.
+                  </p>
+                )}
               </div>
             ) : (
               <p className={`mt-6 rounded-2xl border border-[#E7C9B4] bg-[#FBF1E9] px-4 py-3 text-[15px] leading-snug text-[#3B352F]`}>
@@ -322,31 +349,46 @@ function Converter() {
           </div>
         )}
 
+        {cta ? (
         <div className="mt-6 rounded-3xl bg-[#1A1714] px-5 sm:px-7 py-6 text-white">
-          <p className="font-display text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium leading-tight">
-            {result.complete && result.meets9
-              ? 'You’re at NCLC 9 or higher. Keep your edge sharp.'
-              : result.complete && result.meets7
-                ? 'You’re past NCLC 7. Next stop: NCLC 9.'
-                : 'Close the gap with a free day-by-day plan.'}
-          </p>
-          <p className="mt-2 text-[15px] leading-relaxed text-[#D9D2C8]">
-            {result.complete
-              ? `We’ll open a free ${examName} ${ctaLevel} plan (30 days) built from official, free material.`
-              : `Opens a free ${examName} plan at ${ctaLevel} (30 days), built from official, free material. Enter your scores first and we’ll pick the level for you.`}
-          </p>
-          <a
-            href={cta}
-            data-clb-cta
-            className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold"
-          >
-            Get a free study plan to reach CLB 7/9 <ArrowRight className="w-4 h-4" aria-hidden="true" />
-          </a>
-        </div>
+            <p className="font-display text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium leading-tight">
+              {result.complete && result.meets9
+                ? `You’re at ${scheme} 9 or higher. Keep your edge sharp.`
+                : result.complete && result.meets7
+                  ? `You’re past ${scheme} 7. Next stop: ${scheme} 9.`
+                  : 'Close the gap with a free day-by-day plan.'}
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-[#D9D2C8]">
+              {result.complete
+                ? `We’ll open a free ${examName} ${ctaLevel} plan (30 days) built from official, free material.`
+                : `Opens a free ${examName} plan at ${ctaLevel} (30 days), built from official, free material. Enter your scores first and we’ll pick the level for you.`}
+            </p>
+            <a
+              href={cta}
+              data-clb-cta
+              className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold"
+            >
+              Get a free study plan to reach CLB 7/9 <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </a>
+          </div>
+        ) : (
+          <div className="mt-6 rounded-3xl bg-[#1A1714] px-5 sm:px-7 py-6 text-white">
+            <p className="font-display text-[22px] sm:text-[26px] tracking-[-0.02em] font-medium leading-tight">Looking for free practice material?</p>
+            <p className="mt-2 text-[15px] leading-relaxed text-[#D9D2C8]">
+              OpenExam Hub doesn’t have a CELPIP study plan yet. Our exam guides link to the free official practice that exam bodies publish.
+            </p>
+            <a
+              href="/exams"
+              className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold"
+            >
+              Browse the exam guides <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </a>
+          </div>
+        )}
       </div>
 
       <p className="mt-5 text-[13px] leading-snug text-[#6B635A]">
-        Not affiliated with IRCC. Tables checked on {verifiedLabel()}. Verify your level on{' '}
+        Not affiliated with IRCC. Tables checked on {verifiedLabel(french ? LAST_VERIFIED : ENGLISH_LAST_VERIFIED)}. No score guarantees. Verify your level on{' '}
         <a href={mode === 'TEF_NEW_699' ? START_UP_URL : EE_LANGUAGE_URL} target="_blank" rel="noopener noreferrer" className="text-[#C2410C] underline underline-offset-4">canada.ca</a>.
         Nothing you type leaves your device.
       </p>
@@ -358,6 +400,8 @@ export default function ClbConverter() {
   const tef = TABLES.TEF_EXPRESS_ENTRY;
   const tcf = TABLES.TCF_CANADA;
   const tef699 = TABLES.TEF_NEW_699;
+  const ielts = TABLES.IELTS_GT;
+  const celpip = TABLES.CELPIP_G;
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#1A1714] antialiased" style={pageFont}>
       <SiteHeader />
@@ -368,7 +412,7 @@ export default function ClbConverter() {
             <p className={eyebrow}>Free tool · No account needed</p>
             <h1 className={`mt-4 font-display ${ink} text-[36px] sm:text-5xl lg:text-[56px] tracking-[-0.03em] font-medium leading-[1.05]`}>{TOOL_H1}</h1>
             <p className={`mt-6 ${lead}`}>
-              Enter your four scores and see your NCLC level for each skill, your lowest level overall, whether you meet NCLC 7 or 9, and the CRS language points they earn. It uses IRCC’s own tables from canada.ca, checked on {verifiedLabel()}.
+              Pick IELTS General Training, CELPIP-General, TEF Canada or TCF Canada, enter your four scores and see your CLB (NCLC) level for each skill, your lowest level overall, whether you meet level 7 or 9, and the CRS language points they earn. It uses IRCC’s own tables from canada.ca, checked on {verifiedLabel(ENGLISH_LAST_VERIFIED)} (IELTS and CELPIP) and {verifiedLabel()} (TEF Canada and TCF Canada). The tool gives no score guarantees.
             </p>
           </header>
 
@@ -377,19 +421,24 @@ export default function ClbConverter() {
           <section aria-labelledby="how-title" className="mt-14 max-w-3xl">
             <SectionTitle id="how-title">What to enter</SectionTitle>
             <ul className={`mt-4 list-disc pl-5 space-y-2 text-[17px] leading-[1.7] ${muted}`}>
+              <li><strong className={ink}>IELTS:</strong> your General Training band for each skill, in steps of 0.5 (for example 6.0 or 6.5). Express Entry accepts IELTS General Training only, not IELTS Academic.</li>
+              <li><strong className={ink}>CELPIP:</strong> your CELPIP-General level for each skill, a whole number. Express Entry accepts the CELPIP-General test.</li>
               <li><strong className={ink}>TEF Canada, for Express Entry:</strong> the numbers in the “Équivalence ancien score” column of your attestation de résultats. Don’t use the “Score / 699” column.</li>
               <li><strong className={ink}>TCF Canada:</strong> reading and listening are out of 699; speaking and writing are out of 20.</li>
-              <li>NCLC 10 is the top band on IRCC’s tables, so any score from its lower limit up counts as NCLC 10.</li>
-              <li>A score below the NCLC 4 band is reported as “Below NCLC 4”.</li>
+              <li>CLB or NCLC 10 is the top level on IRCC’s tables, so any score from its lower limit up counts as level 10.</li>
+              <li>A score below the level 4 row is reported as “Below CLB 4” or “Below NCLC 4”.</li>
+              <li>For IELTS, IRCC lists one score per level. A band between two listed scores counts at the lower level (see the questions below), so confirm your result on canada.ca.</li>
             </ul>
           </section>
 
           <section aria-labelledby="tables-title" className="mt-14">
             <SectionTitle id="tables-title">IRCC score tables used by this tool</SectionTitle>
             <p className={`mt-3 text-[16px] leading-[1.7] ${muted} max-w-3xl`}>
-              Copied from canada.ca and last checked on {verifiedLabel()}. Each range is the score that earns that NCLC level.
+              Copied from canada.ca. The TEF Canada and TCF Canada tables were last checked on {verifiedLabel()}, and the IELTS and CELPIP tables on {verifiedLabel(ENGLISH_LAST_VERIFIED)}. For TEF Canada and TCF Canada each range is the score that earns that NCLC level. For IELTS and CELPIP the table shows the score IRCC lists for each CLB level.
             </p>
             <div className="mt-6 space-y-9">
+              <ReferenceTable table={ielts} />
+              <ReferenceTable table={celpip} />
               <ReferenceTable table={tef} />
               <ReferenceTable table={tcf} />
               <ReferenceTable table={tef699} />
@@ -426,7 +475,7 @@ export default function ClbConverter() {
             <h2 id="sources-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Sources and disclaimer</h2>
             <ol className="mt-4 space-y-2 text-[16px] leading-snug">
               {[
-                { url: EE_LANGUAGE_URL, label: 'IRCC: Express Entry, Language test results (TEF Canada “ancien score” and TCF Canada tables)' },
+                { url: EE_LANGUAGE_URL, label: 'IRCC: Express Entry, Language test results (IELTS General Training, CELPIP-General, TEF Canada “ancien score” and TCF Canada tables)' },
                 { url: START_UP_URL, label: 'IRCC: Start-up visa, Language testing (TEF Canada “Score / 699” table, tests after 10 December 2023)' },
                 { url: CRS_URL, label: 'IRCC: Comprehensive Ranking System (CRS) criteria (first official language points, French bonus)' }
               ].map((s) => (
@@ -438,13 +487,14 @@ export default function ClbConverter() {
               ))}
             </ol>
             <p className="mt-4 text-[14px] leading-relaxed text-[#6B635A]">
-              Tables last verified on <time dateTime={LAST_VERIFIED}>{verifiedLabel()}</time>. OpenExam Hub is independent and not affiliated with IRCC, CCI Paris Île-de-France or France Éducation international. This tool is for information only and is not immigration advice. IRCC can change its tables and rules at any time, so verify your level and your program’s requirements on canada.ca before you apply.
+              IRCC’s Express Entry language test results page was last modified on <time dateTime={EE_LANGUAGE_MODIFIED}>{verifiedLabel(EE_LANGUAGE_MODIFIED)}</time> (the page’s modified date in its metadata when we read it). IELTS and CELPIP tables last verified on <time dateTime={ENGLISH_LAST_VERIFIED}>{verifiedLabel(ENGLISH_LAST_VERIFIED)}</time>; TEF Canada and TCF Canada tables on <time dateTime={LAST_VERIFIED}>{verifiedLabel()}</time>. OpenExam Hub is independent and not affiliated with IRCC, the IELTS test owners, Paragon Testing Enterprises (CELPIP), CCI Paris Île-de-France or France Éducation international. The tool gives no score guarantees. This tool is for information only and is not immigration advice. IRCC can change its tables and rules at any time, so verify your level and your program’s requirements on canada.ca before you apply.
             </p>
           </section>
 
           <section aria-labelledby="related-title" className="mt-14 max-w-3xl">
             <h2 id="related-title" className={`font-display ${ink} text-[24px] tracking-[-0.02em] font-medium`}>Related guides</h2>
             <ul className="mt-4 space-y-3 text-[16px] leading-snug">
+              <li><a href="/exams/ielts" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">IELTS guide: test format, band scores and free official practice</a></li>
               <li><a href="/exams/tef-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TEF Canada guide: format, NCLC scores and free official practice</a></li>
               <li><a href="/exams/tcf-canada" className="text-[#1A1714] underline decoration-[#E7C9B4] underline-offset-4 hover:text-[#C2410C]">TCF Canada guide: format, timings and free official practice</a></li>
               <li><a href="/blog" className="text-[#C2410C] underline underline-offset-4">Read the blog</a></li>

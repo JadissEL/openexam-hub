@@ -13,7 +13,7 @@
 - [DELE](https://openexamhub.org/exams/dele): exam format by level and official resources
 
 ## Free tools
-- [TEF Canada and TCF Canada to CLB (NCLC) score converter](https://openexamhub.org/tools/clb-converter): level per skill, NCLC 7 and 9 check and CRS language points from IRCC's official tables
+- [IELTS, CELPIP, TEF Canada and TCF Canada to CLB (NCLC) score converter](https://openexamhub.org/tools/clb-converter): level per skill, CLB/NCLC 7 and 9 check and CRS language points from IRCC's official tables (IELTS General Training and CELPIP-General only; no score guarantees)
 
 ## Study plans
 - [TCF Canada official practice and 30-day study path](https://openexamhub.org/exams/tcf-canada/official-practice-study-path)

@@ -117,7 +117,7 @@ export async function prerenderPages(distDir, template, { applyHead, injectRoot,
     const p = ssr.TOOL_PATH;
     const url = `${SITE_ORIGIN}${p}`;
     const toolLd = [
-      breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'NCLC score converter', path: p }]),
+      breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'CLB / NCLC score converter', path: p }]),
       {
         '@context': 'https://schema.org',
         '@type': 'WebApplication',
