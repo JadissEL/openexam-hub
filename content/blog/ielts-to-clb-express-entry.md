@@ -48,7 +48,7 @@ That rules out **IELTS Academic** for this programme. Academic is the usual test
 
 It also rules out **IELTS Online**. That product is the Academic test taken at home. The official [IELTS Online page](https://ielts.org/take-a-test/test-types/ielts-academic-test/ielts-online) says it is “currently only available for the Academic test,” that “IELTS Online is not currently accepted for immigration purposes,” and that for visa and immigration purposes you should take the test in an authorised test centre. Computer-delivered General Training at a centre is a different product; do not confuse the two. For fees, dates and booking labels, see [IELTS fees, registration and 2027 test dates](/blog/ielts-fees-registration-2027-test-dates). The [IELTS exam guide](/exams/ielts) covers format and official practice.
 
-IRCC also accepts CELPIP-General and PTE Core for English, and TEF Canada and TCF Canada for French, on the same page. This post is only about the IELTS General Training table.
+IRCC also accepts CELPIP-General and PTE Core for English, and TEF Canada and TCF Canada for French, on the same page. This post is only about the IELTS General Training table. If you took CELPIP instead, see [CELPIP to CLB: Express Entry scores explained](/blog/celpip-to-clb-express-entry).
 
 ## The official IELTS General Training to CLB table
 
@@ -97,7 +97,7 @@ On the same language-test page, your results “must be less than 2 years old”
 
 ## French tests, and a study-plan preview
 
-If you are also proving French, use the official TEF Canada and TCF Canada tables on the same IRCC page. OpenExam Hub’s readings of those tables are [TEF Canada scores to CLB and NCLC](/blog/tef-canada-clb-nclc-express-entry) and [TCF Canada scores to CLB and NCLC](/blog/tcf-canada-clb-nclc-express-entry). For those two French tests only — not IELTS — you can also use the [TEF Canada and TCF Canada to NCLC converter](/tools/clb-converter), which maps each skill to an NCLC level, flags NCLC 7 or 9, and shows first-official-language CRS points from IRCC’s tables.
+If you are also proving French, use the official TEF Canada and TCF Canada tables on the same IRCC page. OpenExam Hub’s readings of those tables are [TEF Canada scores to CLB and NCLC](/blog/tef-canada-clb-nclc-express-entry) and [TCF Canada scores to CLB and NCLC](/blog/tcf-canada-clb-nclc-express-entry). You can also use the [OpenExam Hub CLB converter](/tools/clb-converter), which has tabs for IELTS General Training, CELPIP-General, TEF Canada and TCF Canada, built from IRCC’s tables. It maps each skill to a CLB or NCLC level, flags level 7 or 9, and shows first-official-language CRS points. It is not an official IRCC tool, so confirm your result on IRCC’s page.
 
 If a university or another country names a CEFR level instead of CLB, see [IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2](/blog/ielts-to-cefr). CLB and CEFR are separate scales with separate official tables.
 
