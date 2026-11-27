@@ -136,6 +136,24 @@ function OpenSource() {
   );
 }
 
+function MoreToRead() {
+  return (
+    <section aria-labelledby="more-read-title" className="border-t border-[#E7E1D7]">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-20">
+        <h2 id="more-read-title" className={`font-display ${ink} text-[28px] sm:text-[32px] tracking-[-0.02em] font-medium`}>
+          More to read
+        </h2>
+        <p className={`mt-4 max-w-3xl text-[17px] leading-[1.7] ${muted}`}>
+          Questions about what OpenExam Hub costs, which exams it covers, and how plans are made are answered on the{' '}
+          <a href="/faq" className="text-[#C2410C] underline underline-offset-4">FAQ</a>
+          . Guides on exam scores, fees and requirements are on the{' '}
+          <a href="/blog" className="text-[#C2410C] underline underline-offset-4">blog</a>.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 export function AboutPage() {
   return (
     <PageShell
@@ -147,6 +165,7 @@ export function AboutPage() {
       <Story />
       <ProductPeek />
       <OpenSource />
+      <MoreToRead />
     </PageShell>
   );
 }
@@ -245,7 +264,13 @@ export function FundingPage() {
         </dl>
         <FundingBooks />
         <FundingCta />
-        <p className={`pb-24 text-[17px] leading-[1.7] ${muted}`}>
+        <p className={`text-[17px] leading-[1.7] ${muted} max-w-3xl`}>
+          Questions about cost, accounts and ads are also on the{' '}
+          <a href="/faq" className="text-[#C2410C] underline underline-offset-4">FAQ</a>
+          . For exam scores, fees and requirements, see the{' '}
+          <a href="/blog" className="text-[#C2410C] underline underline-offset-4">blog</a>.
+        </p>
+        <p className={`pt-8 pb-24 text-[17px] leading-[1.7] ${muted}`}>
           The live totals are also on the Transparency tab inside the{' '}
           <a className="text-[#C2410C] underline underline-offset-4" href="/app">planner</a> (free account).
         </p>

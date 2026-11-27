@@ -388,6 +388,40 @@ export function escapeHtml(str) {
 /** Suffix appended to a post's seoTitle (or title) to form the document <title>. */
 export const POST_TITLE_SUFFIX = ' · OpenExam Hub';
 
+/** Head title and meta description for the /blog index (shared with CollectionPage JSON-LD). */
+export const BLOG_INDEX_TITLE = 'Blog · OpenExam Hub';
+export const BLOG_INDEX_DESCRIPTION =
+  'Guides on language exams for students, professionals and immigration applicants: what they are used for, who asks for them, and when to start preparing.';
+
+/** CollectionPage + ItemList for /blog. Item order must match the visible listing. */
+export function blogIndexJsonLd(posts = []) {
+  const list = posts || [];
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${SITE_ORIGIN}/blog#webpage`,
+    name: BLOG_INDEX_TITLE,
+    description: BLOG_INDEX_DESCRIPTION,
+    url: `${SITE_ORIGIN}/blog`,
+    isPartOf: {
+      '@type': 'Blog',
+      '@id': `${SITE_ORIGIN}/blog#blog`,
+      name: 'OpenExam Hub Blog',
+      url: `${SITE_ORIGIN}/blog`
+    },
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: list.length,
+      itemListElement: list.map((post, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: post.title,
+        url: post.canonical
+      }))
+    }
+  };
+}
+
 /** Full <title> / og:title / twitter:title for a blog post. */
 export function postHeadTitle(post) {
   const base = (post.seoTitle || post.title || '').trim();
