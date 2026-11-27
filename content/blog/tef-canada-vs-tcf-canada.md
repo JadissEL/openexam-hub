@@ -103,7 +103,7 @@ What does **not** differ: for Express Entry, IRCC converts both to the same NCLC
 
 1. **Start from the rule for your route.** Express Entry, citizenship and PSTQ list both, so the rule can only tell you the level you need, not the brand.
 2. **Pick the Canada version for Express Entry.** IRCC’s Express Entry page names TEF Canada and TCF Canada only, so do not book TCF tout public or the general TEF for that route. Citizenship and Quebec list more versions, but both still name TCF Canada and TEF Canada.
-3. **Look at your centre and dates.** Seats, dates and fees are set by each approved centre. We cannot give you a global price. Check your nearest centre’s own page and book the first slot that leaves you time to prepare.
+3. **Look at your centre and dates.** Seats, dates and fees are set by each approved centre. We cannot give you a global price. Check your nearest centre’s own page and book the first slot that leaves you time to prepare. If you are in Morocco or Tunisia, there is a French-language guide to [approved TEF Canada centres, Institut français fees and official free prep](/blog/tef-canada-maroc-tunisie).
 4. **Try the official sample material.** Each exam body publishes its own. Use it to see which style suits you. That is a personal call, not a ranking.
 5. **Do not swap mid-way without a reason.** If you already hold a valid result at the level you need, a second test is usually only worth it if one skill sits below the level you need.
 
