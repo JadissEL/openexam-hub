@@ -17,7 +17,7 @@ import { ENABLED_LOCALES, localeMeta } from '../src/i18n/locales.js';
 import { alternatesFor, isPagePublished, publishedLocales } from '../src/i18n/publish.js';
 import { localizePath } from '../src/i18n/paths.js';
 import { indexablePaths, SITE_ORIGIN } from '../src/seo/site.js';
-import { CONTENT_DIR, REPO_ROOT, loadBlogPosts } from './blog-data.mjs';
+import { CONTENT_DIR, REPO_ROOT, includeDraftsFromEnv, loadBlogPosts } from './blog-data.mjs';
 import { loadCatalog } from './load-catalog.mjs';
 import enMessages from '../src/i18n/messages/en.json' with { type: 'json' };
 
@@ -155,7 +155,8 @@ if (built) {
   test('built locale pages match the sitemap and hreflang set', () => {
     const sitemap = fs.readFileSync(path.join(dist, 'sitemap.xml'), 'utf8');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-    const pages = [...indexablePaths().filter((p) => p !== '/app'), '/blog', ...posts.map((p) => `/blog/${p.slug}`)];
+    const visiblePosts = loadBlogPosts({ includeDrafts: includeDraftsFromEnv() });
+    const pages = [...indexablePaths().filter((p) => p !== '/app'), '/blog', ...visiblePosts.map((p) => `/blog/${p.slug}`)];
     const expected = [];
     for (const page of pages) {
       for (const alt of alternatesFor(page)) {
