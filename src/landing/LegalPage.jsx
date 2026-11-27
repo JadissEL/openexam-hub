@@ -2,7 +2,7 @@ import React from 'react';
 import { SiteHeader, SiteFooter } from './SiteChrome.jsx';
 import { APP_PATH, CONTACT_EMAIL, REPO_URL } from './content.js';
 
-const UPDATED = '21 November 2026';
+const UPDATED = '27 November 2026';
 const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>;
 
 // Plain-language legal pages. Keep them matching what the code actually does.
@@ -29,9 +29,10 @@ const PAGES = {
               and use them on more than one device.
             </li>
             <li>
-              <strong>Analytics only if you say yes.</strong> With your consent we use Google Analytics to see which pages
-              and features help learners. If you click “Reject”, or don’t choose, it never loads. AI requests contain your
-              exam, level, timeline and progress, never your name or email.
+              <strong>Analytics only if you say yes.</strong> With your consent we use Google Analytics, and Microsoft
+              Clarity for heatmaps and session replay, to see which pages and features help learners. If you click “Reject”,
+              or don’t choose, neither loads. AI requests contain your exam, level, timeline and progress, never your name
+              or email.
             </li>
             <li>
               <strong>A cookieless visit counter.</strong> Without any cookie, ID or stored IP address, each page view sends us
@@ -79,7 +80,7 @@ const PAGES = {
         body: (
           <ul>
             <li>No analytics without your consent, and no ads on the home page or on any information page.</li>
-            <li>We don’t send your name, email or plan contents to Google Analytics.</li>
+            <li>We don’t send your name, email or plan contents to Google Analytics or Microsoft Clarity.</li>
             <li>Our own visit counter keeps daily totals only: no cookies, no IDs, no IP addresses.</li>
             <li>We don’t sell, rent or share your personal data for marketing.</li>
             <li>We don’t ask for your real name, phone number or payment details.</li>
@@ -87,7 +88,7 @@ const PAGES = {
         )
       },
       {
-        h: 'Cookies and Google Analytics',
+        h: 'Cookies, Google Analytics and Microsoft Clarity',
         body: (
           <>
             <p>
@@ -107,12 +108,19 @@ const PAGES = {
                 call-to-action or an official exam resource. Google Analytics keeps this event data for 14 months.
               </li>
               <li>
-                <strong>If you reject (or don’t choose):</strong> Google Analytics is not loaded and no analytics cookies are set.
-                Google Consent Mode stays “denied” for analytics and ads.
+                <strong>Microsoft Clarity</strong> (only if you accept) records heatmaps and session replay so we can see where
+                people scroll, click and leave. Microsoft processes that data. Text typed into fields stays masked. Clarity sets
+                first-party cookies named <code>_clck</code> and <code>_clsk</code>. See the{' '}
+                <a href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener noreferrer">Microsoft Privacy Statement</a>.
               </li>
               <li>
-                <strong>If you change your mind:</strong> choosing “Reject” later stops Google Analytics and deletes its cookies on
-                this site. See <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">how Google uses data from sites that use its services</a>.
+                <strong>If you reject (or don’t choose):</strong> Google Analytics and Microsoft Clarity are not loaded and no
+                analytics cookies are set. Google Consent Mode stays “denied” for analytics and ads, and Clarity is not told that
+                consent was granted.
+              </li>
+              <li>
+                <strong>If you change your mind:</strong> choosing “Reject” later stops Google Analytics and Microsoft Clarity and
+                deletes their cookies on this site. See <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">how Google uses data from sites that use its services</a>.
               </li>
             </ul>
           </>
@@ -161,6 +169,7 @@ const PAGES = {
             <li><strong>Cloudflare</strong> serves the website and <strong>Vercel</strong> runs the server (Frankfurt region). Like any web host, they keep short-lived technical logs such as IP addresses.</li>
             <li><strong>Google Firebase</strong> provides sign-in and the database.</li>
             <li><strong>Google Analytics</strong> (only if you accept cookies) measures visits and the actions listed above.</li>
+            <li><strong>Microsoft Clarity</strong> (only if you accept cookies) records heatmaps and session replay. Microsoft processes that data.</li>
             <li><strong>Google AdSense</strong> (only on the signed-in dashboard, once ads are switched on) shows ads and runs the consent message described above.</li>
             <li><strong>Google Fonts</strong> serves the typefaces, so your browser contacts Google’s font servers.</li>
             <li>
