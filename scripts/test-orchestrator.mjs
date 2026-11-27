@@ -136,7 +136,7 @@ async function test(name, fn) {
   try { await fn(); passed++; console.log(`  ok   ${name}`); } catch (err) { failed++; console.log(`  FAIL ${name}\n       ${err?.stack?.split('\n').slice(0, 3).join('\n       ')}`); }
 }
 
-const { validateInput, InputError, generateRoadmap, saveToLibrary } = await import('../lib/orchestrator.js');
+const { validateInput, InputError, generateRoadmap, saveToLibrary, setGenerateRoadmapFaultForTests, clearPlanCache } = await import('../lib/orchestrator.js');
 const P = await import('../lib/agents/planner.js');
 const A = await import('../lib/agents/copyrightAuditor.js');
 const D = await import('../lib/agents/discovery.js');
@@ -309,7 +309,6 @@ const usageTotals = async (kind = 'u') => {
   for (const d of (await globalThis.__fakeDb.pub().collection('usage_buckets').get()).docs) for (const [k, v] of Object.entries(d.data()[kind] || {})) out[k] = (out[k] || 0) + v;
   return out;
 };
-const { clearPlanCache } = await import('../lib/orchestrator.js');
 llm.format = () => ({ sections: [{ name: 'TCF tout public', durationMinutes: 999, questionCount: null, description: 'd' }], scoring: null, notes: null });
 
 await test('400 on bad input, never throws', async () => {
@@ -451,6 +450,89 @@ await test('not enough verified resources -> 422 with trace (discovery retried o
   const r = await generateRoadmap({ exam: 'IELTS', level: 'B2', days: 30 });
   assert.equal(r.status, 422); assert.match(r.body.error, /Not enough verified/);
   assert.equal(r.body.pipeline.filter((p) => p.agent === 'discovery').length, 2);
+});
+const captureErrors = (logs) => (...args) => logs.push(args.map((x) => (x instanceof Error ? `${x.message} ${x.code || ''}` : typeof x === 'string' ? x : JSON.stringify(x))).join(' '));
+
+await test('planRoadmap does not return a raw error', async () => {
+  let reads = 0;
+  const resources = [{
+    id: 'a',
+    get title() {
+      reads += 1;
+      if (reads > 1) throw new Error('PERMISSION_DENIED sk-plan-secret');
+      return 'TV5Monde';
+    },
+    url: 'https://apprendre.tv5monde.com/fr',
+    skills: ['listening']
+  }];
+  const logs = [];
+  const origErr = console.error;
+  console.error = captureErrors(logs);
+  try {
+    const r = await P.planRoadmap({ exam: 'TCF', level: 'B2', days: 30, resources });
+    assert.equal(r.ok, false);
+    assert.equal(r.error, 'AI planner unavailable');
+    assert.doesNotMatch(JSON.stringify(r), /PERMISSION_DENIED|sk-plan-secret/);
+    assert.match(logs.join('\n'), /sk-plan-secret/);
+  } finally {
+    console.error = origErr;
+  }
+});
+await test('firestore and cache failures stay out of the pipeline', async () => {
+  const origGet = DocRef.prototype.get;
+  DocRef.prototype.get = async function patchedGet() {
+    if (String(this.path).includes('/plans/')) {
+      const e = new Error('FAILED_PRECONDITION cache-read-secret');
+      e.code = 9;
+      throw e;
+    }
+    if (String(this.path).includes('/exam_profiles/')) {
+      const e = new Error('PERMISSION_DENIED format-read-secret');
+      e.code = 7;
+      throw e;
+    }
+    return origGet.call(this);
+  };
+  const logs = [];
+  const origErr = console.error;
+  console.error = captureErrors(logs);
+  clearPlanCache();
+  let r;
+  try {
+    r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 40 });
+  } finally {
+    DocRef.prototype.get = origGet;
+    console.error = origErr;
+  }
+  assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
+  const body = JSON.stringify(r.body);
+  assert.doesNotMatch(body, /cache-read-secret|format-read-secret|FAILED_PRECONDITION|PERMISSION_DENIED/);
+  const cache = r.body.roadmap.pipeline.find((p) => p.agent === 'global_cache' && p.status === 'failed');
+  assert.equal(cache.detail, 'Could not read the shared plan cache, so a new plan is being built');
+  assert.match(logs.join('\n'), /cache-read-secret/);
+  assert.match(logs.join('\n'), /format-read-secret/);
+});
+await test('unexpected orchestrator failure returns only a generic error', async () => {
+  const logs = [];
+  const origErr = console.error;
+  console.error = captureErrors(logs);
+  setGenerateRoadmapFaultForTests(() => {
+    const e = new Error('INTERNAL cache-500-secret');
+    e.code = 13;
+    throw e;
+  });
+  let r;
+  try {
+    r = await generateRoadmap({ exam: 'TCF', level: 'B2', days: 9 });
+  } finally {
+    console.error = origErr;
+    setGenerateRoadmapFaultForTests(null);
+  }
+  assert.equal(r.status, 500);
+  assert.deepEqual(r.body, { error: 'Roadmap generation failed unexpectedly. Please try again.' });
+  assert.equal(Object.hasOwn(r.body, 'pipeline'), false);
+  assert.doesNotMatch(JSON.stringify(r.body), /cache-500-secret|INTERNAL/);
+  assert.match(logs.join('\n'), /cache-500-secret/);
 });
 await test('saveToLibrary handles empty levels (lib arrayUnion() workaround)', async () => {
   const id = await saveToLibrary({ url: 'https://www.goethe.de/de/spr/prf.html', title: 'G', category: 'c', skills: ['exam_format'], levels: [], license: 'L', linkStatus: 'ok', httpCode: 200 }, { exam: 'GOETHE', addedBy: 'seed' });
