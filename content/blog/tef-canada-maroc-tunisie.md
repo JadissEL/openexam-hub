@@ -198,6 +198,8 @@ Un parcours de 30 jours fondé sur le matériel officiel est aussi décrit dans 
 
 Les conditions d’inscription générales : avoir **plus de 16 ans**, aucun diplôme n’est exigé pour se présenter. Inscrivez-vous assez tôt pour que vos résultats soient encore valides le jour de la demande de résidence permanente, pas seulement à l’ouverture du profil.
 
+Si vous candidatez aussi pour la rentrée de septembre 2027 en France, les tests demandés par Campus France au Maroc, en Tunisie et en Égypte, et les dates limites de chaque Espace, sont expliqués dans [Campus France 2027: which French test you need in Morocco, Tunisia and Egypt](/blog/campus-france-2027-french-test-maroc-tunisie-egypte) (en anglais, avec un résumé en français). Ce n’est pas le même test que le TEF Canada pour Entrée express.
+
 ## Préparer un plan d’étude
 
 Vous pouvez [apercevoir un plan TEF Canada](https://openexamhub.org/app?exam=TEF_CANADA&level=B2&days=60) sur OpenExam Hub (niveau B2, 60 jours). Le lien ouvre un aperçu lorsqu’un plan en cache existe. **Pour générer et enregistrer un plan, un compte gratuit est nécessaire** (e-mail ou Google).

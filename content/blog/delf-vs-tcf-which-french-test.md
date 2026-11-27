@@ -116,7 +116,7 @@ France's higher-education ministry publishes a notice for the **Demande d'admiss
 
 The French government's student site adds that some programmes may ask for a DELF B2, and some for a DALF at C1 to C2. For master's or doctoral applications, Campus France Maroc notes that each university chooses its own way of assessing French, so read the programme page.
 
-If you already hold a DELF B2, you skip the TCF for the DAP. If you do not, the TCF with written expression is the route the notice describes.
+If you already hold a DELF B2, you skip the TCF for the DAP. If you do not, the TCF with written expression is the route the notice describes. If you are filing through Campus France in Morocco, Tunisia or Egypt for the September 2027 intake, the country deadlines and the tests each Espace names are in [Campus France 2027: which French test you need in Morocco, Tunisia and Egypt](/blog/campus-france-2027-french-test-maroc-tunisie-egypte).
 
 ## Canadian immigration: DELF is not the answer for Express Entry
 
