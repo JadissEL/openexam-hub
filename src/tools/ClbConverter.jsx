@@ -22,7 +22,7 @@ import {
   plannerHref,
   recommendedLevel
 } from './clbData.js';
-import { TOOL_FAQ, TOOL_H1, TOOL_PATH } from './clbContent.js';
+import { TOOL_FAQ, TOOL_H1, TOOL_PATH, DEFAULT_TOOL_MODE, modeFromSearch, searchWithTab } from './clbContent.js';
 
 const MODES = [
   { id: 'TEF_EXPRESS_ENTRY', tab: 'tef', title: 'TEF Canada' },
@@ -185,12 +185,27 @@ function Meets({ ok, label, detail }) {
   );
 }
 
+function syncTabInUrl(mode) {
+  if (typeof window === 'undefined' || !window.history?.replaceState) return;
+  const next = window.location.pathname + searchWithTab(window.location.search, mode) + window.location.hash;
+  const current = window.location.pathname + window.location.search + window.location.hash;
+  if (next !== current) window.history.replaceState(null, '', next);
+}
+
 function Converter() {
-  const [mode, setMode] = useState('TEF_EXPRESS_ENTRY');
+  // Always start on TEF so the prerendered HTML and the first client render match. A ?tab= value is
+  // applied after mount (and invalid values are ignored, leaving TEF).
+  const [mode, setMode] = useState(DEFAULT_TOOL_MODE);
   const [scores, setScores] = useState({ reading: '', listening: '', writing: '', speaking: '' });
   const [spouse, setSpouse] = useState(false);
   const [touched, setTouched] = useState({});
   const counted = useRef(false);
+
+  useEffect(() => {
+    const next = modeFromSearch(window.location.search);
+    setMode(next);
+    syncTabInUrl(next);
+  }, []);
 
   // Scores from one scale mean nothing on another, so switching test or scale starts a fresh form.
   const chooseMode = (id) => {
@@ -198,6 +213,7 @@ function Converter() {
     setMode(id);
     setScores({ reading: '', listening: '', writing: '', speaking: '' });
     setTouched({});
+    syncTabInUrl(id);
   };
 
   const tableId = mode;

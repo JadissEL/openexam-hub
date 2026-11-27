@@ -3,6 +3,50 @@
 import { ENGLISH_LAST_VERIFIED, LAST_VERIFIED } from './clbData.js';
 
 export const TOOL_PATH = '/tools/clb-converter';
+
+/** Short ?tab= slugs for the four tests. Missing or invalid values fall back to TEF (the default). */
+export const DEFAULT_TOOL_MODE = 'TEF_EXPRESS_ENTRY';
+export const TOOL_TABS = {
+  tef: 'TEF_EXPRESS_ENTRY',
+  tcf: 'TCF_CANADA',
+  ielts: 'IELTS_GT',
+  celpip: 'CELPIP_G'
+};
+
+export function modeFromTabParam(value) {
+  const key = String(value ?? '').trim().toLowerCase();
+  return Object.hasOwn(TOOL_TABS, key) ? TOOL_TABS[key] : DEFAULT_TOOL_MODE;
+}
+
+export function tabFromMode(mode) {
+  if (mode === 'TEF_NEW_699') return 'tef';
+  const found = Object.entries(TOOL_TABS).find(([, id]) => id === mode);
+  return found ? found[0] : 'tef';
+}
+
+/** Read ?tab= from a query string (with or without a leading ?). */
+export function modeFromSearch(search) {
+  const raw = String(search || '');
+  const q = raw.startsWith('?') ? raw.slice(1) : raw;
+  return modeFromTabParam(new URLSearchParams(q).get('tab'));
+}
+
+/** Path + query for a tab slug. The default TEF tab is the bare path, matching the canonical URL. */
+export function toolPathForTab(tab) {
+  const slug = tabFromMode(modeFromTabParam(tab));
+  return slug === 'tef' ? TOOL_PATH : `${TOOL_PATH}?tab=${slug}`;
+}
+
+/** Update only the tab param in an existing query string; other params are kept. TEF drops `tab`. */
+export function searchWithTab(search, mode) {
+  const params = new URLSearchParams(String(search || '').replace(/^\?/, ''));
+  const slug = tabFromMode(mode);
+  if (slug === 'tef') params.delete('tab');
+  else params.set('tab', slug);
+  const next = params.toString();
+  return next ? `?${next}` : '';
+}
+
 export const TOOL_NAME = 'IELTS, CELPIP, TEF Canada & TCF Canada to CLB (NCLC) score converter';
 export const TOOL_LABEL = 'CLB / NCLC score converter';
 export const TOOL_H1 = 'IELTS, CELPIP, TEF Canada and TCF Canada to CLB (NCLC) score converter';
