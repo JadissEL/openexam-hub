@@ -750,6 +750,110 @@
     "verified_at": "2026-11-20T18:24:52+02:00"
   },
   {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT Listening section format (2026 test)",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/about/content/listening.html",
+    "category": "Official exam info",
+    "skills": [
+      "listening",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT Reading section format (2026 test)",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/about/content/reading.html",
+    "category": "Official exam info",
+    "skills": [
+      "reading",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT Speaking section format (2026 test)",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/about/content/speaking.html",
+    "category": "Official exam info",
+    "skills": [
+      "speaking",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-27T17:14:33+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT Writing section format (including Academic Discussion)",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/about/content/writing.html",
+    "category": "Official exam info",
+    "skills": [
+      "writing",
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-27T12:33:42+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — official TOEFL iBT Test 2026 Update blueprint and specifications (PDF)",
+    "url": "https://www.ets.org/pdfs/toefl/toefl-ibt-test-specifications-2026.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-27T12:33:42+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — Understand your TOEFL iBT scores (2026 1–6 band scale and CEFR alignment)",
+    "url": "https://www.ets.org/toefl/test-takers/ibt/scores/understand-scores.html",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-21T08:29:22+02:00"
+  },
+  {
+    "exam": "TOEFL",
+    "title": "ETS — Updated TOEFL iBT Test Overview (2026 format, sample tasks and scoring) (PDF)",
+    "url": "https://www.ets.org/pdfs/toefl/toefl-ibt-test-overview.pdf",
+    "category": "Official exam info",
+    "skills": [
+      "exam_format",
+      "mock_exam",
+      "listening",
+      "reading",
+      "writing",
+      "speaking"
+    ],
+    "levels": [],
+    "license": "Official exam-board page (free public access)",
+    "source_org": "ETS",
+    "verified_at": "2026-11-21T08:29:22+02:00"
+  },
+  {
     "exam": "CELPIP",
     "title": "CELPIP — official Writing Pro: Target 9+ Study Pack (2026, PDF)",
     "url": "https://www.celpip.ca/wp-content/uploads/2026/10/Writing-Pro-Target-9-Study-Pack-2026.pdf",
