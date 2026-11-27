@@ -11,6 +11,7 @@
 - [CELPIP](https://openexamhub.org/exams/celpip): test format, CLB scores and free official practice
 - [DELF and DALF](https://openexamhub.org/exams/delf): levels A1–C2 and free official sample papers
 - [Goethe-Zertifikat](https://openexamhub.org/exams/goethe): free official practice tests A1–C2
+- [telc](https://openexamhub.org/exams/telc): official practice tests and handbooks
 - [DELE](https://openexamhub.org/exams/dele): exam format by level and official resources
 
 ## Free tools
@@ -24,6 +25,9 @@
 - [Goethe-Zertifikat B1 30-day study plan](https://openexamhub.org/exams/goethe/b1-30-day-study-plan)
 
 ## Blog guides
+- [Campus France 2027: which French test you need in Morocco, Tunisia and Egypt](https://openexamhub.org/blog/campus-france-2027-french-test-maroc-tunisie-egypte): Official Campus France deadlines and accepted French tests for the September 2027 intake in Morocco, Tunisia and Egypt. No fee guesses.
+- [Canada’s 2027 Francophone immigration target, and why NCLC 7 matters](https://openexamhub.org/blog/canada-2027-francophone-immigration-target-nclc-7): IRCC’s 2027–2029 levels plan sets a 9.5% Francophone target outside Quebec, or 31,825 admissions, and the Express Entry French category still requires NCLC 7.
+- [TEF Canada au Maroc et en Tunisie : centres agréés, tarifs et préparation gratuite](https://openexamhub.org/blog/tef-canada-maroc-tunisie): Official approved TEF Canada centres in Morocco and Tunisia, Institut français fees, and free official prep from Le français des affaires.
 - [Can you use a DELF or DALF for Express Entry?](https://openexamhub.org/blog/delf-dalf-express-entry): IRCC does not accept DELF or DALF for Express Entry. Official TEF Canada and TCF Canada scores, where a DELF still helps, and how to move from B2 toward an NCLC target.
 - [CELPIP to CLB: Express Entry scores explained](https://openexamhub.org/blog/celpip-to-clb-express-entry): How CELPIP-General levels map to CLB on IRCC’s Express Entry table, the minimum level for each program, and why CELPIP-General LS is not the test for Express Entry.
 - [DELF vs TCF: which French test should you take?](https://openexamhub.org/blog/delf-vs-tcf-which-french-test): A lifetime diploma or a score valid for two years? What the French government, universities and IRCC actually accept for citizenship, residence, study and Canadian immigration.

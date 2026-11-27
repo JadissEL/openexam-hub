@@ -114,6 +114,8 @@ Do not reuse TEF numbers on a TCF file, or the other way around. The [full TCF C
 
 To run all four TEF Canada or TCF Canada scores through those official tables at once — including whether you meet NCLC 7 or 9, and the first-official-language CRS points they earn — use the [OpenExam Hub CLB and NCLC converter](/tools/clb-converter) (TEF Canada and TCF Canada tabs; it also has IELTS General Training and CELPIP-General tabs). It is not an official IRCC tool, so confirm your result on IRCC.
 
+IRCC’s 2027–2029 Immigration Levels Plan also sets a target for French-speaking permanent resident admissions outside Quebec. For the official figures, and how they sit next to this NCLC 7 category rule, see [Canada’s 2027 Francophone immigration target, and why NCLC 7 matters](/blog/canada-2027-francophone-immigration-target-nclc-7).
+
 ## Preview a study plan
 
 You can preview a free plan on OpenExam Hub, then generate and save one with a **free account** (email or Google):

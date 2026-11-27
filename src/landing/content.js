@@ -84,14 +84,14 @@ export const FAQ = [
   },
   {
     q: 'Which exams are covered?',
-    a: 'Right now: TEF Canada and TCF (French), IELTS, TOEFL and CELPIP (English), the Goethe-Zertifikat exams (German), and DELE (Spanish), for levels A1 to C2. TCF is offered as TCF tout public or TCF Canada. More exams will come once we have good official material to point to.'
+    a: 'Right now the planner covers TEF Canada and TCF (French), IELTS, TOEFL and CELPIP (English), the Goethe-Zertifikat exams (German), and DELE (Spanish), for levels A1 to C2. TCF is offered as TCF tout public or TCF Canada. There is also a free official-material guide for the telc German exams. More planner exams will come once we have good official material to build plans from.'
   },
   {
     q: 'Do you host or copy exam papers?',
     a: 'No. We link to pages that the exam bodies and public broadcasters already publish for free, and we check those links regularly. We never re-upload their material.'
   },
   {
-    q: 'Are you affiliated with CCI Paris, France Éducation international, ETS, Paragon Testing Enterprises, Instituto Cervantes, IELTS or the Goethe-Institut?',
+    q: 'Are you affiliated with CCI Paris, France Éducation international, ETS, Paragon Testing Enterprises, Instituto Cervantes, IELTS, the Goethe-Institut or telc gGmbH?',
     a: 'No. OpenExam Hub is an independent project. We are not affiliated with, endorsed by or sponsored by any exam body or publisher we link to.'
   },
   {

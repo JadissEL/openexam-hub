@@ -10,7 +10,7 @@ import {
   plannerHref, recommendedLevel, levelLabel, formatScore, LAST_VERIFIED, ENGLISH_LAST_VERIFIED, EE_LANGUAGE_MODIFIED,
   EE_LANGUAGE_URL, START_UP_URL, CRS_URL
 } from '../src/tools/clbData.js';
-import { TOOL_FAQ, TOOL_PATH, DEFAULT_TOOL_MODE, TOOL_TABS, modeFromTabParam, modeFromSearch, tabFromMode, toolPathForTab, searchWithTab } from '../src/tools/clbContent.js';
+import { TOOL_FAQ, TOOL_PATH, DEFAULT_TOOL_MODE, TOOL_TABS, modeFromTabParam, modeFromSearch, tabFromMode, toolPathForTab, searchWithTab, toolPathForGuide, GUIDE_TOOL_TABS } from '../src/tools/clbContent.js';
 import { isPlannerDeepLink, parsePlannerQuery, parsePlannerDays, parsePlannerVariant } from '../lib/exams.js';
 import { HIT_EVENTS, normPath, sanitizeBeacon, validRecord } from '../lib/analytics/hits.js';
 import { SITEMAP_PATHS } from './blog-data.mjs';
@@ -369,6 +369,14 @@ test('?tab= deep-links select a converter test and ignore invalid values', () =>
   assert.equal(toolPathForTab('tcf'), '/tools/clb-converter?tab=tcf');
   assert.equal(toolPathForTab('tef'), TOOL_PATH);
   assert.equal(toolPathForTab('nope'), TOOL_PATH);
+  assert.equal(toolPathForGuide('tef-canada'), TOOL_PATH);
+  assert.equal(toolPathForGuide('tcf-canada'), '/tools/clb-converter?tab=tcf');
+  assert.equal(toolPathForGuide('ielts'), '/tools/clb-converter?tab=ielts');
+  assert.equal(toolPathForGuide('celpip'), '/tools/clb-converter?tab=celpip');
+  assert.equal(toolPathForGuide('unknown'), TOOL_PATH);
+  assert.equal(toolPathForGuide('tcf-canada', '?utm_source=guide'), '/tools/clb-converter?utm_source=guide&tab=tcf');
+  assert.equal(toolPathForGuide('tef-canada', '?utm_source=guide'), '/tools/clb-converter?utm_source=guide');
+  assert.deepEqual(GUIDE_TOOL_TABS, { 'tef-canada': 'tef', 'tcf-canada': 'tcf', ielts: 'ielts', celpip: 'celpip' });
   assert.equal(searchWithTab('', 'TCF_CANADA'), '?tab=tcf');
   assert.equal(searchWithTab('?tab=tcf', 'TEF_EXPRESS_ENTRY'), '');
   assert.equal(searchWithTab('?utm=1&tab=tcf', 'IELTS_GT'), '?utm=1&tab=ielts');
@@ -514,9 +522,13 @@ if (process.argv.includes('--built')) {
 
   test('built sitemap lists the tool; guides and footer link to it', () => {
     assert.ok(read('sitemap.xml').includes('<loc>https://openexamhub.org/tools/clb-converter</loc>'));
-    for (const rel of ['exams/tef-canada/index.html', 'exams/tcf-canada/index.html', 'exams/ielts/index.html', 'exams/celpip/index.html']) {
-      assert.ok(read(rel).includes('href="/tools/clb-converter"'), `${rel} links to the tool`);
-    }
+    assert.ok(read('exams/tef-canada/index.html').includes('href="/tools/clb-converter"'), 'TEF Canada guide links to the converter');
+    assert.ok(read('exams/tcf-canada/index.html').includes('href="/tools/clb-converter?tab=tcf"'), 'TCF Canada guide card deep-links the TCF tab');
+    assert.ok(read('exams/ielts/index.html').includes('href="/tools/clb-converter?tab=ielts"'), 'IELTS guide card deep-links the IELTS tab');
+    assert.ok(read('exams/celpip/index.html').includes('href="/tools/clb-converter?tab=celpip"'), 'CELPIP guide card deep-links the CELPIP tab');
+    const tefCard = (read('exams/tef-canada/index.html').split('id="related-tool-title"')[1] || '').split('</section>')[0];
+    assert.ok(tefCard.includes('href="/tools/clb-converter"'), 'TEF Canada card uses the bare converter URL');
+    assert.ok(!tefCard.includes('?tab='), 'TEF Canada card does not add a tab query');
     assert.ok(visibleText(read('exams/ielts/index.html')).includes('Express Entry accepts IELTS General Training only, not Academic'), 'IELTS guide card states the General Training rule');
     assert.ok(fs.readFileSync(path.join(root, 'public/llms.txt'), 'utf8').includes('IELTS, CELPIP, TEF Canada and TCF Canada to CLB (NCLC) score converter'), 'llms.txt describes the new scope');
     for (const rel of ['index.html', 'exams/tef-canada/index.html', 'blog/index.html', 'tools/clb-converter/index.html']) {

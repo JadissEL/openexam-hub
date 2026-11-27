@@ -118,7 +118,7 @@ A **DELF B2, DALF C1 or DALF C2** is a diploma at B2 or above, so it falls under
 
 For a first-year licence application through the **Demande d’admission préalable (DAP)**, the [2027–2028 ministry notice](https://www.enseignementsup-recherche.gouv.fr/sites/default/files/2026-10/Notice%20dossier%20blanc%20DAP%202027-2028.pdf) asks for the **TCF Tout Public with a compulsory written expression test**, unless you are exempt. One exemption is holders of a French-language diploma from the higher-education ministry at **B2 or above**. [Campus France Tunisie](https://www.tunisie.campusfrance.org/faq/puis-je-etre-dispensee-du-tcf-dap) names the **DELF B2** and the **DALF C1 or C2** in its answer on who is exempt from the TCF for the DAP.
 
-The notice’s file deadline is **15 December 2026**. Master’s and other programmes set their own rules, so check each university. France’s student site also notes that some programmes may ask for a DELF B2, and some for a DALF at C1 to C2.
+The notice’s file deadline is **15 December 2026**. Master’s and other programmes set their own rules, so check each university. France’s student site also notes that some programmes may ask for a DELF B2, and some for a DALF at C1 to C2. Country-by-country Campus France deadlines for Morocco, Tunisia and Egypt are in [Campus France 2027: which French test you need in Morocco, Tunisia and Egypt](/blog/campus-france-2027-french-test-maroc-tunisie-egypte).
 
 ## DELF B2 versus TEF Canada and TCF Canada
 
@@ -178,7 +178,7 @@ You can also enter four scores in the [CLB and NCLC converter](/tools/clb-conver
 
 ### How to prepare
 
-- Choose **TEF Canada or TCF Canada** using [the comparison guide](/blog/tef-canada-vs-tcf-canada). No official source ranks one as easier. Look at your nearest approved centre, your dates, and the official sample material for each test.
+- Choose **TEF Canada or TCF Canada** using [the comparison guide](/blog/tef-canada-vs-tcf-canada). No official source ranks one as easier. Look at your nearest approved centre, your dates, and the official sample material for each test. Candidates in Morocco and Tunisia can start with the French guide to [TEF Canada centres, fees and free official prep](/blog/tef-canada-maroc-tunisie).
 - Read the [TEF Canada exam guide](/exams/tef-canada) or the [TCF Canada exam guide](/exams/tcf-canada). If you still want the diploma explained in one place, see the [DELF exam guide](/exams/delf).
 - Use official practice where it exists: the [TEF Canada 30-day study plan](/exams/tef-canada/30-day-study-plan) and the [TCF Canada official practice study path](/exams/tcf-canada/official-practice-study-path).
 - Book early enough that your results will still be valid when you submit a permanent residence application, not only when you open a profile.

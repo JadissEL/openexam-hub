@@ -35,7 +35,7 @@
   var OFFICIAL = [
     'france-education-international.fr', 'tv5monde.com', 'rfi.fr', 'britishcouncil.org', 'ielts.org',
     'cambridgeenglish.org', 'goethe.de', 'dw.com', 'vhs-lernportal.de', 'europa.eu', 'lefrancaisdesaffaires.fr',
-    'canada.ca', 'ets.org', 'cervantes.es', 'cervantes.org', 'testdaf.de', 'ambafrance-ca.org', 'celpip.ca', 'paragontesting.ca', 'youtube.com', 'youtu.be'
+    'canada.ca', 'ets.org', 'cervantes.es', 'cervantes.org', 'testdaf.de', 'telc.net', 'ambafrance-ca.org', 'celpip.ca', 'paragontesting.ca', 'youtube.com', 'youtu.be'
   ];
 
   w.dataLayer = w.dataLayer || [];

@@ -79,6 +79,14 @@ export const EXAM_PAGES = [
       'Goethe-Zertifikat German exams from A1 to C2: the free official Goethe-Institut practice tests (Übungssätze) for every level, plus free self-study from DW and the VHS Lernportal.'
   },
   {
+    slug: 'telc',
+    label: 'telc',
+    tags: ['TELC'],
+    title: 'telc Deutsch exams: official practice tests and handbooks',
+    description:
+      'telc German exams from telc gGmbH: free official mock exams, handbooks and regulations on telc.net, from A1 to C2, including A2+ Beruf and C1 Hochschule.'
+  },
+  {
     slug: 'dele',
     label: 'DELE',
     tags: ['DELE'],

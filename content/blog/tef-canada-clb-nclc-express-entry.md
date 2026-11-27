@@ -143,6 +143,6 @@ To check all four of your Équivalence ancien score figures at once — your NCL
 
 You can [preview a free TEF Canada plan](https://openexamhub.org/app?exam=TEF_CANADA&level=B2&days=30) on OpenExam Hub (B2 over 30 days). The link opens a plan preview when a matching cached plan exists. **Generating or saving a plan needs a free account** (email or Google).
 
-A free 30-day practice schedule that uses official TEF Canada materials is on the [TEF Canada 30-day study plan](/exams/tef-canada/30-day-study-plan).
+A free 30-day practice schedule that uses official TEF Canada materials is on the [TEF Canada 30-day study plan](/exams/tef-canada/30-day-study-plan). If you plan to sit the test in Morocco or Tunisia, see the French guide to [approved centres, Institut français fees and official free prep](/blog/tef-canada-maroc-tunisie).
 
 
