@@ -32,6 +32,7 @@ export default async function handler(req, res) {
     }
     const { status, body: out } = await generateRoadmap(body);
     res.setHeader('Cache-Control', 'no-store');
+    if (status >= 500) return res.status(status).json({ error: 'Roadmap generation failed unexpectedly. Please try again.' });
     return res.status(status).json(out);
   } catch (err) {
     console.error('[generate-roadmap]', err);
