@@ -16,7 +16,8 @@ import {
   resolveImageUrl,
   SITE_ORIGIN,
   CONTENT_DIR,
-  BLOG_EXAMS
+  BLOG_EXAMS,
+  postHeadTitle
 } from './blog-data.mjs';
 import { SITEMAP_PATHS, TAG_INDEX_MIN_POSTS, allExamTags } from './blog-data.mjs';
 import { parsePlannerQuery, parsePlannerDays, parsePlannerVariant, DEFAULT_PICKER_EXAM, resolvePlannerExam, resourceVariantScore, preferVariantResources, withOfficialSource, officialProfile } from '../lib/exams.js';
@@ -118,6 +119,40 @@ sources: []
 Body.
 `;
   assert.throws(() => parsePost('bad-date.md', bad), /YYYY-MM-DD/);
+});
+
+test('optional seoTitle is used for the document title only', () => {
+  const raw = `---
+title: "A long visible title that can stay on the page"
+seoTitle: "Short tab title"
+description: "A post"
+date: "2026-01-01"
+updated: "2026-01-01"
+lastVerified: "2026-01-01"
+exams: [IELTS]
+audience: [students]
+lang: en
+draft: false
+sources: []
+---
+
+Body text is here.
+`;
+  const post = parsePost('seo-title-post.md', raw);
+  assert.equal(post.title, 'A long visible title that can stay on the page');
+  assert.equal(post.seoTitle, 'Short tab title');
+  assert.equal(postHeadTitle(post), 'Short tab title · OpenExam Hub');
+  assert.equal(articleJsonLd(post).headline, post.title);
+  const rss = buildRssXml([post]);
+  assert.match(rss, /<title>A long visible title that can stay on the page<\/title>/);
+  assert.doesNotMatch(rss, /Short tab title/);
+
+  const without = parsePost('no-seo-title-post.md', raw.replace(/\nseoTitle: "Short tab title"/, ''));
+  assert.equal(without.seoTitle, null);
+  assert.equal(postHeadTitle(without), `${without.title} · OpenExam Hub`);
+
+  const blank = raw.replace('seoTitle: "Short tab title"', 'seoTitle: ""');
+  assert.throws(() => parsePost('blank-seo.md', blank), /seoTitle/);
 });
 
 test('unknown exam ids are rejected', () => {
@@ -407,6 +442,14 @@ test('every published post is listed in public/llms.txt and has a unique title a
       seen.set(v, p.slug);
     }
   }
+  const seenHead = new Map();
+  for (const p of posts) {
+    const head = postHeadTitle(p);
+    assert.ok(head.length <= 60, `${p.slug}: <title> is ${head.length} chars (> 60): ${head}`);
+    const key = head.toLowerCase();
+    assert.ok(!seenHead.has(key), `${p.slug} and ${seenHead.get(key)} share the same <title>`);
+    seenHead.set(key, p.slug);
+  }
 });
 
 if (process.argv.includes('--built')) {
@@ -509,6 +552,45 @@ if (process.argv.includes('--built')) {
     for (const p of loadBlogPosts({ includeDrafts: false })) assert.ok(sitemap.includes(`<loc>https://openexamhub.org/blog/${p.slug}</loc>`), `sitemap lists ${p.slug}`);
     // Local and preview builds include drafts on purpose; only a production build must omit them.
     if (!includeDraftsFromEnv()) for (const d of loadBlogPosts({ includeDrafts: true }).filter((p) => p.draft)) assert.ok(!sitemap.includes(`/blog/${d.slug}<`), `sitemap omits draft ${d.slug}`);
+  });
+
+  test('published post <title>s are at most 60 characters; H1, RSS and headline keep the full title', () => {
+    const rss = read('blog/rss.xml');
+    const escape = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const decode = (s) =>
+      s
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+    for (const post of loadBlogPosts({ includeDrafts: false })) {
+      const html = read(`blog/${post.slug}/index.html`);
+      const rawTitle = (html.match(/<title>([\s\S]*?)<\/title>/) || [])[1];
+      assert.ok(rawTitle, `missing <title> on ${post.slug}`);
+      const title = decode(rawTitle).replace(/\s+/g, ' ').trim();
+      assert.equal(title, postHeadTitle(post), `<title> on ${post.slug}`);
+      assert.ok(title.length <= 60, `${post.slug}: <title> is ${title.length} chars (> 60): ${title}`);
+      assert.match(html, new RegExp(`<meta property="og:title" content="${escape(rawTitle)}"`));
+      assert.match(html, new RegExp(`<meta name="twitter:title" content="${escape(rawTitle)}"`));
+      const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/);
+      assert.ok(h1, `missing h1 on ${post.slug}`);
+      const h1text = decode(h1[1].replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+      assert.equal(h1text, post.title, `H1 on ${post.slug} must keep the visible title`);
+      const article = jsonLdBlocks(html)
+        .flatMap((b) => (b['@graph'] ? b['@graph'] : [b]))
+        .find((b) => b['@type'] === 'BlogPosting');
+      assert.ok(article, `${post.slug} missing BlogPosting JSON-LD`);
+      assert.equal(article.headline, post.title, `headline on ${post.slug}`);
+      assert.ok(article.headline.length <= 110, `${post.slug}: headline is ${article.headline.length} chars`);
+      const rssTitle = post.title
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      assert.ok(rss.includes(`<title>${rssTitle}</title>`), `RSS keeps the visible title for ${post.slug}`);
+    }
   });
 
   test('exam guide pages are prerendered as static HTML with their own head and JSON-LD', () => {

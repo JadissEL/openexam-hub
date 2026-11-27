@@ -1,5 +1,6 @@
 ---
 title: "IELTS Academic or General Training: which one you need for Express Entry"
+seoTitle: "IELTS Academic or General for Express Entry"
 description: "IRCC accepts only IELTS General Training for Express Entry, not Academic, One Skill Retake or IELTS Online. When Academic is the right test for university or professional registration."
 date: "2026-11-26"
 updated: "2026-11-26"

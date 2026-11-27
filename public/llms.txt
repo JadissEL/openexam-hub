@@ -23,6 +23,7 @@
 - [Goethe-Zertifikat B1 30-day study plan](https://openexamhub.org/exams/goethe/b1-30-day-study-plan)
 
 ## Blog guides
+- [CELPIP to CLB: Express Entry scores explained](https://openexamhub.org/blog/celpip-to-clb-express-entry): How CELPIP-General levels map to CLB on IRCC’s Express Entry table, the minimum level for each program, and why CELPIP-General LS is not the test for Express Entry.
 - [DELF vs TCF: which French test should you take?](https://openexamhub.org/blog/delf-vs-tcf-which-french-test): A lifetime diploma or a score valid for two years? What the French government, universities and IRCC actually accept for citizenship, residence, study and Canadian immigration.
 - [IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2](https://openexamhub.org/blog/ielts-to-cefr): What IELTS.org and the British Council say about overall IELTS bands and CEFR levels, why 5.0, 6.5 and 8.0 are borderline, and what the UK Home Office asks per skill.
 - [TOEFL vs IELTS in 2026: which English test should you take?](https://openexamhub.org/blog/toefl-vs-ielts): TOEFL iBT changed in January 2026. How it compares with IELTS on format, scoring and acceptance, and why TOEFL is not on IRCC’s Express Entry list.

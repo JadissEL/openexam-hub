@@ -1,5 +1,6 @@
 ---
 title: "TCF Canada scores to NCLC for Express Entry: NCLC 7 by skill, and the full table"
+seoTitle: "TCF Canada to NCLC: scores for NCLC 7"
 description: "The TCF Canada score you need in each skill for NCLC 7, from IRCC’s table, plus the full NCLC 4–10 bands, programme minimums, the French-language category, CRS points and result validity."
 date: "2026-11-21"
 updated: "2026-11-27"

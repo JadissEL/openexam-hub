@@ -1,5 +1,6 @@
 ---
 title: "TEF Canada scores to CLB and NCLC for Express Entry"
+seoTitle: "TEF Canada to CLB and NCLC: Express Entry"
 description: "How to read a TEF Canada certificate, which score column to enter in an Express Entry profile, and the official IRCC and CCI tables that convert those scores to NCLC."
 date: "2026-11-20"
 updated: "2026-11-27"

@@ -1,5 +1,6 @@
 ---
 title: "IELTS to CEFR: which IELTS band matches B1, B2, C1 and C2"
+seoTitle: "IELTS to CEFR: bands for B1, B2, C1 and C2"
 description: "What IELTS.org and the British Council say about overall IELTS bands and CEFR levels, why 5.0, 6.5 and 8.0 are borderline, and what the UK Home Office asks per skill."
 date: "2026-11-27"
 updated: "2026-11-27"
