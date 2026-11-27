@@ -9,6 +9,8 @@ import { examContent } from './examContent.js';
 import { FAQ } from '../landing/content.js';
 import ClbConverter from '../tools/ClbConverter.jsx';
 import CrsLanguagePoints from '../tools/CrsLanguagePoints.jsx';
+import CefrConverter from '../tools/CefrConverter.jsx';
+import { CEFR_TOOL_PATH, CEFR_TOOL_H1, CEFR_TOOL_DESCRIPTION, CEFR_TOOL_FAQ, CEFR_LAST_VERIFIED } from '../tools/cefrData.js';
 import { CRS_TOOL_PATH, CRS_TOOL_H1, CRS_TOOL_DESCRIPTION, CRS_TOOL_FAQ, CRS_LAST_VERIFIED } from '../tools/crsLanguage.js';
 import ComparePage from '../compare/ComparePage.jsx';
 import { ClbTablePage, CompareHub } from '../compare/CompareHub.jsx';
@@ -28,6 +30,7 @@ export function renderPage(pathname, posts = []) {
   if (p === '/terms') return renderToString(<LegalPage kind="terms" />);
   if (p === '/tools/clb-converter') return renderToString(<ClbConverter />);
   if (p === CRS_TOOL_PATH) return renderToString(<CrsLanguagePoints />);
+  if (p === CEFR_TOOL_PATH) return renderToString(<CefrConverter />);
   if (p === COMPARE_HUB.path) return renderToString(<CompareHub />);
   if (p === CLB_TABLE_PAGE.path) return renderToString(<ClbTablePage />);
   const cm = p.match(/^\/compare\/([a-z0-9-]+)$/);
@@ -40,6 +43,7 @@ export function renderPage(pathname, posts = []) {
   return null;
 }
 
+export { CEFR_TOOL_PATH, CEFR_TOOL_H1, CEFR_TOOL_DESCRIPTION, CEFR_TOOL_FAQ, CEFR_LAST_VERIFIED };
 export { CRS_TOOL_PATH, CRS_TOOL_H1, CRS_TOOL_DESCRIPTION, CRS_TOOL_FAQ, CRS_LAST_VERIFIED };
 export { COMPARE_PAGES, comparePath, compareBreadcrumbs, COMPARE_LAST_VERIFIED, CLB_TABLE_PAGE, COMPARE_HUB, clbCsv };
 export { examContent, FAQ, PLAN_PAGES, planPath, TOOL_FAQ, TOOL_H1, TOOL_DESCRIPTION, TOOL_LAST_VERIFIED, TOOL_PATH };

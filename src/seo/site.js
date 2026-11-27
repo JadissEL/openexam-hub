@@ -1,3 +1,4 @@
+import { CEFR_TOOL_PATH, CEFR_TOOL_TITLE, CEFR_TOOL_DESCRIPTION } from '../tools/cefrData.js';
 import { CRS_TOOL_PATH, CRS_TOOL_TITLE, CRS_TOOL_DESCRIPTION } from '../tools/crsLanguage.js';
 /**
  * SEO metadata shared by the build-time prerender (Node) and the browser.
@@ -154,7 +155,8 @@ export const PAGE_META = {
     description:
       'Convert IELTS General Training, CELPIP-General, PTE Core, TEF Canada or TCF Canada scores to CLB (NCLC) with IRCC’s tables. Level per skill and CRS points.'
   },
-  [CRS_TOOL_PATH]: { title: CRS_TOOL_TITLE, description: CRS_TOOL_DESCRIPTION }
+  [CRS_TOOL_PATH]: { title: CRS_TOOL_TITLE, description: CRS_TOOL_DESCRIPTION },
+  [CEFR_TOOL_PATH]: { title: CEFR_TOOL_TITLE, description: CEFR_TOOL_DESCRIPTION }
 };
 
 export function normalizePath(pathname) {
