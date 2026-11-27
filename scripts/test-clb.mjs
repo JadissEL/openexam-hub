@@ -344,6 +344,15 @@ test('route, meta, sitemap and cookieless counter are wired', () => {
   assert.deepEqual(validRecord({ t: 'event', e: 'clb_tool_used' }), { t: 'event', e: 'clb_tool_used', a: null });
 });
 
+test('cookie banner Accept and Reject are real buttons in tab order', () => {
+  const src = fs.readFileSync(path.join(root, 'public/oeh-consent.js'), 'utf8');
+  assert.match(src, /createElement\('button'\)/);
+  assert.match(src, /b\.type = 'button'/);
+  assert.match(src, /b\.tabIndex = 0/);
+  assert.doesNotMatch(src, /tabIndex\s*=\s*-1/);
+  assert.match(src, /insertBefore\(banner, d\.body\.firstChild\)/);
+});
+
 if (process.argv.includes('--built')) {
   const dist = path.join(root, 'dist');
   const read = (rel) => fs.readFileSync(path.join(dist, rel), 'utf8');
@@ -384,6 +393,18 @@ if (process.argv.includes('--built')) {
     for (const u of [EE_LANGUAGE_URL, START_UP_URL, CRS_URL]) assert.ok(html.includes(u), `source link ${u}`);
     assert.match(html, /<time dateTime="2026-10-16">|<time datetime="2026-10-16">/, 'IRCC page modified date is marked up');
     assert.ok(html.includes('href="/exams/ielts"'), 'converter links to the IELTS guide');
+    for (const label of [
+      'IRCC TEF Canada table',
+      'IRCC TEF Canada Score /699 table',
+      'IRCC TCF Canada table',
+      'IRCC IELTS General Training table',
+      'IRCC CELPIP-General table',
+      'IRCC CRS first official language points table'
+    ]) {
+      assert.ok(html.includes(`role="region"`) && html.includes(`tabindex="0"`) && html.includes(`aria-label="${label}"`), `scrollable table region: ${label}`);
+    }
+    assert.ok(html.includes('#BC3D0B'), 'header Hub word uses a slightly darker rust for 4.5:1 contrast');
+    assert.ok((html.match(/bg-\[#C2410C\]/g) || []).length >= 1 || html.includes('#C2410C'), 'primary CTA uses #C2410C (white text passes AA)');
     const blocks = jsonLdBlocks(html);
     const all = blocks.flatMap((b) => (b['@graph'] ? b['@graph'] : [b]));
     const types = all.map((b) => b['@type']);

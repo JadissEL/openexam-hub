@@ -18,7 +18,7 @@ export function Wordmark({ className = '' }) {
   return (
     <a href="/" className={`inline-flex items-center gap-2.5 font-semibold tracking-tight text-[#1A1714] ${className}`}>
       <img src="/brand/mark.svg" alt="" width="30" height="30" className="w-[30px] h-[30px]" />
-      <span className="text-[17px]">OpenExam <span className="text-[#C2410C]">Hub</span></span>
+      <span className="text-[17px]">OpenExam <span className="text-[#BC3D0B]">Hub</span></span>
     </a>
   );
 }

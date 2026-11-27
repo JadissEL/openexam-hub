@@ -1874,7 +1874,7 @@ Never include pirated PDFs, paywalled courses, or third-party blogs. Output stri
           >
             <img src="/brand/mark.svg" alt="" width="36" height="36" className="w-9 h-9 shrink-0" aria-hidden="true" />
             <span className="min-w-0 text-left">
-              <span className="block font-bold text-[17px] tracking-tight leading-none text-neutral-950">OpenExam <span className="text-[#C2410C]">Hub</span></span>
+              <span className="block font-bold text-[17px] tracking-tight leading-none text-neutral-950">OpenExam <span className="text-[#BC3D0B]">Hub</span></span>
               <span className="hidden 2xl:block whitespace-nowrap text-[11px] text-neutral-500 mt-1">Free official exam prep · MIT open source</span>
             </span>
           </button>

@@ -78,12 +78,28 @@ function cellText(table, r) {
   return table.id === 'CELPIP_G' ? `${r.min}+` : `${fmt(r.min)}–${fmt(r.max)}`;
 }
 
+
+function tableRegionLabel(table) {
+  return {
+    TEF_EXPRESS_ENTRY: 'IRCC TEF Canada table',
+    TEF_NEW_699: 'IRCC TEF Canada Score /699 table',
+    TCF_CANADA: 'IRCC TCF Canada table',
+    IELTS_GT: 'IRCC IELTS General Training table',
+    CELPIP_G: 'IRCC CELPIP-General table'
+  }[table.id] || `IRCC ${table.short || table.label} table`;
+}
+
 function ReferenceTable({ table }) {
   const scheme = table.scheme;
   return (
     <div className="mt-5 first:mt-0">
       <h3 className={`font-display ${ink} text-[20px] tracking-[-0.01em] font-medium`}>{table.label}</h3>
-      <div className="mt-3 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70">
+      <div
+        className="mt-3 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714] focus-visible:ring-offset-2"
+        tabIndex={0}
+        role="region"
+        aria-label={tableRegionLabel(table)}
+      >
         <table className="w-full text-left text-[15px] leading-snug">
           <caption className="sr-only">{table.label}: {table.listed ? 'score listed by IRCC for each' : 'score ranges for each'} {scheme} level</caption>
           <thead className="bg-[#F1EDE5] text-[#3B352F]">
@@ -126,7 +142,12 @@ function CrsTable() {
     ['CLB 10 or more', 32, 34]
   ];
   return (
-    <div className="mt-3 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70">
+    <div
+      className="mt-3 overflow-x-auto rounded-2xl border border-[#E7E1D7] bg-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1714] focus-visible:ring-offset-2"
+      tabIndex={0}
+      role="region"
+      aria-label="IRCC CRS first official language points table"
+    >
       <table className="w-full text-left text-[15px] leading-snug">
         <caption className="sr-only">CRS points per ability for the first official language</caption>
         <thead className="bg-[#F1EDE5] text-[#3B352F]">
@@ -366,7 +387,7 @@ function Converter() {
             <a
               href={cta}
               data-clb-cta
-              className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold"
+              className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold"
             >
               Get a free study plan to reach CLB 7/9 <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </a>
@@ -379,7 +400,7 @@ function Converter() {
             </p>
             <a
               href="/exams"
-              className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#EA580C] hover:bg-[#C2410C] text-white font-semibold"
+              className="mt-4 inline-flex w-full sm:w-auto items-center justify-center gap-2 h-12 px-6 rounded-full bg-[#C2410C] hover:bg-[#9A3412] text-white font-semibold"
             >
               Browse the exam guides <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </a>

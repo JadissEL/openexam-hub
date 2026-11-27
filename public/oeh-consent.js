@@ -191,6 +191,7 @@
   var banner = null;
   function btnStyle(b) {
     b.type = 'button';
+    b.tabIndex = 0;
     b.style.cssText =
       'flex:1 1 0;min-height:40px;padding:0 16px;border-radius:999px;border:1.5px solid #1A1714;' +
       'background:#1A1714;color:#fff;font:600 15px/1 Inter,system-ui,sans-serif;cursor:pointer';
@@ -347,10 +348,19 @@
     banner.appendChild(p);
     banner.appendChild(row);
     banner.setAttribute('aria-labelledby', 'oeh-consent-title');
+    if (!d.getElementById('oeh-consent-focus')) {
+      var focusCss = d.createElement('style');
+      focusCss.id = 'oeh-consent-focus';
+      focusCss.textContent =
+        '#oeh-consent button:focus{outline:3px solid #C2410C;outline-offset:3px}' +
+        '#oeh-consent button:focus-visible{outline:3px solid #C2410C;outline-offset:3px}';
+      d.head.appendChild(focusCss);
+    }
     banner.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && state) hide();
     });
-    d.body.appendChild(banner);
+    // First in tab order so Accept/Reject are reachable without walking the whole page.
+    d.body.insertBefore(banner, d.body.firstChild);
     reservePageSpace();
     if (w.requestAnimationFrame) w.requestAnimationFrame(reservePageSpace);
     listenResize(true);
