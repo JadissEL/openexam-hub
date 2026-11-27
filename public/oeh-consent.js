@@ -1,5 +1,5 @@
 /*
- * OpenExam Hub: cookie consent + Google Analytics 4 (Consent Mode v2).
+ * OpenExam Hub: cookie consent + Google Analytics 4 (Consent Mode v2) + Microsoft Clarity.
  *
  * Plain script, loaded with `defer` on every page (including the static blog and exam guides),
  * before the app bundle. What it does:
@@ -9,6 +9,9 @@
  *    in localStorage ("oeh_consent_v1");
  *  - loads gtag.js only after Accept, only on the production hostname, and only when the build
  *    set a Measurement ID (meta[name="oeh-ga-id"], filled from VITE_GA_ID at build time);
+ *  - loads Microsoft Clarity the same way (meta[name="oeh-clarity-id"], from VITE_CLARITY_PROJECT_ID),
+ *    only after Accept. Reject never inserts the tag. Revoking calls Clarity's consent API and
+ *    stops it. Inputs stay masked (Clarity's default); this script never unmasks anything;
  *  - sends page_view on first load and on SPA route changes (history.pushState / popstate);
  *  - exposes window.oeh = { track, consent, open, require } for the app and the AdSense loader.
  * Any element with [data-oe-consent-open] reopens the banner ("Cookie settings").
@@ -24,6 +27,9 @@
   var meta = d.querySelector('meta[name="oeh-ga-id"]');
   var GA_ID = meta ? String(meta.getAttribute('content') || '').trim() : '';
   var gaOn = /^G-[A-Z0-9]{4,20}$/.test(GA_ID) && PROD_HOSTS.indexOf(location.hostname) !== -1;
+  var clarityMeta = d.querySelector('meta[name="oeh-clarity-id"]');
+  var CLARITY_ID = clarityMeta ? String(clarityMeta.getAttribute('content') || '').trim() : '';
+  var clarityOn = /^[a-z0-9]{6,32}$/.test(CLARITY_ID) && PROD_HOSTS.indexOf(location.hostname) !== -1;
 
   // Keep in sync with lib/allowlist.js (BASE_DOMAIN_ALLOWLIST).
   var OFFICIAL = [
@@ -91,6 +97,54 @@
     s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA_ID);
     d.head.appendChild(s);
     pageView();
+  }
+
+  // ---- Microsoft Clarity (heatmaps + session replay) --------------------------------------
+  // Same gate as GA: production hostname, and only after analytics consent is granted.
+  // The tag is async and inserted after consent, so it is not on the critical path.
+  // consentv2 is Clarity's current consent API (ad_Storage / analytics_Storage, case-sensitive).
+  // The site's banner is one choice for analytics and ads, so both flags follow that choice.
+  // Rejecting after a grant calls consent(false), which tells Clarity to delete its cookies and
+  // stop tracking until consent is granted again. Inputs stay masked; nothing here unmasks them.
+  var clarityLoaded = false;
+  function claritySignals(choice) {
+    var v = choice === 'granted' ? 'granted' : 'denied';
+    return { ad_Storage: v, analytics_Storage: v };
+  }
+  function ensureClarityStub() {
+    if (typeof w.clarity === 'function') return;
+    w.clarity = function () {
+      (w.clarity.q = w.clarity.q || []).push(arguments);
+    };
+  }
+  function clearClarityCookies() {
+    var host = location.hostname;
+    d.cookie.split(';').forEach(function (c) {
+      var n = c.split('=')[0].trim();
+      if (n === '_clck' || n === '_clsk' || n === 'CLID') {
+        ['', host, '.' + host].forEach(function (dom) {
+          d.cookie = n + '=; Max-Age=0; path=/' + (dom ? '; domain=' + dom : '');
+        });
+      }
+    });
+  }
+  function loadClarity() {
+    if (!clarityOn || !granted()) return;
+    ensureClarityStub();
+    w.clarity('consentv2', claritySignals('granted'));
+    if (clarityLoaded) return;
+    clarityLoaded = true;
+    var s = d.createElement('script');
+    s.async = true;
+    s.id = 'oeh-clarity';
+    s.src = 'https://www.clarity.ms/tag/' + CLARITY_ID;
+    d.head.appendChild(s);
+  }
+  function stopClarity() {
+    if (!clarityLoaded || typeof w.clarity !== 'function') return;
+    w.clarity('consentv2', claritySignals('denied'));
+    w.clarity('consent', false);
+    clearClarityCookies();
   }
   // ---- Cookieless visit counter (no consent needed: nothing is stored on the device) ---------
   // One small POST to /api/hit per page view and per funnel event. It carries only the page path,
@@ -166,7 +220,7 @@
     en: {
       label: 'Cookie consent',
       title: 'Cookies on OpenExam Hub',
-      body: 'With your OK, we use Google Analytics to see which pages help, and Google may set ad cookies on the study dashboard. Nothing loads until you choose; change it anytime in “Cookie settings”.',
+      body: 'With your OK, we use Google Analytics and Microsoft Clarity (heatmaps and session recordings) to see which pages help, and Google may set ad cookies on the study dashboard. Nothing loads until you choose; change it anytime in “Cookie settings”.',
       more: 'Privacy notice',
       accept: 'Accept',
       reject: 'Reject'
@@ -174,7 +228,7 @@
     fr: {
       label: 'Consentement aux cookies',
       title: 'Cookies sur OpenExam Hub',
-      body: 'Avec votre accord, nous utilisons Google Analytics pour voir quelles pages aident, et Google peut déposer des cookies publicitaires sur le tableau de bord. Rien n’est chargé avant votre choix ; modifiable à tout moment via « Cookie settings ».',
+      body: 'Avec votre accord, nous utilisons Google Analytics et Microsoft Clarity (cartes de chaleur et enregistrements de session) pour voir quelles pages aident, et Google peut déposer des cookies publicitaires sur le tableau de bord. Rien n’est chargé avant votre choix ; modifiable à tout moment via « Cookie settings ».',
       more: 'Politique de confidentialité',
       accept: 'Accepter',
       reject: 'Refuser'
@@ -374,15 +428,20 @@
       w.localStorage.setItem(KEY, JSON.stringify(state));
     } catch (e) { /* storage blocked: choice holds for this page view */ }
     gtag('consent', 'update', signals(choice));
-    if (choice === 'granted') loadGa();
-    else if (was === 'granted') clearGaCookies();
+    if (choice === 'granted') {
+      loadGa();
+      loadClarity();
+    } else {
+      if (was === 'granted') clearGaCookies();
+      stopClarity();
+    }
     hide();
     try {
       w.dispatchEvent(new CustomEvent('oeh:consent', { detail: { choice: choice } }));
     } catch (e) { /* old browser */ }
   }
 
-  var required = gaOn;
+  var required = gaOn || clarityOn;
   function requireConsent() {
     required = true;
     if (!state) whenReady(function () { show(false); });
@@ -442,6 +501,8 @@
   };
   whenReady(countView);
 
-  if (granted()) loadGa();
-  else if (!state && required) whenReady(function () { show(false); });
+  if (granted()) {
+    loadGa();
+    loadClarity();
+  } else if (!state && required) whenReady(function () { show(false); });
 })();

@@ -15,6 +15,7 @@ import { isPlannerDeepLink, parsePlannerQuery, parsePlannerDays, parsePlannerVar
 import { HIT_EVENTS, normPath, sanitizeBeacon, validRecord } from '../lib/analytics/hits.js';
 import { SITEMAP_PATHS } from './blog-data.mjs';
 import { routeMeta } from '../src/seo/site.js';
+import { CLARITY_PROJECT_ID_DEFAULT, clarityProjectId, clarityIdPlugin } from '../vite.config.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
@@ -345,6 +346,18 @@ test('route, meta, sitemap and cookieless counter are wired', () => {
   assert.deepEqual(validRecord({ t: 'event', e: 'clb_tool_used' }), { t: 'event', e: 'clb_tool_used', a: null });
 });
 
+test('Clarity project id has one default and honors an explicit override', () => {
+  assert.equal(CLARITY_PROJECT_ID_DEFAULT, 'zk5viik44t');
+  assert.equal(clarityProjectId('production', { VITE_CLARITY_PROJECT_ID: 'zk5viik44t' }), 'zk5viik44t');
+  assert.equal(clarityProjectId('production', { VITE_CLARITY_PROJECT_ID: 'abc12345' }), 'abc12345');
+  assert.equal(clarityProjectId('production', { VITE_CLARITY_PROJECT_ID: '' }), '');
+  const filled = clarityIdPlugin(CLARITY_PROJECT_ID_DEFAULT).transformIndexHtml(
+    '<meta name="oeh-ga-id" content="" />\n<meta name="oeh-clarity-id" content="" />'
+  );
+  assert.match(filled, /<meta name="oeh-clarity-id" content="zk5viik44t" \/>/);
+  assert.equal(clarityIdPlugin('nope!').transformIndexHtml('<meta name="oeh-clarity-id" content="x" />'), '<meta name="oeh-clarity-id" content="" />');
+});
+
 test('cookie banner Accept and Reject are real buttons in tab order', () => {
   const src = fs.readFileSync(path.join(root, 'public/oeh-consent.js'), 'utf8');
   assert.match(src, /createElement\('button'\)/);
@@ -352,6 +365,16 @@ test('cookie banner Accept and Reject are real buttons in tab order', () => {
   assert.match(src, /b\.tabIndex = 0/);
   assert.doesNotMatch(src, /tabIndex\s*=\s*-1/);
   assert.match(src, /insertBefore\(banner, d\.body\.firstChild\)/);
+  assert.match(src, /function loadClarity\(\)/);
+  assert.match(src, /if \(!clarityOn \|\| !granted\(\)\) return/);
+  assert.match(src, /clarity\('consentv2', claritySignals\('granted'\)\)/);
+  assert.match(src, /clarity\('consentv2', claritySignals\('denied'\)\)/);
+  assert.match(src, /clarity\('consent', false\)/);
+  assert.match(src, /ad_Storage: v, analytics_Storage: v/);
+  assert.match(src, /https:\/\/www\.clarity\.ms\/tag\//);
+  assert.doesNotMatch(src, /clarity\(\s*['"]unmask['"]/);
+  assert.doesNotMatch(src, /data-clarity-unmask/);
+  assert.doesNotMatch(src, /zk5viik44t/, 'the project id stays in vite config, not in the consent script');
 });
 
 if (process.argv.includes('--built')) {
@@ -426,6 +449,20 @@ if (process.argv.includes('--built')) {
     });
     assert.ok(!types.includes('HowTo'), 'no HowTo markup without visible step-by-step instructions');
     assert.doesNotMatch(html, /pagead2\.googlesyndication|adsbygoogle/);
+  });
+
+  test('built pages carry the Clarity id and the consent script; privacy names Clarity', () => {
+    for (const rel of ['index.html', 'privacy/index.html', 'app/index.html', 'exams/ielts/index.html', 'blog/index.html', 'tools/clb-converter/index.html']) {
+      const html = read(rel);
+      assert.match(html, /<meta name="oeh-clarity-id" content="zk5viik44t"\s*\/>/, rel);
+      assert.match(html, /<script src="\/oeh-consent\.js" defer><\/script>/, rel);
+      assert.doesNotMatch(html, /clarity\.ms\/tag\//, `${rel} must not preload the Clarity tag`);
+    }
+    const privacy = visibleText(read('privacy/index.html'));
+    assert.ok(privacy.includes('Microsoft Clarity'), 'privacy page names Microsoft Clarity');
+    assert.ok(privacy.includes('heatmaps'), 'privacy page mentions heatmaps');
+    assert.ok(privacy.includes('session replay'), 'privacy page mentions session replay');
+    assert.ok(privacy.includes('Microsoft processes that data'), 'privacy page says Microsoft processes the data');
   });
 
   test('built sitemap lists the tool; guides and footer link to it', () => {
